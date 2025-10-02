@@ -66,6 +66,8 @@ Visit `http://localhost:8000` in your browser.
 
 ## Deployment to Koyeb
 
+> **📝 Quick Start**: For a step-by-step deployment guide with screenshots, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ### 1. Create PostgreSQL Database
 
 1. Log in to your [Koyeb dashboard](https://app.koyeb.com)

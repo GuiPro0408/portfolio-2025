@@ -17,11 +17,9 @@ export default function PublicHeader({ contact }) {
                     <Link href={route('projects.index')} className="nav-link">
                         Projects
                     </Link>
-                    {contact?.email && (
-                        <a href={`mailto:${contact.email}`} className="nav-cta">
-                            Contact
-                        </a>
-                    )}
+                    <Link href={route('contact.index')} className="nav-cta">
+                        Contact
+                    </Link>
                     {auth?.user ? (
                         <Link href={route('dashboard')} className="nav-link">
                             Dashboard

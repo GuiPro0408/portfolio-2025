@@ -1,3 +1,5 @@
+import { Link } from '@inertiajs/react';
+
 export default function HomeCtaSection({ settings, contact }) {
     return (
         <section className="public-shell section-block reveal" aria-label="Final call to action">
@@ -9,9 +11,9 @@ export default function HomeCtaSection({ settings, contact }) {
                 </div>
 
                 <div className="cta-actions">
-                    <a href={`mailto:${contact.email}`} className="button-primary">
+                    <Link href={route('contact.index')} className="button-primary">
                         {settings.final_cta_button_label}
-                    </a>
+                    </Link>
                     <a href={contact.linkedin} target="_blank" rel="noreferrer" className="button-secondary">
                         LinkedIn
                     </a>

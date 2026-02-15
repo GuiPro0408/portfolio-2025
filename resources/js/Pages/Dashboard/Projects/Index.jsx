@@ -7,7 +7,7 @@ import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { LoaderCircle, PenSquare, Trash2 } from 'lucide-react';
+import { Copy, LoaderCircle, PenSquare, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const defaultFilters = {
@@ -28,8 +28,11 @@ export default function Index({ projects, filters }) {
     const initialFilters = { ...defaultFilters, ...(filters ?? {}) };
     const [query, setQuery] = useState(initialFilters.q);
     const [pendingRows, setPendingRows] = useState({});
+    const [pendingSortRows, setPendingSortRows] = useState({});
+    const [sortValues, setSortValues] = useState({});
     const [projectPendingDelete, setProjectPendingDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [pendingDuplicateId, setPendingDuplicateId] = useState(null);
 
     const visitWithFilters = (nextFilters) => {
         router.get(route('dashboard.projects.index'), nextFilters, {
@@ -67,6 +70,16 @@ export default function Index({ projects, filters }) {
         return () => window.clearTimeout(timeoutId);
     }, [query]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    useEffect(() => {
+        const nextSortValues = {};
+
+        projects.data.forEach((project) => {
+            nextSortValues[project.id] = String(project.sort_order);
+        });
+
+        setSortValues(nextSortValues);
+    }, [projects.data]);
+
     const deleteProject = () => {
         if (!projectPendingDelete) {
             return;
@@ -101,6 +114,54 @@ export default function Index({ projects, filters }) {
                             currentRows;
                         return remainingRows;
                     });
+                },
+            },
+        );
+    };
+
+    const saveSortOrder = (project) => {
+        const nextSortOrder = Number.parseInt(
+            sortValues[project.id] ?? String(project.sort_order),
+            10,
+        );
+
+        if (Number.isNaN(nextSortOrder) || nextSortOrder < 0) {
+            return;
+        }
+
+        setPendingSortRows((currentRows) => ({
+            ...currentRows,
+            [project.id]: true,
+        }));
+
+        router.patch(
+            route('dashboard.projects.sort.update', project.id),
+            {
+                sort_order: nextSortOrder,
+            },
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setPendingSortRows((currentRows) => {
+                        const { [project.id]: removed, ...remainingRows } =
+                            currentRows;
+                        return remainingRows;
+                    });
+                },
+            },
+        );
+    };
+
+    const duplicateProject = (project) => {
+        setPendingDuplicateId(project.id);
+
+        router.post(
+            route('dashboard.projects.duplicate', project.id),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setPendingDuplicateId(null);
                 },
             },
         );
@@ -160,6 +221,10 @@ export default function Index({ projects, filters }) {
                                     <tbody>
                                         {projects.data.map((project) => {
                                             const isPending = pendingRows[project.id] === true;
+                                            const isSortPending =
+                                                pendingSortRows[project.id] === true;
+                                            const isDuplicatePending =
+                                                pendingDuplicateId === project.id;
 
                                             return (
                                                 <tr key={project.id}>
@@ -215,7 +280,60 @@ export default function Index({ projects, filters }) {
                                                             {formatUpdatedAt(project.updated_at)}
                                                         </p>
                                                     </td>
-                                                    <td>{project.sort_order}</td>
+                                                    <td>
+                                                        <div className="flex items-center gap-2">
+                                                            <input
+                                                                type="number"
+                                                                min={0}
+                                                                value={
+                                                                    sortValues[
+                                                                        project
+                                                                            .id
+                                                                    ] ??
+                                                                    project.sort_order
+                                                                }
+                                                                onChange={(
+                                                                    event,
+                                                                ) =>
+                                                                    setSortValues(
+                                                                        (
+                                                                            currentValues,
+                                                                        ) => ({
+                                                                            ...currentValues,
+                                                                            [project.id]:
+                                                                                event
+                                                                                    .target
+                                                                                    .value,
+                                                                        }),
+                                                                    )
+                                                                }
+                                                                className="w-20 rounded-md border border-slate-600 bg-slate-900 px-2 py-1 text-right text-sm text-slate-100"
+                                                                disabled={
+                                                                    isSortPending
+                                                                }
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                className="dashboard-toggle-btn"
+                                                                onClick={() =>
+                                                                    saveSortOrder(
+                                                                        project,
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    isSortPending
+                                                                }
+                                                            >
+                                                                Save
+                                                            </button>
+                                                            {isSortPending ? (
+                                                                <LoaderCircle
+                                                                    size={13}
+                                                                    className="animate-spin text-slate-300"
+                                                                />
+                                                            ) : null}
+                                                        </div>
+                                                    </td>
                                                     <td className="text-right">
                                                         <div className="dashboard-row-actions">
                                                             <Link
@@ -228,11 +346,38 @@ export default function Index({ projects, filters }) {
                                                             <button
                                                                 type="button"
                                                                 onClick={() =>
+                                                                    duplicateProject(
+                                                                        project,
+                                                                    )
+                                                                }
+                                                                className="dashboard-inline-action"
+                                                                disabled={
+                                                                    isDuplicatePending
+                                                                }
+                                                            >
+                                                                {isDuplicatePending ? (
+                                                                    <LoaderCircle
+                                                                        size={14}
+                                                                        className="animate-spin"
+                                                                        aria-hidden="true"
+                                                                    />
+                                                                ) : (
+                                                                    <Copy
+                                                                        size={14}
+                                                                        aria-hidden="true"
+                                                                    />
+                                                                )}
+                                                                Duplicate
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
                                                                     setProjectPendingDelete(
                                                                         project,
                                                                     )
                                                                 }
                                                                 className="dashboard-inline-action dashboard-inline-action-danger"
+                                                                disabled={isPending}
                                                             >
                                                                 <Trash2 size={14} aria-hidden="true" />
                                                                 Delete

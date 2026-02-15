@@ -19,6 +19,8 @@ class ProjectManagementTest extends TestCase
         $this->get(route('dashboard.projects.index'))->assertRedirect(route('login'));
         $this->get(route('dashboard.projects.create'))->assertRedirect(route('login'));
         $this->get(route('dashboard.projects.edit', $project))->assertRedirect(route('login'));
+        $this->post(route('dashboard.projects.duplicate', $project))->assertRedirect(route('login'));
+        $this->patch(route('dashboard.projects.sort.update', $project), ['sort_order' => 1])->assertRedirect(route('login'));
     }
 
     public function test_authenticated_users_can_open_management_pages(): void
@@ -305,5 +307,83 @@ class ProjectManagementTest extends TestCase
 
         $response->assertRedirect(route('dashboard.projects.index'));
         $response->assertSessionHasErrors(['is_published', 'is_featured']);
+    }
+
+    public function test_authenticated_user_can_duplicate_a_project_as_draft_copy(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->published()->featured()->create([
+            'slug' => 'core-platform',
+            'title' => 'Core Platform',
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->post(route('dashboard.projects.duplicate', $project));
+
+        $response->assertRedirect();
+
+        $copy = Project::query()
+            ->where('id', '!=', $project->id)
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($copy);
+        $this->assertSame('Core Platform (Copy)', $copy->title);
+        $this->assertSame('core-platform-copy', $copy->slug);
+        $this->assertFalse($copy->is_published);
+        $this->assertFalse($copy->is_featured);
+        $this->assertNull($copy->published_at);
+    }
+
+    public function test_duplicate_project_slug_suffix_is_incremented_when_needed(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create(['slug' => 'alpha']);
+        Project::factory()->create(['slug' => 'alpha-copy']);
+
+        $this
+            ->actingAs($user)
+            ->post(route('dashboard.projects.duplicate', $project))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('projects', [
+            'slug' => 'alpha-copy-2',
+            'title' => $project->title.' (Copy)',
+        ]);
+    }
+
+    public function test_authenticated_user_can_update_project_sort_order_inline(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create(['sort_order' => 2]);
+
+        $this
+            ->actingAs($user)
+            ->patch(route('dashboard.projects.sort.update', $project), [
+                'sort_order' => 17,
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('projects', [
+            'id' => $project->id,
+            'sort_order' => 17,
+        ]);
+    }
+
+    public function test_project_sort_update_validation_rejects_invalid_values(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->from(route('dashboard.projects.index'))
+            ->patch(route('dashboard.projects.sort.update', $project), [
+                'sort_order' => -5,
+            ]);
+
+        $response->assertRedirect(route('dashboard.projects.index'));
+        $response->assertSessionHasErrors(['sort_order']);
     }
 }

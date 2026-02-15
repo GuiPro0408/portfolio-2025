@@ -67,12 +67,16 @@ class ProjectsPublicTest extends TestCase
         $response->assertOk();
         $response->assertInertia(fn (Assert $page) => $page
             ->component('Projects/Index')
+            ->where('filters.q', '')
+            ->where('filters.stack', '')
+            ->where('filters.sort', 'editorial')
             ->where('projects.data', fn ($projects) => collect($projects)
                 ->pluck('title')
                 ->contains($published->title))
             ->where('projects.data', fn ($projects) => collect($projects)
                 ->pluck('title')
-                ->contains('Draft Project') === false));
+                ->contains('Draft Project') === false)
+            ->where('availableStacks', fn ($stacks) => is_iterable($stacks)));
     }
 
     public function test_homepage_featured_projects_are_limited_and_ordered_for_public_display(): void
@@ -164,6 +168,118 @@ class ProjectsPublicTest extends TestCase
                     ->pluck('title')
                     ->values()
                     ->all() === ['Project A', 'Project B', 'Project C']));
+    }
+
+    public function test_projects_index_supports_public_query_filters_and_sort_modes(): void
+    {
+        Project::factory()->published()->create([
+            'title' => 'CRM Dashboard',
+            'summary' => 'Operations platform',
+            'stack' => 'Laravel, React',
+            'published_at' => '2026-01-01 10:00:00',
+            'sort_order' => 8,
+        ]);
+
+        Project::factory()->published()->create([
+            'title' => 'CRM Toolkit',
+            'summary' => 'Legacy migration toolkit',
+            'stack' => 'Laravel, React',
+            'published_at' => '2025-01-01 10:00:00',
+            'sort_order' => 1,
+        ]);
+
+        Project::factory()->published()->create([
+            'title' => 'Inventory Backoffice',
+            'summary' => 'Admin operations',
+            'stack' => 'Laravel, Vue',
+            'published_at' => '2026-02-01 10:00:00',
+            'sort_order' => 0,
+        ]);
+
+        $response = $this->get(route('projects.index', [
+            'q' => 'crm',
+            'stack' => 'React',
+            'sort' => 'newest',
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Projects/Index')
+                ->where('filters.q', 'crm')
+                ->where('filters.stack', 'React')
+                ->where('filters.sort', 'newest')
+                ->where('projects.data', fn ($projects) => collect($projects)
+                    ->pluck('title')
+                    ->values()
+                    ->all() === ['CRM Dashboard', 'CRM Toolkit'])
+                ->where('availableStacks', fn ($stacks) => collect($stacks)
+                    ->values()
+                    ->all() === ['Laravel', 'React', 'Vue']));
+    }
+
+    public function test_projects_index_preserves_public_filters_through_pagination_links(): void
+    {
+        Project::factory()->count(12)->published()->create([
+            'title' => 'CRM Listing',
+            'summary' => 'Project summary',
+            'stack' => 'Laravel, React',
+        ]);
+
+        $response = $this->get(route('projects.index', [
+            'q' => 'crm',
+            'stack' => 'React',
+            'sort' => 'oldest',
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('projects.next_page_url', function ($url) {
+                    return is_string($url)
+                        && str_contains(urldecode($url), 'q=crm')
+                        && str_contains(urldecode($url), 'stack=React')
+                        && str_contains(urldecode($url), 'sort=oldest');
+                }));
+    }
+
+    public function test_projects_index_supports_multi_stack_filter(): void
+    {
+        Project::factory()->published()->create([
+            'title' => 'React System',
+            'stack' => 'Laravel, React',
+            'published_at' => '2026-02-01 10:00:00',
+            'sort_order' => 1,
+        ]);
+
+        Project::factory()->published()->create([
+            'title' => 'Vue System',
+            'stack' => 'Laravel, Vue',
+            'published_at' => '2026-01-01 10:00:00',
+            'sort_order' => 2,
+        ]);
+
+        Project::factory()->published()->create([
+            'title' => 'Svelte System',
+            'stack' => 'Laravel, Svelte',
+            'published_at' => '2025-01-01 10:00:00',
+            'sort_order' => 3,
+        ]);
+
+        $response = $this->get(route('projects.index', [
+            'stack' => 'React,Vue',
+            'sort' => 'newest',
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Projects/Index')
+                ->where('filters.stack', 'React,Vue')
+                ->where('projects.data', fn ($projects) => collect($projects)
+                    ->pluck('title')
+                    ->values()
+                    ->all() === ['React System', 'Vue System']));
     }
 
     public function test_published_project_detail_is_visible(): void

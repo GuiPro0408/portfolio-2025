@@ -17,6 +17,17 @@ export default function Show({ project, contact }) {
     const metaDescription =
         project.summary ??
         'Detailed case study of a delivered software project.';
+    const canonicalUrl = route('projects.show', project.slug);
+
+    const structuredData = {
+        '@context': 'https://schema.org',
+        '@type': 'CreativeWork',
+        name: project.title,
+        description: metaDescription,
+        url: canonicalUrl,
+        image: project.cover_image_url ?? undefined,
+        keywords: tags.length > 0 ? tags.join(', ') : undefined,
+    };
 
     return (
         <>
@@ -28,6 +39,10 @@ export default function Show({ project, contact }) {
                 />
                 <meta property="og:description" content={metaDescription} />
                 <meta name="twitter:card" content="summary" />
+                <link rel="canonical" href={canonicalUrl} />
+                <script type="application/ld+json">
+                    {JSON.stringify(structuredData)}
+                </script>
             </Head>
 
             <PublicLayout contact={contact}>

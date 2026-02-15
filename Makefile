@@ -1,4 +1,4 @@
-.PHONY: setup setup-ci ensure-deps dev check check-docker format test build
+.PHONY: setup setup-ci ensure-deps dev check docs-check check-docker format test build analyse
 
 setup:
 	composer install --prefer-dist --no-interaction
@@ -20,8 +20,15 @@ dev: ensure-deps
 check:
 	composer validate --strict
 	composer run lint:php
+	composer run lint:static
 	composer test
 	npm run build
+
+analyse:
+	composer run lint:static
+
+docs-check:
+	./scripts/check-docs.sh
 
 check-docker:
 	docker compose exec -T app composer validate --strict

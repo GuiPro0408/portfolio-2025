@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectFlagsRequest;
 use App\Http\Requests\UpdateProjectRequest;
+use App\Http\Requests\UpdateProjectSortRequest;
 use App\Models\Project;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -126,6 +128,30 @@ class ProjectController extends Controller
             ->with('success', 'Project deleted successfully.');
     }
 
+    public function duplicate(Project $project)
+    {
+        $copy = $project->replicate();
+        $copy->title = $project->title.' (Copy)';
+        $copy->slug = $this->generateUniqueCopySlug($project->slug);
+        $copy->is_featured = false;
+        $copy->is_published = false;
+        $copy->published_at = null;
+        $copy->save();
+
+        return redirect()
+            ->route('dashboard.projects.edit', $copy)
+            ->with('success', 'Project duplicated successfully.');
+    }
+
+    public function updateSort(UpdateProjectSortRequest $request, Project $project)
+    {
+        $project->update([
+            'sort_order' => $request->validated('sort_order'),
+        ]);
+
+        return back()->with('success', 'Project sort order updated.');
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -175,5 +201,19 @@ class ProjectController extends Controller
             'title_desc' => $query->orderByDesc('title'),
             default => $query->orderBy('sort_order')->orderByDesc('updated_at'),
         };
+    }
+
+    private function generateUniqueCopySlug(string $originalSlug): string
+    {
+        $baseSlug = Str::slug($originalSlug).'-copy';
+        $slug = $baseSlug;
+        $counter = 2;
+
+        while (Project::query()->where('slug', $slug)->exists()) {
+            $slug = "{$baseSlug}-{$counter}";
+            $counter++;
+        }
+
+        return $slug;
     }
 }

@@ -40,7 +40,9 @@
 .brand-link {
     font-family: 'Sora', sans-serif;
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 1.12rem;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
 }
 
 .public-nav {
@@ -49,12 +51,12 @@
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 0.75rem;
-    font-size: 0.95rem;
+    font-size: var(--fs-body-sm);
 }
 
 .nav-link {
     color: var(--muted);
-    font-weight: 600;
+    font-weight: 650;
     text-decoration: none;
     transition: color 0.2s ease;
 
@@ -66,10 +68,29 @@
 .nav-cta {
     text-decoration: none;
     padding: 0.45rem 0.85rem;
-    border: 1px solid var(--border);
+    border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
     border-radius: 999px;
-    font-weight: 600;
-    background: var(--surface);
+    font-weight: 700;
+    font-size: var(--fs-body-sm);
+    color: #dce7ff;
+    background:
+        linear-gradient(140deg, rgba(132, 167, 255, 0.22), rgba(84, 123, 225, 0.14)),
+        linear-gradient(180deg, rgba(23, 36, 64, 0.92), rgba(16, 25, 44, 0.92));
+    box-shadow: inset 0 1px 0 rgba(175, 201, 255, 0.14), 0 8px 20px rgba(11, 22, 48, 0.35);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease,
+        filter 0.2s ease;
+
+    &:hover {
+        transform: translateY(-1px);
+        border-color: color-mix(in srgb, var(--accent) 70%, #d6e5ff);
+        box-shadow: inset 0 1px 0 rgba(196, 216, 255, 0.2), 0 12px 24px rgba(42, 78, 168, 0.35);
+        filter: saturate(1.1);
+    }
+
+    &:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--accent) 82%, #ffffff);
+        outline-offset: 2px;
+    }
 }
 
 .section-block {
@@ -86,22 +107,24 @@
 .section-eyebrow {
     margin: 0;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 0.75rem;
+    letter-spacing: 0.11em;
+    font-size: var(--fs-meta);
     font-weight: 700;
-    color: var(--muted);
+    color: #afbddb;
 }
 
 .section-title {
     margin: 0;
-    font-size: clamp(1.7rem, 3vw, 2.3rem);
-    line-height: 1.15;
+    font-size: var(--fs-h2);
+    line-height: 1.08;
+    letter-spacing: -0.018em;
 }
 
 .section-description {
     margin: 0;
     max-width: 55ch;
-    font-size: 1.05rem;
+    font-size: var(--fs-body-lg);
+    line-height: 1.52;
     color: var(--muted);
 }
 
@@ -117,9 +140,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    font-size: 0.95rem;
+    font-size: var(--fs-body-sm);
     font-weight: 700;
-    text-decoration: underline;
     text-underline-offset: 3px;
     color: var(--accent);
 }
@@ -131,7 +153,7 @@
     justify-content: center;
     border-radius: 0.65rem;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: var(--fs-body-sm);
     text-decoration: none;
     padding: 0.65rem 1rem;
     border: 1px solid transparent;
@@ -175,7 +197,7 @@
 .public-footer-copy {
     margin: 0;
     color: var(--muted);
-    font-size: 0.92rem;
+    font-size: var(--fs-body-sm);
 }
 
 .public-footer-links {
@@ -187,7 +209,7 @@
         text-decoration: none;
         font-weight: 700;
         color: var(--muted);
-        font-size: 0.92rem;
+        font-size: var(--fs-body-sm);
 
         &:hover {
             color: var(--text);

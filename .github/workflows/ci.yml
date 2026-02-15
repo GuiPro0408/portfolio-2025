@@ -20,7 +20,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: pdo, pgsql, pdo_pgsql
+          extensions: pdo, pgsql, pdo_pgsql, sqlite, pdo_sqlite
           coverage: none
 
       - name: Get Composer Cache Directory
@@ -43,5 +43,49 @@ jobs:
       - name: Install dependencies (harness)
         run: make setup-ci
 
+      - name: Validate docs harness
+        run: make docs-check
+
       - name: Run harness checks
         run: make check
+
+  playwright:
+    runs-on: ubuntu-latest
+    env:
+      COMPOSER_NO_INTERACTION: 1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, sqlite, pdo_sqlite
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: make setup-ci
+
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi --force
+          touch database/database.sqlite
+          php artisan migrate:fresh --seed --force
+          npm run build
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright smoke tests
+        env:
+          APP_URL: http://127.0.0.1:8000
+        run: npm run test:e2e

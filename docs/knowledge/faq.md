@@ -29,3 +29,14 @@ Add a new ADR under `docs/decisions/` using sequential numbering (`0004-...`, `0
 
 ## 6) Which docs are canonical vs historical?
 Canonical docs are in `docs/` (except `docs/archive/`). Files in `docs/archive/` are historical and non-canonical.
+
+## 7) What PHP checker should I run with VS Code?
+Use the repository checker:
+```bash
+make analyse
+```
+It runs Larastan/PHPStan with Laravel-aware rules.
+
+Recommended VS Code extensions:
+- PHP Tools (`DEVSENSE.phptools-vscode`) or
+- Intelephense (`bmewburn.vscode-intelephense-client`)

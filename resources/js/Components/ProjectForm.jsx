@@ -29,6 +29,24 @@ function FieldHelp({ children }) {
     return <p className="dashboard-field-help">{children}</p>;
 }
 
+function ToggleField({ id, label, checked, onChange }) {
+    return (
+        <button
+            id={id}
+            type="button"
+            role="switch"
+            aria-checked={checked}
+            className="dashboard-switch-field"
+            onClick={() => onChange(!checked)}
+        >
+            <span className={`dashboard-switch-track ${checked ? 'is-on' : ''}`}>
+                <span className="dashboard-switch-thumb" />
+            </span>
+            <span>{label}</span>
+        </button>
+    );
+}
+
 export default function ProjectForm({
     data,
     setData,
@@ -176,39 +194,31 @@ export default function ProjectForm({
                 <div className="grid gap-5 md:grid-cols-2">
                     <div>
                         <InputLabel htmlFor="published_at" value="Published At" />
-                        <TextInput
+                        <input
                             id="published_at"
-                            type="datetime-local"
-                            className="mt-1 block w-full"
+                            type="date"
+                            className="dashboard-date-input mt-1 block w-full"
                             value={data.published_at}
                             onChange={(event) => setData('published_at', event.target.value)}
                         />
-                        <FieldHelp>When empty and “Published” is enabled, the current time is used.</FieldHelp>
+                        <FieldHelp>Pick a publication date. Leave empty to auto-use today when publishing.</FieldHelp>
                         <InputError className="mt-2" message={errors.published_at} />
                     </div>
 
                     <div className="dashboard-flag-grid">
-                        <label className="dashboard-toggle-field">
-                            <input
-                                id="is_featured"
-                                type="checkbox"
-                                className="dashboard-checkbox"
-                                checked={data.is_featured}
-                                onChange={(event) => setData('is_featured', event.target.checked)}
-                            />
-                            <span>Featured project</span>
-                        </label>
+                        <ToggleField
+                            id="is_featured"
+                            label="Featured project"
+                            checked={data.is_featured}
+                            onChange={(nextValue) => setData('is_featured', nextValue)}
+                        />
 
-                        <label className="dashboard-toggle-field">
-                            <input
-                                id="is_published"
-                                type="checkbox"
-                                className="dashboard-checkbox"
-                                checked={data.is_published}
-                                onChange={(event) => setData('is_published', event.target.checked)}
-                            />
-                            <span>Published project</span>
-                        </label>
+                        <ToggleField
+                            id="is_published"
+                            label="Published project"
+                            checked={data.is_published}
+                            onChange={(nextValue) => setData('is_published', nextValue)}
+                        />
                     </div>
                 </div>
             </section>

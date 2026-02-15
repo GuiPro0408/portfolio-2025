@@ -1,3 +1,4 @@
+import '../../css/styles/contact-page.css';
 import InputError from '@/Components/InputError';
 import PublicLayout from '@/Layouts/PublicLayout';
 import { Link } from '@inertiajs/react';

@@ -1,3 +1,4 @@
+import '../../css/styles/dashboard-theme.css';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import ToastStack from '@/Components/Dashboard/ToastStack';
 import Dropdown from '@/Components/Dropdown';

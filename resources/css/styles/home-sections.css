@@ -303,6 +303,65 @@
     padding: 0.58rem 1rem;
 }
 
+.active-filter-criteria {
+    margin-top: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.active-filter-chips {
+    list-style: none;
+    display: flex;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+}
+
+.active-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border));
+    background: color-mix(in srgb, var(--accent-soft) 58%, transparent);
+    color: #d9e6ff;
+    font-size: var(--fs-meta);
+    font-weight: 700;
+    padding: 0.22rem 0.58rem;
+}
+
+.active-filter-chip-label {
+    color: color-mix(in srgb, #d9e6ff 82%, var(--muted));
+}
+
+.active-filter-chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    line-height: 1;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+}
+
+.active-filter-clear {
+    border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+    border-radius: 0.6rem;
+    background: rgba(17, 27, 47, 0.8);
+    color: #cadcff;
+    padding: 0.4rem 0.72rem;
+    font-size: var(--fs-body-sm);
+    font-weight: 700;
+}
+
 .project-card {
     overflow: hidden;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -319,6 +378,38 @@
     object-fit: cover;
     display: block;
     border-bottom: 1px solid var(--border);
+}
+
+.project-grid-skeleton .project-card {
+    min-height: 10.5rem;
+}
+
+.project-card-skeleton {
+    pointer-events: none;
+}
+
+.skeleton-line {
+    height: 0.75rem;
+    border-radius: 0.42rem;
+    background: linear-gradient(
+        90deg,
+        rgba(121, 148, 217, 0.14) 0%,
+        rgba(121, 148, 217, 0.32) 45%,
+        rgba(121, 148, 217, 0.14) 100%
+    );
+    background-size: 220% 100%;
+    animation: shimmer 1.5s linear infinite;
+    margin-top: 0.62rem;
+}
+
+.skeleton-title {
+    width: 70%;
+    height: 1rem;
+    margin-top: 0;
+}
+
+.skeleton-short {
+    width: 45%;
 }
 
 .project-card-body {

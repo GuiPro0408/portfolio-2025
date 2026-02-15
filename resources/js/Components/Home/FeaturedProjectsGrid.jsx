@@ -38,6 +38,8 @@ export default function FeaturedProjectsGrid({ projects, settings }) {
                 <Link
                     href={route('projects.index')}
                     className="section-inline-link section-inline-link-button"
+                    prefetch="hover"
+                    cacheFor="30s"
                 >
                     View all projects
                 </Link>
@@ -72,7 +74,11 @@ export default function FeaturedProjectsGrid({ projects, settings }) {
 
                                 <div className="project-card-body">
                                     <h3 className="project-card-title">
-                                        <Link href={route('projects.show', project.slug)}>
+                                        <Link
+                                            href={route('projects.show', project.slug)}
+                                            prefetch="hover"
+                                            cacheFor="30s"
+                                        >
                                             {project.title}
                                         </Link>
                                     </h3>
@@ -91,6 +97,8 @@ export default function FeaturedProjectsGrid({ projects, settings }) {
                                     <Link
                                         href={route('projects.show', project.slug)}
                                         className="project-link"
+                                        prefetch="hover"
+                                        cacheFor="30s"
                                     >
                                         View project
                                     </Link>

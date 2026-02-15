@@ -1,5 +1,7 @@
-import PublicLayout from '@/Layouts/PublicLayout';
+import ActiveFilterChips from '@/Components/Filters/ActiveFilterChips';
+import ListboxSelect from '@/Components/Filters/ListboxSelect';
 import SectionHeading from '@/Components/SectionHeading';
+import PublicLayout from '@/Layouts/PublicLayout';
 import {
     Listbox,
     ListboxButton,
@@ -7,7 +9,7 @@ import {
     ListboxOptions,
 } from '@headlessui/react';
 import { Head, Link, router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const defaultFilters = {
     q: '',
@@ -38,38 +40,6 @@ function parseFilterStack(stack) {
         .filter(Boolean);
 }
 
-function FilterSelect({ label, value, onChange, options }) {
-    const selectedOption =
-        options.find((option) => option.value === value) ?? options[0];
-
-    return (
-        <label className="projects-filter-label">
-            {label}
-            <Listbox value={selectedOption.value} onChange={onChange}>
-                <div className="projects-filter-select">
-                    <ListboxButton className="projects-filter-select-button">
-                        <span>{selectedOption.label}</span>
-                        <span className="projects-filter-select-icon" aria-hidden="true">
-                            ▾
-                        </span>
-                    </ListboxButton>
-                    <ListboxOptions className="projects-filter-options">
-                        {options.map((option) => (
-                            <ListboxOption
-                                key={option.value || 'all'}
-                                value={option.value}
-                                className="projects-filter-option"
-                            >
-                                {option.label}
-                            </ListboxOption>
-                        ))}
-                    </ListboxOptions>
-                </div>
-            </Listbox>
-        </label>
-    );
-}
-
 function StackMultiSelect({ selectedValues, onChange, options }) {
     const selectedLabels = options
         .filter((option) => selectedValues.includes(option.value))
@@ -88,7 +58,10 @@ function StackMultiSelect({ selectedValues, onChange, options }) {
                 <div className="projects-filter-select">
                     <ListboxButton className="projects-filter-select-button">
                         <span>{buttonLabel}</span>
-                        <span className="projects-filter-select-icon" aria-hidden="true">
+                        <span
+                            className="projects-filter-select-icon"
+                            aria-hidden="true"
+                        >
                             ▾
                         </span>
                     </ListboxButton>
@@ -109,74 +82,199 @@ function StackMultiSelect({ selectedValues, onChange, options }) {
     );
 }
 
+function ProjectSkeletonGrid() {
+    return (
+        <div className="project-grid project-grid-skeleton mt-8" aria-busy="true">
+            {Array.from({ length: 6 }).map((_, index) => (
+                <article
+                    key={`project-skeleton-${index}`}
+                    className="project-card card-surface project-card-skeleton"
+                >
+                    <div className="project-card-body">
+                        <div className="skeleton-line skeleton-title" />
+                        <div className="skeleton-line" />
+                        <div className="skeleton-line skeleton-short" />
+                    </div>
+                </article>
+            ))}
+        </div>
+    );
+}
+
 export default function Index({ projects, contact, filters, availableStacks }) {
     const initialFilters = { ...defaultFilters, ...(filters ?? {}) };
-    const stackOptions = availableStacks ?? [];
     const [query, setQuery] = useState(initialFilters.q);
     const [stack, setStack] = useState(parseFilterStack(initialFilters.stack));
     const [sort, setSort] = useState(initialFilters.sort);
+    const [isListLoading, setIsListLoading] = useState(false);
 
     useEffect(() => {
         setQuery(initialFilters.q);
         setStack(parseFilterStack(initialFilters.stack));
         setSort(initialFilters.sort);
+        setIsListLoading(false);
     }, [initialFilters.q, initialFilters.stack, initialFilters.sort]);
 
-    const visitWithFilters = (nextFilters) => {
+    const stackFilterOptions = useMemo(
+        () =>
+            (availableStacks ?? []).map((stackItem) => ({
+                value: stackItem,
+                label: stackItem,
+            })),
+        [availableStacks],
+    );
+
+    const sortFilterOptions = useMemo(
+        () => [
+            { value: 'editorial', label: 'Editorial' },
+            { value: 'newest', label: 'Newest' },
+            { value: 'oldest', label: 'Oldest' },
+        ],
+        [],
+    );
+
+    const sortLabelByValue = useMemo(
+        () =>
+            Object.fromEntries(
+                sortFilterOptions.map((option) => [option.value, option.label]),
+            ),
+        [sortFilterOptions],
+    );
+
+    const visitWithFilters = useCallback((nextFilters, options = {}) => {
         const queryParams = Object.fromEntries(
             Object.entries(nextFilters).filter(
                 ([, value]) => value !== '' && value !== null && value !== undefined,
             ),
         );
 
+        setIsListLoading(true);
+
         router.get(route('projects.index'), queryParams, {
+            only: ['projects', 'filters', 'availableStacks'],
+            preserveState: true,
+            preserveScroll: true,
+            replace: options.replace ?? true,
+            onFinish: () => setIsListLoading(false),
+        });
+    }, []);
+
+    const visitWithUrl = useCallback((url) => {
+        if (!url) {
+            return;
+        }
+
+        setIsListLoading(true);
+
+        router.visit(url, {
+            method: 'get',
+            only: ['projects', 'filters'],
             preserveState: true,
             preserveScroll: true,
             replace: true,
+            onFinish: () => setIsListLoading(false),
         });
-    };
+    }, []);
 
-    const submitFilters = (event) => {
-        event.preventDefault();
-        visitWithFilters({
-            q: query,
+    useEffect(() => {
+        const nextFilters = {
+            q: query.trim(),
             stack: stack.join(','),
             sort,
-        });
-    };
+        };
 
-    const resetFilters = () => {
+        const currentFilters = {
+            q: initialFilters.q,
+            stack: initialFilters.stack,
+            sort: initialFilters.sort,
+        };
+
+        if (JSON.stringify(nextFilters) === JSON.stringify(currentFilters)) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            visitWithFilters(nextFilters);
+        }, 300);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [query, stack, sort, initialFilters.q, initialFilters.stack, initialFilters.sort, visitWithFilters]);
+
+    const resetFilters = useCallback(() => {
         setQuery(defaultFilters.q);
         setStack([]);
         setSort(defaultFilters.sort);
         visitWithFilters(defaultFilters);
-    };
+    }, [visitWithFilters]);
+
+    const activeFilterChips = useMemo(() => {
+        const chips = [];
+
+        if (query.trim() !== '') {
+            chips.push({
+                key: 'q',
+                label: 'Search',
+                value: query.trim(),
+            });
+        }
+
+        stack.forEach((token) => {
+            chips.push({
+                key: `stack:${token}`,
+                label: 'Stack',
+                value: token,
+                token,
+            });
+        });
+
+        if (sort !== defaultFilters.sort) {
+            chips.push({
+                key: 'sort',
+                label: 'Sort',
+                value: sortLabelByValue[sort] ?? sort,
+            });
+        }
+
+        return chips;
+    }, [query, stack, sort, sortLabelByValue]);
+
+    const removeChip = useCallback((chip) => {
+        if (chip.key === 'q') {
+            setQuery('');
+            return;
+        }
+
+        if (chip.key === 'sort') {
+            setSort(defaultFilters.sort);
+            return;
+        }
+
+        if (chip.key.startsWith('stack:')) {
+            setStack((currentStack) =>
+                currentStack.filter((token) => token !== chip.token),
+            );
+        }
+    }, []);
 
     const metaDescription =
         'Published software projects showcasing delivery quality, architecture, and measurable outcomes.';
     const canonicalUrl = route('projects.index');
-    const stackFilterOptions = stackOptions.map((stackItem) => ({
-        value: stackItem,
-        label: stackItem,
-    }));
-    const sortFilterOptions = [
-        { value: 'editorial', label: 'Editorial' },
-        { value: 'newest', label: 'Newest' },
-        { value: 'oldest', label: 'Oldest' },
-    ];
 
-    const structuredData = {
-        '@context': 'https://schema.org',
-        '@type': 'CollectionPage',
-        name: 'Published Projects',
-        description: metaDescription,
-        url: canonicalUrl,
-        hasPart: projects.data.map((project) => ({
-            '@type': 'CreativeWork',
-            name: project.title,
-            url: route('projects.show', project.slug),
-        })),
-    };
+    const structuredData = useMemo(
+        () => ({
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            name: 'Published Projects',
+            description: metaDescription,
+            url: canonicalUrl,
+            hasPart: projects.data.map((project) => ({
+                '@type': 'CreativeWork',
+                name: project.title,
+                url: route('projects.show', project.slug),
+            })),
+        }),
+        [canonicalUrl, metaDescription, projects.data],
+    );
 
     return (
         <>
@@ -199,10 +297,7 @@ export default function Index({ projects, contact, filters, availableStacks }) {
                         description="A curated list of shipped work, ordered by editorial priority."
                     />
 
-                    <form
-                        onSubmit={submitFilters}
-                        className="projects-filter-form card-surface mt-6"
-                    >
+                    <div className="projects-filter-form card-surface mt-6">
                         <label className="projects-filter-label projects-filter-search">
                             Search
                             <input
@@ -220,19 +315,20 @@ export default function Index({ projects, contact, filters, availableStacks }) {
                             options={stackFilterOptions}
                         />
 
-                        <FilterSelect
+                        <ListboxSelect
                             label="Sort"
                             value={sort}
                             onChange={setSort}
                             options={sortFilterOptions}
+                            labelClassName="projects-filter-label"
+                            containerClassName="projects-filter-select"
+                            buttonClassName="projects-filter-select-button"
+                            iconClassName="projects-filter-select-icon"
+                            optionsClassName="projects-filter-options"
+                            optionClassName="projects-filter-option"
+                            ariaLabel="Sort projects"
                         />
 
-                        <button
-                            type="submit"
-                            className="button-primary projects-filter-action"
-                        >
-                            Apply
-                        </button>
                         <button
                             type="button"
                             onClick={resetFilters}
@@ -240,9 +336,17 @@ export default function Index({ projects, contact, filters, availableStacks }) {
                         >
                             Reset
                         </button>
-                    </form>
+                    </div>
 
-                    {projects.data.length === 0 ? (
+                    <ActiveFilterChips
+                        chips={activeFilterChips}
+                        onRemove={removeChip}
+                        onClearAll={resetFilters}
+                    />
+
+                    {isListLoading ? (
+                        <ProjectSkeletonGrid />
+                    ) : projects.data.length === 0 ? (
                         <p className="card-surface empty-note mt-8">
                             No published projects yet.
                         </p>
@@ -263,6 +367,8 @@ export default function Index({ projects, contact, filters, availableStacks }) {
                                                         'projects.show',
                                                         project.slug,
                                                     )}
+                                                    prefetch="hover"
+                                                    cacheFor="30s"
                                                 >
                                                     {project.title}
                                                 </Link>
@@ -293,6 +399,8 @@ export default function Index({ projects, contact, filters, availableStacks }) {
                                                     project.slug,
                                                 )}
                                                 className="project-link"
+                                                prefetch="hover"
+                                                cacheFor="30s"
                                             >
                                                 View project
                                             </Link>
@@ -312,20 +420,28 @@ export default function Index({ projects, contact, filters, availableStacks }) {
                         </p>
                         <div className="flex gap-3">
                             {projects.prev_page_url && (
-                                <Link
-                                    href={projects.prev_page_url}
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        visitWithUrl(projects.prev_page_url)
+                                    }
                                     className="button-secondary"
+                                    disabled={isListLoading}
                                 >
                                     Previous
-                                </Link>
+                                </button>
                             )}
                             {projects.next_page_url && (
-                                <Link
-                                    href={projects.next_page_url}
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        visitWithUrl(projects.next_page_url)
+                                    }
                                     className="button-secondary"
+                                    disabled={isListLoading}
                                 >
                                     Next
-                                </Link>
+                                </button>
                             )}
                         </div>
                     </nav>

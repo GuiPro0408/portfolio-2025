@@ -13,6 +13,7 @@ use App\Support\PublicCacheKeys;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -29,35 +30,8 @@ class ProjectController extends Controller
     {
         $filters = $this->normalizedFilters($request);
 
-        $projects = Project::query()
-            ->when($filters['q'] !== '', function ($query) use ($filters) {
-                $query->where(function ($searchQuery) use ($filters) {
-                    $searchQuery
-                        ->where('title', 'like', '%'.$filters['q'].'%')
-                        ->orWhere('slug', 'like', '%'.$filters['q'].'%');
-                });
-            })
-            ->when($filters['status'] !== 'all', function ($query) use ($filters) {
-                $query->where('is_published', $filters['status'] === 'published');
-            })
-            ->when($filters['featured'] !== 'all', function ($query) use ($filters) {
-                $query->where('is_featured', $filters['featured'] === 'featured');
-            })
-            ->tap(fn ($query) => $this->applySort($query, $filters['sort']))
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Project $project) => [
-                'id' => $project->id,
-                'title' => $project->title,
-                'slug' => $project->slug,
-                'is_published' => $project->is_published,
-                'is_featured' => $project->is_featured,
-                'sort_order' => $project->sort_order,
-                'updated_at' => $project->updated_at->toDateTimeString(),
-            ]);
-
         return Inertia::render('Dashboard/Projects/Index', [
-            'projects' => $projects,
+            'projects' => fn (): LengthAwarePaginator => $this->resolveProjectsPayload($filters),
             'filters' => $filters,
         ]);
     }
@@ -105,7 +79,7 @@ class ProjectController extends Controller
                 'live_url' => $project->live_url,
                 'is_featured' => $project->is_featured,
                 'is_published' => $project->is_published,
-                'published_at' => $project->published_at?->format('Y-m-d\TH:i'),
+                'published_at' => $project->published_at?->format('Y-m-d'),
                 'sort_order' => $project->sort_order,
             ],
         ]);
@@ -270,5 +244,38 @@ class ProjectController extends Controller
     private function technologyTablesReady(): bool
     {
         return Schema::hasTable('technologies') && Schema::hasTable('project_technology');
+    }
+
+    /**
+     * @param  array{q: string, status: string, featured: string, sort: string}  $filters
+     */
+    private function resolveProjectsPayload(array $filters): LengthAwarePaginator
+    {
+        return Project::query()
+            ->when($filters['q'] !== '', function ($query) use ($filters) {
+                $query->where(function ($searchQuery) use ($filters) {
+                    $searchQuery
+                        ->where('title', 'like', '%'.$filters['q'].'%')
+                        ->orWhere('slug', 'like', '%'.$filters['q'].'%');
+                });
+            })
+            ->when($filters['status'] !== 'all', function ($query) use ($filters) {
+                $query->where('is_published', $filters['status'] === 'published');
+            })
+            ->when($filters['featured'] !== 'all', function ($query) use ($filters) {
+                $query->where('is_featured', $filters['featured'] === 'featured');
+            })
+            ->tap(fn ($query) => $this->applySort($query, $filters['sort']))
+            ->paginate(15)
+            ->withQueryString()
+            ->through(fn (Project $project) => [
+                'id' => $project->id,
+                'title' => $project->title,
+                'slug' => $project->slug,
+                'is_published' => $project->is_published,
+                'is_featured' => $project->is_featured,
+                'sort_order' => $project->sort_order,
+                'updated_at' => $project->updated_at->toDateTimeString(),
+            ]);
     }
 }

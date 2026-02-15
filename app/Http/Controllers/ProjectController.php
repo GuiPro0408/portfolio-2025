@@ -8,6 +8,7 @@ use App\Models\Technology;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,30 +19,11 @@ class ProjectController extends Controller
     {
         $filters = $this->normalizedFilters($request);
         $technologyTablesReady = $this->technologyTablesReady();
-        $selectedStacks = $this->normalizeSelectedStacks($filters['stack']);
-
-        $query = Project::query()->published();
-
-        if ($technologyTablesReady) {
-            $query->with('technologies');
-        }
-
-        $this->applySearchFilter($query, $filters['q'], $technologyTablesReady);
-        $this->applyStackFilter($query, $selectedStacks, $technologyTablesReady);
-
-        $this->applySort($query, $filters['sort']);
-
-        $projects = $query
-            ->paginate(9)
-            ->withQueryString()
-            ->through(fn (Project $project) => $this->transformProjectCard($project));
-
-        $availableStacks = $this->resolveAvailableStacks($technologyTablesReady);
 
         return Inertia::render('Projects/Index', [
-            'projects' => $projects,
+            'projects' => fn (): LengthAwarePaginator => $this->resolveProjectsPayload($filters, $technologyTablesReady),
             'filters' => $filters,
-            'availableStacks' => $availableStacks,
+            'availableStacks' => fn (): array => $this->resolveAvailableStacks($technologyTablesReady),
             'contact' => $this->contactPayload(),
         ]);
     }
@@ -234,6 +216,28 @@ class ProjectController extends Controller
         }
 
         return $project->stack;
+    }
+
+    /**
+     * @param  array{q: string, stack: string, sort: string}  $filters
+     */
+    private function resolveProjectsPayload(array $filters, bool $technologyTablesReady): LengthAwarePaginator
+    {
+        $selectedStacks = $this->normalizeSelectedStacks($filters['stack']);
+        $query = Project::query()->published();
+
+        if ($technologyTablesReady) {
+            $query->with('technologies');
+        }
+
+        $this->applySearchFilter($query, $filters['q'], $technologyTablesReady);
+        $this->applyStackFilter($query, $selectedStacks, $technologyTablesReady);
+        $this->applySort($query, $filters['sort']);
+
+        return $query
+            ->paginate(9)
+            ->withQueryString()
+            ->through(fn (Project $project) => $this->transformProjectCard($project));
     }
 
     private function technologyTablesReady(): bool

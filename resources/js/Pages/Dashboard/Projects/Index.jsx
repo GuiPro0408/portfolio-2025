@@ -1,3 +1,4 @@
+import ActiveFilterChips from '@/Components/Filters/ActiveFilterChips';
 import DashboardPageHeader from '@/Components/Dashboard/DashboardPageHeader';
 import EmptyState from '@/Components/Dashboard/EmptyState';
 import FilterToolbar from '@/Components/Dashboard/FilterToolbar';
@@ -8,7 +9,7 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { Copy, LoaderCircle, PenSquare, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const defaultFilters = {
     q: '',
@@ -24,51 +25,161 @@ function formatUpdatedAt(dateString) {
     }).format(new Date(dateString));
 }
 
+function DashboardSkeletonRows() {
+    return (
+        <div className="dashboard-skeleton-rows" aria-busy="true">
+            {Array.from({ length: 8 }).map((_, index) => (
+                <div key={`dashboard-skeleton-${index}`} className="dashboard-skeleton-row">
+                    <div className="skeleton-line skeleton-title" />
+                    <div className="skeleton-line" />
+                    <div className="skeleton-line skeleton-short" />
+                </div>
+            ))}
+        </div>
+    );
+}
+
 export default function Index({ projects, filters }) {
     const initialFilters = { ...defaultFilters, ...(filters ?? {}) };
     const [query, setQuery] = useState(initialFilters.q);
+    const [status, setStatus] = useState(initialFilters.status);
+    const [featured, setFeatured] = useState(initialFilters.featured);
+    const [sort, setSort] = useState(initialFilters.sort);
+    const [isListLoading, setIsListLoading] = useState(false);
+    const [showListSkeleton, setShowListSkeleton] = useState(false);
+
     const [pendingRows, setPendingRows] = useState({});
     const [pendingSortRows, setPendingSortRows] = useState({});
     const [sortValues, setSortValues] = useState({});
     const [projectPendingDelete, setProjectPendingDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [pendingDuplicateId, setPendingDuplicateId] = useState(null);
+    const [isFilterAccordionOpen, setIsFilterAccordionOpen] = useState(true);
 
-    const visitWithFilters = (nextFilters) => {
+    useEffect(() => {
+        setQuery(initialFilters.q);
+        setStatus(initialFilters.status);
+        setFeatured(initialFilters.featured);
+        setSort(initialFilters.sort);
+        setIsListLoading(false);
+        setShowListSkeleton(false);
+    }, [initialFilters.q, initialFilters.status, initialFilters.featured, initialFilters.sort]);
+
+    useEffect(() => {
+        if (!isListLoading) {
+            setShowListSkeleton(false);
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            setShowListSkeleton(true);
+        }, 180);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [isListLoading]);
+
+    const statusOptions = useMemo(
+        () => [
+            { value: 'all', label: 'All statuses' },
+            { value: 'published', label: 'Published' },
+            { value: 'draft', label: 'Draft' },
+        ],
+        [],
+    );
+
+    const featuredOptions = useMemo(
+        () => [
+            { value: 'all', label: 'All featured states' },
+            { value: 'featured', label: 'Featured only' },
+            { value: 'not_featured', label: 'Not featured' },
+        ],
+        [],
+    );
+
+    const sortOptions = useMemo(
+        () => [
+            { value: 'sort_order_asc', label: 'Sort order' },
+            { value: 'updated_desc', label: 'Updated (newest)' },
+            { value: 'updated_asc', label: 'Updated (oldest)' },
+            { value: 'title_asc', label: 'Title (A-Z)' },
+            { value: 'title_desc', label: 'Title (Z-A)' },
+        ],
+        [],
+    );
+
+    const sortLabelByValue = useMemo(
+        () => Object.fromEntries(sortOptions.map((option) => [option.value, option.label])),
+        [sortOptions],
+    );
+
+    const statusLabelByValue = useMemo(
+        () =>
+            Object.fromEntries(statusOptions.map((option) => [option.value, option.label])),
+        [statusOptions],
+    );
+
+    const featuredLabelByValue = useMemo(
+        () =>
+            Object.fromEntries(
+                featuredOptions.map((option) => [option.value, option.label]),
+            ),
+        [featuredOptions],
+    );
+
+    const visitWithFilters = useCallback((nextFilters) => {
+        setIsListLoading(true);
+
         router.get(route('dashboard.projects.index'), nextFilters, {
+            only: ['projects', 'filters', 'flash'],
             preserveState: true,
             preserveScroll: true,
             replace: true,
+            onFinish: () => setIsListLoading(false),
         });
-    };
+    }, []);
 
-    const updateFilter = (key, value) => {
-        visitWithFilters({
-            ...initialFilters,
-            [key]: value,
-            q: query,
+    const visitWithUrl = useCallback((url) => {
+        if (!url) {
+            return;
+        }
+
+        setIsListLoading(true);
+
+        router.visit(url, {
+            method: 'get',
+            only: ['projects', 'filters', 'flash'],
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+            onFinish: () => setIsListLoading(false),
         });
-    };
-
-    const resetFilters = () => {
-        setQuery(defaultFilters.q);
-        visitWithFilters(defaultFilters);
-    };
+    }, []);
 
     useEffect(() => {
-        const timeoutId = window.setTimeout(() => {
-            if (query === initialFilters.q) {
-                return;
-            }
+        const nextFilters = {
+            q: query.trim(),
+            status,
+            featured,
+            sort,
+        };
 
-            visitWithFilters({
-                ...initialFilters,
-                q: query,
-            });
-        }, 320);
+        const currentFilters = {
+            q: initialFilters.q,
+            status: initialFilters.status,
+            featured: initialFilters.featured,
+            sort: initialFilters.sort,
+        };
+
+        if (JSON.stringify(nextFilters) === JSON.stringify(currentFilters)) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            visitWithFilters(nextFilters);
+        }, 300);
 
         return () => window.clearTimeout(timeoutId);
-    }, [query]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [query, status, featured, sort, initialFilters.q, initialFilters.status, initialFilters.featured, initialFilters.sort, visitWithFilters]);
 
     useEffect(() => {
         const nextSortValues = {};
@@ -80,7 +191,86 @@ export default function Index({ projects, filters }) {
         setSortValues(nextSortValues);
     }, [projects.data]);
 
-    const deleteProject = () => {
+    const updateFilter = useCallback((key, value) => {
+        if (key === 'status') {
+            setStatus(value);
+            return;
+        }
+
+        if (key === 'featured') {
+            setFeatured(value);
+            return;
+        }
+
+        if (key === 'sort') {
+            setSort(value);
+        }
+    }, []);
+
+    const resetFilters = useCallback(() => {
+        setQuery(defaultFilters.q);
+        setStatus(defaultFilters.status);
+        setFeatured(defaultFilters.featured);
+        setSort(defaultFilters.sort);
+        visitWithFilters(defaultFilters);
+    }, [visitWithFilters]);
+
+    const activeFilterChips = useMemo(() => {
+        const chips = [];
+
+        if (query.trim() !== '') {
+            chips.push({ key: 'q', label: 'Search', value: query.trim() });
+        }
+
+        if (status !== defaultFilters.status) {
+            chips.push({
+                key: 'status',
+                label: 'Status',
+                value: statusLabelByValue[status] ?? status,
+            });
+        }
+
+        if (featured !== defaultFilters.featured) {
+            chips.push({
+                key: 'featured',
+                label: 'Featured',
+                value: featuredLabelByValue[featured] ?? featured,
+            });
+        }
+
+        if (sort !== defaultFilters.sort) {
+            chips.push({
+                key: 'sort',
+                label: 'Sort',
+                value: sortLabelByValue[sort] ?? sort,
+            });
+        }
+
+        return chips;
+    }, [query, status, featured, sort, statusLabelByValue, featuredLabelByValue, sortLabelByValue]);
+
+    const removeChip = useCallback((chip) => {
+        if (chip.key === 'q') {
+            setQuery('');
+            return;
+        }
+
+        if (chip.key === 'status') {
+            setStatus(defaultFilters.status);
+            return;
+        }
+
+        if (chip.key === 'featured') {
+            setFeatured(defaultFilters.featured);
+            return;
+        }
+
+        if (chip.key === 'sort') {
+            setSort(defaultFilters.sort);
+        }
+    }, []);
+
+    const deleteProject = useCallback(() => {
         if (!projectPendingDelete) {
             return;
         }
@@ -95,9 +285,9 @@ export default function Index({ projects, filters }) {
                 setIsDeleting(false);
             },
         });
-    };
+    }, [projectPendingDelete]);
 
-    const toggleFlags = (project, updates) => {
+    const toggleFlags = useCallback((project, updates) => {
         setPendingRows((currentRows) => ({ ...currentRows, [project.id]: true }));
 
         router.patch(
@@ -117,9 +307,16 @@ export default function Index({ projects, filters }) {
                 },
             },
         );
-    };
+    }, []);
 
-    const saveSortOrder = (project) => {
+    const updateSortValue = useCallback((projectId, value) => {
+        setSortValues((currentValues) => ({
+            ...currentValues,
+            [projectId]: value,
+        }));
+    }, []);
+
+    const saveSortOrder = useCallback((project) => {
         const nextSortOrder = Number.parseInt(
             sortValues[project.id] ?? String(project.sort_order),
             10,
@@ -150,9 +347,9 @@ export default function Index({ projects, filters }) {
                 },
             },
         );
-    };
+    }, [sortValues]);
 
-    const duplicateProject = (project) => {
+    const duplicateProject = useCallback((project) => {
         setPendingDuplicateId(project.id);
 
         router.post(
@@ -165,7 +362,7 @@ export default function Index({ projects, filters }) {
                 },
             },
         );
-    };
+    }, []);
 
     return (
         <AuthenticatedLayout
@@ -174,7 +371,10 @@ export default function Index({ projects, filters }) {
                     title="Projects"
                     description="Search, filter, and update publication flags without leaving the table."
                     actions={
-                        <Link href={route('dashboard.projects.create')} className="dashboard-button-primary">
+                        <Link
+                            href={route('dashboard.projects.create')}
+                            className="dashboard-button-primary"
+                        >
                             New Project
                         </Link>
                     }
@@ -185,18 +385,65 @@ export default function Index({ projects, filters }) {
 
             <div className="py-10">
                 <div className="mx-auto max-w-7xl space-y-5 px-4 sm:px-6 lg:px-8">
-                    <FilterToolbar
-                        filters={{
-                            ...initialFilters,
-                            q: query,
-                        }}
-                        onQueryChange={setQuery}
-                        onFilterChange={updateFilter}
-                        onReset={resetFilters}
-                    />
+                    <section className="dashboard-filter-accordion dashboard-panel">
+                        <button
+                            type="button"
+                            className="dashboard-filter-accordion-trigger"
+                            onClick={() =>
+                                setIsFilterAccordionOpen(
+                                    (currentValue) => !currentValue,
+                                )
+                            }
+                            aria-expanded={isFilterAccordionOpen}
+                            aria-controls="dashboard-project-filters"
+                        >
+                            <span>Filters</span>
+                            <span className="dashboard-filter-accordion-meta">
+                                {activeFilterChips.length} active
+                            </span>
+                            <span
+                                className={`dashboard-filter-accordion-icon ${isFilterAccordionOpen ? 'is-open' : ''}`}
+                                aria-hidden="true"
+                            >
+                                ▾
+                            </span>
+                        </button>
+
+                        {isFilterAccordionOpen ? (
+                            <div
+                                id="dashboard-project-filters"
+                                className="dashboard-filter-accordion-content"
+                            >
+                                <FilterToolbar
+                                    filters={{
+                                        q: query,
+                                        status,
+                                        featured,
+                                        sort,
+                                    }}
+                                    statusOptions={statusOptions}
+                                    featuredOptions={featuredOptions}
+                                    sortOptions={sortOptions}
+                                    onQueryChange={setQuery}
+                                    onFilterChange={updateFilter}
+                                    onReset={resetFilters}
+                                />
+
+                                <ActiveFilterChips
+                                    chips={activeFilterChips}
+                                    onRemove={removeChip}
+                                    onClearAll={resetFilters}
+                                />
+                            </div>
+                        ) : null}
+                    </section>
 
                     <section className="dashboard-panel overflow-hidden">
-                        {projects.data.length === 0 ? (
+                        {showListSkeleton ? (
+                            <div className="p-4">
+                                <DashboardSkeletonRows />
+                            </div>
+                        ) : projects.data.length === 0 ? (
                             <EmptyState
                                 title="No matching projects"
                                 description="Try adjusting your filters or create a new project."
@@ -286,43 +533,20 @@ export default function Index({ projects, filters }) {
                                                                 type="number"
                                                                 min={0}
                                                                 value={
-                                                                    sortValues[
-                                                                        project
-                                                                            .id
-                                                                    ] ??
-                                                                    project.sort_order
+                                                                    sortValues[project.id] ??
+                                                                    String(project.sort_order)
                                                                 }
-                                                                onChange={(
-                                                                    event,
-                                                                ) =>
-                                                                    setSortValues(
-                                                                        (
-                                                                            currentValues,
-                                                                        ) => ({
-                                                                            ...currentValues,
-                                                                            [project.id]:
-                                                                                event
-                                                                                    .target
-                                                                                    .value,
-                                                                        }),
-                                                                    )
+                                                                onChange={(event) =>
+                                                                    updateSortValue(project.id, event.target.value)
                                                                 }
-                                                                className="w-20 rounded-md border border-slate-600 bg-slate-900 px-2 py-1 text-right text-sm text-slate-100"
-                                                                disabled={
-                                                                    isSortPending
-                                                                }
+                                                                className="dashboard-sort-input"
+                                                                disabled={isSortPending}
                                                             />
                                                             <button
                                                                 type="button"
                                                                 className="dashboard-toggle-btn"
-                                                                onClick={() =>
-                                                                    saveSortOrder(
-                                                                        project,
-                                                                    )
-                                                                }
-                                                                disabled={
-                                                                    isSortPending
-                                                                }
+                                                                onClick={() => saveSortOrder(project)}
+                                                                disabled={isSortPending}
                                                             >
                                                                 Save
                                                             </button>
@@ -345,15 +569,9 @@ export default function Index({ projects, filters }) {
                                                             </Link>
                                                             <button
                                                                 type="button"
-                                                                onClick={() =>
-                                                                    duplicateProject(
-                                                                        project,
-                                                                    )
-                                                                }
+                                                                onClick={() => duplicateProject(project)}
                                                                 className="dashboard-inline-action"
-                                                                disabled={
-                                                                    isDuplicatePending
-                                                                }
+                                                                disabled={isDuplicatePending}
                                                             >
                                                                 {isDuplicatePending ? (
                                                                     <LoaderCircle
@@ -362,20 +580,13 @@ export default function Index({ projects, filters }) {
                                                                         aria-hidden="true"
                                                                     />
                                                                 ) : (
-                                                                    <Copy
-                                                                        size={14}
-                                                                        aria-hidden="true"
-                                                                    />
+                                                                    <Copy size={14} aria-hidden="true" />
                                                                 )}
                                                                 Duplicate
                                                             </button>
                                                             <button
                                                                 type="button"
-                                                                onClick={() =>
-                                                                    setProjectPendingDelete(
-                                                                        project,
-                                                                    )
-                                                                }
+                                                                onClick={() => setProjectPendingDelete(project)}
                                                                 className="dashboard-inline-action dashboard-inline-action-danger"
                                                                 disabled={isPending}
                                                             >
@@ -402,14 +613,24 @@ export default function Index({ projects, filters }) {
                         </p>
                         <div className="flex gap-3">
                             {projects.prev_page_url ? (
-                                <Link href={projects.prev_page_url} className="dashboard-button-secondary">
+                                <button
+                                    type="button"
+                                    onClick={() => visitWithUrl(projects.prev_page_url)}
+                                    className="dashboard-button-secondary"
+                                    disabled={isListLoading}
+                                >
                                     Previous
-                                </Link>
+                                </button>
                             ) : null}
                             {projects.next_page_url ? (
-                                <Link href={projects.next_page_url} className="dashboard-button-secondary">
+                                <button
+                                    type="button"
+                                    onClick={() => visitWithUrl(projects.next_page_url)}
+                                    className="dashboard-button-secondary"
+                                    disabled={isListLoading}
+                                >
                                     Next
-                                </Link>
+                                </button>
                             ) : null}
                         </div>
                     </nav>

@@ -1,6 +1,7 @@
 # Deploy Runbook (Koyeb)
 
 This document is the canonical deployment reference for this repository.
+Deployment is currently deferred while active development continues on SQLite locally.
 
 ## Platform
 - Runtime: Docker (`Dockerfile`)

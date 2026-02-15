@@ -15,7 +15,8 @@ A modern portfolio application built with Laravel 12 + Breeze (React + Inertia.j
 - **Backend**: Laravel 12 (PHP 8.3)
 - **Frontend**: React + Vite + Inertia.js
 - **Starter Kit**: Laravel Breeze
-- **Database**: PostgreSQL
+- **Database (active development)**: SQLite
+- **Database (deferred deployment target)**: PostgreSQL
 - **Deployment**: Koyeb (Docker)
 - **CI**: GitHub Actions
 
@@ -57,7 +58,7 @@ If you prefer to install the toolchain locally, ensure you have:
 - PHP 8.3+
 - Composer 2
 - Node.js 20+
-- PostgreSQL (or SQLite for development)
+- SQLite (recommended)
 
 Then follow the usual Laravel flow:
 
@@ -76,10 +77,13 @@ Then follow the usual Laravel flow:
    cp .env.example .env
    php artisan key:generate
    ```
-4. Configure your database in `.env` (use SQLite for the quickest start):
+4. Configure your database in `.env` (SQLite-first local workflow):
    ```env
    DB_CONNECTION=sqlite
+   DB_DATABASE=/home/guillaume/code/GuiPro0408/portfolio-2025/database/database.sqlite
+   DB_URL=
    ```
+   Keep `DB_URL` empty during local SQLite development. When set, `DB_URL` overrides connection behavior.
 5. Run migrations:
    ```bash
    php artisan migrate
@@ -92,7 +96,10 @@ Then follow the usual Laravel flow:
 
 Visit `http://localhost:8000` (and `http://localhost:5173` for Vite) in your browser.
 
-## Deployment to Koyeb
+## Deployment to Koyeb (Deferred For Now)
+
+Koyeb/PostgreSQL deployment is intentionally deferred while active development continues on SQLite.
+Keep this section as the runbook for when deployment resumes.
 
 > **📝 Quick Start**: For a step-by-step deployment guide with screenshots, see [DEPLOYMENT.md](DEPLOYMENT.md).
 

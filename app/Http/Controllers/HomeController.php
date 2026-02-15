@@ -29,9 +29,9 @@ class HomeController extends Controller
         return Inertia::render('Welcome', [
             'featuredProjects' => $featuredProjects,
             'contact' => [
-                'email' => 'guillaume.juste0408@gmail.com',
-                'linkedin' => 'https://www.linkedin.com/in/guillaume-juste-developer/',
-                'github' => 'https://github.com/GuiPro0408',
+                'email' => config('portfolio.email'),
+                'linkedin' => config('portfolio.linkedin'),
+                'github' => config('portfolio.github'),
             ],
         ]);
     }

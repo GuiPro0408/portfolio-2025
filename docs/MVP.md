@@ -5,6 +5,10 @@ This document defines what ships first for the portfolio product.
 ## Goal
 Deliver a complete first vertical slice with public portfolio discovery and authenticated project management.
 
+## Active Development Mode
+- Local development database: SQLite
+- `DB_URL` must stay empty during SQLite-first local development because it overrides connection behavior.
+
 ## In Scope
 - Public homepage at `/` with intro, featured projects, and contact CTA.
 - Public project listing at `/projects`.
@@ -35,7 +39,7 @@ Deliver a complete first vertical slice with public portfolio discovery and auth
 - If published is disabled, clear `published_at`.
 
 ## Contact
-MVP contact CTA uses static links in frontend:
+MVP contact CTA uses backend-provided config values exposed to frontend props:
 - Email (`mailto`)
 - LinkedIn profile
 - GitHub profile

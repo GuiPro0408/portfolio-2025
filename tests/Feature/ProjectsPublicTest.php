@@ -13,6 +13,10 @@ class ProjectsPublicTest extends TestCase
 
     public function test_homepage_shows_only_featured_published_projects(): void
     {
+        config()->set('portfolio.email', 'contact@example.com');
+        config()->set('portfolio.linkedin', 'https://linkedin.com/in/example');
+        config()->set('portfolio.github', 'https://github.com/example');
+
         $featuredPublished = Project::factory()->published()->featured()->create([
             'title' => 'Featured Published',
         ]);
@@ -37,7 +41,10 @@ class ProjectsPublicTest extends TestCase
                 ->contains('Published But Not Featured') === false)
             ->where('featuredProjects', fn ($projects) => collect($projects)
                 ->pluck('title')
-                ->contains('Featured Draft') === false));
+                ->contains('Featured Draft') === false)
+            ->where('contact.email', 'contact@example.com')
+            ->where('contact.linkedin', 'https://linkedin.com/in/example')
+            ->where('contact.github', 'https://github.com/example'));
     }
 
     public function test_projects_index_lists_only_published_projects(): void

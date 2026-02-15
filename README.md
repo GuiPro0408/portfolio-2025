@@ -259,6 +259,7 @@ Pull requests are welcome! Please ensure:
 - `make check` passes locally
 - Docs in `docs/` are updated when behavior/workflow changes
 
+
 ## Support
 
 For issues or questions:

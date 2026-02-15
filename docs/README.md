@@ -7,6 +7,16 @@
 - [Quality](QUALITY.md): golden commands, check expectations, and CI parity.
 - [Deploy](DEPLOY.md): Koyeb deployment runbook, env var contract, and migration flow.
 
+## Knowledge Base
+- [FAQ](knowledge/faq.md): common process and workflow questions.
+- [Troubleshooting](knowledge/troubleshooting.md): common failure modes and fixes.
+- [Recipes](knowledge/recipes.md): repeatable implementation playbooks.
+
+## Architecture Decision Records (ADRs)
+- [0001 - Golden command](decisions/0001-golden-command.md): adopt `make check` as the quality gate.
+- [0002 - CI parity](decisions/0002-ci-parity.md): CI runs identical checks to local harness.
+- [0003 - Docker parity](decisions/0003-docker-parity.md): container workflows use `make check-docker`.
+
 ## Historical / Archived
 - [Archived portfolio overview](archive/portfolio-project-overview.md): deprecated Next.js-era planning document (non-canonical).
 

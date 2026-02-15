@@ -1,0 +1,110 @@
+.authenticated-theme-dark {
+    color: #e7edff;
+    background:
+        radial-gradient(circle at 0% 0%, #151f39 0, transparent 36%),
+        radial-gradient(circle at 100% 0%, #2a2038 0, transparent 30%), #0b1020;
+
+    & .bg-gray-100 {
+        background-color: #0b1020;
+    }
+
+    & .bg-white {
+        background-color: #121a2b;
+    }
+
+    & .border-gray-100 {
+        border-color: #24314d;
+    }
+
+    & .border-gray-200 {
+        border-color: #2b3652;
+    }
+
+    & .border-gray-300 {
+        border-color: #34415f;
+    }
+
+    & .text-gray-900 {
+        color: #eef3ff;
+    }
+
+    & .text-gray-800 {
+        color: #dde6ff;
+    }
+
+    & .text-gray-700 {
+        color: #c7d3f4;
+    }
+
+    & .text-gray-600 {
+        color: #a3b0d1;
+    }
+
+    & .text-gray-500 {
+        color: #8f9dbc;
+    }
+
+    & .text-gray-400 {
+        color: #7887ab;
+    }
+
+    & .shadow,
+    & .shadow-sm,
+    & .shadow-md,
+    & .shadow-xl {
+        box-shadow: 0 16px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    & .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+        border-color: #2b3652;
+    }
+
+    & .hover\:bg-gray-50:hover,
+    & .hover\:bg-gray-100:hover {
+        background-color: #1a2338;
+    }
+
+    & .focus\:bg-gray-50:focus,
+    & .focus\:bg-gray-100:focus {
+        background-color: #1a2338;
+    }
+
+    & .hover\:text-gray-700:hover,
+    & .hover\:text-gray-800:hover,
+    & .focus\:text-gray-700:focus,
+    & .focus\:text-gray-800:focus {
+        color: #f2f6ff;
+    }
+
+    & .hover\:border-gray-300:hover,
+    & .focus\:border-gray-300:focus {
+        border-color: #3a4a72;
+    }
+
+    & input[type="text"],
+    & input[type="email"],
+    & input[type="password"],
+    & input[type="url"],
+    & input[type="number"],
+    & textarea,
+    & select {
+        background-color: #0f172a;
+        color: #e7edff;
+        border-color: #334155;
+    }
+
+    & input::placeholder,
+    & textarea::placeholder {
+        color: #7f8fb4;
+    }
+
+    & input[type="checkbox"],
+    & input[type="radio"] {
+        background-color: #0f172a;
+        border-color: #334155;
+    }
+
+    & a {
+        color: inherit;
+    }
+}

@@ -1,6 +1,7 @@
 import '../css/app.css';
 import '../css/styles/animations.css';
 import '../css/styles/base.css';
+import '../css/styles/dashboard-theme.css';
 import '../css/styles/home-sections.css';
 import '../css/styles/public-layout.css';
 import './bootstrap';

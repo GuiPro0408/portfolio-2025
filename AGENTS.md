@@ -36,6 +36,7 @@ Docker parity:
 4. Add/update tests in `tests/Feature` or `tests/Unit`.
 5. Run `make check` before opening a PR.
 6. Update docs in `docs/` when behavior or workflow changes.
+7. Ask for explicit user permission before creating any commit.
 
 ## Definition Of Done
 - Behavior implemented with correct Laravel/Inertia boundary.

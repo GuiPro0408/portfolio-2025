@@ -1,12 +1,9 @@
 export const homeContent = {
-    hero: {
-        eyebrow: 'Full-Stack Web Developer',
-        title: 'I design and build web products that move real business goals.',
-        description:
-            'Mauritius-based engineer focused on clean architecture, practical delivery, and interfaces people actually enjoy using.',
-        primaryCta: 'Start a conversation',
-        secondaryCta: 'Explore projects',
-    },
+    heroBullets: [
+        'Clear architecture with delivery discipline',
+        'Product mindset from planning to release',
+        'Strong backend and frontend execution',
+    ],
     credibility: [
         'Based in Mauritius, collaborating globally',
         'Laravel + React with production-first thinking',
@@ -46,10 +43,4 @@ export const homeContent = {
                 'Use feedback and metrics to improve performance, UX, and product impact.',
         },
     ],
-    finalCta: {
-        title: 'Looking for a full-stack developer who ships with discipline?',
-        description:
-            'I am open to impactful product roles and freelance collaborations.',
-        button: 'Get in touch',
-    },
 };

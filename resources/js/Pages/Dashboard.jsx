@@ -34,12 +34,20 @@ export default function Dashboard({ metrics, recentProjects }) {
                             <h3 className="text-lg font-semibold text-gray-900">
                                 Recent updates
                             </h3>
-                            <Link
-                                href={route('dashboard.projects.index')}
-                                className="text-sm font-medium text-indigo-600 hover:underline"
-                            >
-                                Manage projects
-                            </Link>
+                            <div className="flex gap-4">
+                                <Link
+                                    href={route('dashboard.homepage.edit')}
+                                    className="text-sm font-medium text-indigo-600 hover:underline"
+                                >
+                                    Edit homepage
+                                </Link>
+                                <Link
+                                    href={route('dashboard.projects.index')}
+                                    className="text-sm font-medium text-indigo-600 hover:underline"
+                                >
+                                    Manage projects
+                                </Link>
+                            </div>
                         </div>
 
                         {recentProjects.length === 0 ? (

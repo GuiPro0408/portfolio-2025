@@ -1,20 +1,24 @@
+import ImagePlaceholder from '@/Components/Home/ImagePlaceholder';
 import { Link } from '@inertiajs/react';
+import { useState } from 'react';
 
-export default function HeroSection({ content, contact }) {
+export default function HeroSection({ settings, content, contact }) {
+    const [imageFailed, setImageFailed] = useState(false);
+
     return (
         <section className="public-shell section-block reveal">
             <div className="hero-grid card-surface">
                 <div>
-                    <p className="section-eyebrow">{content.eyebrow}</p>
-                    <h1 className="hero-title">{content.title}</h1>
-                    <p className="hero-description">{content.description}</p>
+                    <p className="section-eyebrow">{settings.hero_eyebrow}</p>
+                    <h1 className="hero-title">{settings.hero_headline}</h1>
+                    <p className="hero-description">{settings.hero_subheadline}</p>
 
                     <div className="hero-actions">
                         <a href={`mailto:${contact.email}`} className="button-primary">
-                            {content.primaryCta}
+                            {settings.hero_primary_cta_label}
                         </a>
                         <Link href={route('projects.index')} className="button-secondary">
-                            {content.secondaryCta}
+                            {settings.hero_secondary_cta_label}
                         </Link>
                     </div>
 
@@ -29,12 +33,24 @@ export default function HeroSection({ content, contact }) {
                     </div>
                 </div>
 
-                <aside className="hero-aside" aria-label="Value points">
-                    <p className="hero-aside-title">Why teams work with me</p>
+                <aside className="hero-aside" aria-label="Hero side panel">
+                    <p className="hero-aside-title">{settings.hero_side_title}</p>
+
+                    {!settings.hero_image_url || imageFailed ? (
+                        <ImagePlaceholder variant="hero" label="Studio Preview" />
+                    ) : (
+                        <img
+                            src={settings.hero_image_url}
+                            alt="Homepage hero visual"
+                            className="hero-media"
+                            onError={() => setImageFailed(true)}
+                        />
+                    )}
+
                     <ul className="hero-aside-list">
-                        <li>Clear architecture with delivery discipline</li>
-                        <li>Product mindset from planning to release</li>
-                        <li>Strong backend and frontend execution</li>
+                        {content.heroBullets.map((item) => (
+                            <li key={item}>{item}</li>
+                        ))}
                     </ul>
                 </aside>
             </div>

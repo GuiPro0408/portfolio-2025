@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\HomepageSettings;
 use App\Models\Project;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -13,6 +14,8 @@ class ProjectsPublicTest extends TestCase
 
     public function test_homepage_shows_only_featured_published_projects(): void
     {
+        HomepageSettings::query()->create(HomepageSettings::defaults());
+
         config()->set('portfolio.email', 'contact@example.com');
         config()->set('portfolio.linkedin', 'https://linkedin.com/in/example');
         config()->set('portfolio.github', 'https://github.com/example');
@@ -44,7 +47,9 @@ class ProjectsPublicTest extends TestCase
                 ->contains('Featured Draft') === false)
             ->where('contact.email', 'contact@example.com')
             ->where('contact.linkedin', 'https://linkedin.com/in/example')
-            ->where('contact.github', 'https://github.com/example'));
+            ->where('contact.github', 'https://github.com/example')
+            ->has('homepageSettings')
+            ->where('homepageSettings.hero_headline', HomepageSettings::defaults()['hero_headline']));
     }
 
     public function test_projects_index_lists_only_published_projects(): void

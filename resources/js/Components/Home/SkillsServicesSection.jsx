@@ -1,12 +1,16 @@
+import ImagePlaceholder from '@/Components/Home/ImagePlaceholder';
 import SectionHeading from '@/Components/SectionHeading';
+import { useState } from 'react';
 
-export default function SkillsServicesSection({ services, stack }) {
+export default function SkillsServicesSection({ services, stack, settings }) {
+    const [imageFailed, setImageFailed] = useState(false);
+
     return (
         <section className="public-shell section-block reveal" aria-label="Capabilities">
             <SectionHeading
                 eyebrow="Capabilities"
-                title="What I Build"
-                description="Practical product development from business idea to reliable release."
+                title={settings.capabilities_title}
+                description={settings.capabilities_subtitle}
             />
 
             <div className="capabilities-grid">
@@ -29,6 +33,19 @@ export default function SkillsServicesSection({ services, stack }) {
                         ))}
                     </ul>
                 </article>
+            </div>
+
+            <div className="capabilities-media-wrap">
+                {settings.capabilities_image_url && !imageFailed ? (
+                    <img
+                        src={settings.capabilities_image_url}
+                        alt="Capabilities section visual"
+                        className="section-media"
+                        onError={() => setImageFailed(true)}
+                    />
+                ) : (
+                    <ImagePlaceholder variant="section" label="Capabilities Visual" />
+                )}
             </div>
         </section>
     );

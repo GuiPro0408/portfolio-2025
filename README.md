@@ -20,6 +20,13 @@ A modern portfolio application built with Laravel 12 + Breeze (React + Inertia.j
 - **Deployment**: Koyeb (Docker)
 - **CI**: GitHub Actions
 
+## Current Product Surface
+
+- Public homepage, projects index, and project detail pages
+- Authenticated project CRUD under `/dashboard/projects`
+- Authenticated homepage content settings under `/dashboard/homepage`
+- Homepage contact links configured via env-backed `config/portfolio.php`
+
 ## Local Development
 
 ### Option A – Docker (no local PHP)

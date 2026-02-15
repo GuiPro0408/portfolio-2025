@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\HomepageSettingsController;
 use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
@@ -23,6 +24,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/projects/{project}/edit', [AdminProjectController::class, 'edit'])->name('dashboard.projects.edit');
     Route::put('/dashboard/projects/{project}', [AdminProjectController::class, 'update'])->name('dashboard.projects.update');
     Route::delete('/dashboard/projects/{project}', [AdminProjectController::class, 'destroy'])->name('dashboard.projects.destroy');
+    Route::get('/dashboard/homepage', [HomepageSettingsController::class, 'edit'])->name('dashboard.homepage.edit');
+    Route::put('/dashboard/homepage', [HomepageSettingsController::class, 'update'])->name('dashboard.homepage.update');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

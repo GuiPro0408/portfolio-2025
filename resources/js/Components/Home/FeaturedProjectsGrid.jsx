@@ -1,5 +1,7 @@
+import ImagePlaceholder from '@/Components/Home/ImagePlaceholder';
 import SectionHeading from '@/Components/SectionHeading';
 import { Link } from '@inertiajs/react';
+import { useState } from 'react';
 
 function toTags(stack) {
     if (!stack) {
@@ -13,14 +15,25 @@ function toTags(stack) {
         .slice(0, 3);
 }
 
-export default function FeaturedProjectsGrid({ projects }) {
+export default function FeaturedProjectsGrid({ projects, settings }) {
+    const [failedImages, setFailedImages] = useState({});
+    const imageOverrides = [
+        settings.featured_image_1_url,
+        settings.featured_image_2_url,
+        settings.featured_image_3_url,
+    ];
+
+    const handleImageError = (id) => {
+        setFailedImages((prev) => ({ ...prev, [id]: true }));
+    };
+
     return (
         <section className="public-shell section-block reveal" aria-label="Featured projects">
             <div className="section-header-row">
                 <SectionHeading
                     eyebrow="Selected Work"
-                    title="Featured Projects"
-                    description="A focused sample of recent work with product impact and clean implementation."
+                    title={settings.featured_section_title}
+                    description={settings.featured_section_subtitle}
                 />
                 <Link href={route('projects.index')} className="section-inline-link">
                     View all projects
@@ -31,21 +44,25 @@ export default function FeaturedProjectsGrid({ projects }) {
                 <p className="card-surface empty-note">No featured projects published yet.</p>
             ) : (
                 <div className="project-grid">
-                    {projects.map((project) => {
+                    {projects.map((project, index) => {
                         const tags = toTags(project.stack);
+                        const imageUrl = imageOverrides[index] || project.cover_image_url;
+                        const imageIsBroken = failedImages[project.id] === true;
 
                         return (
                             <article key={project.id} className="project-card card-surface">
-                                {project.cover_image_url ? (
+                                {imageUrl && !imageIsBroken ? (
                                     <img
-                                        src={project.cover_image_url}
+                                        src={imageUrl}
                                         alt={`${project.title} cover`}
                                         className="project-cover"
+                                        onError={() => handleImageError(project.id)}
                                     />
                                 ) : (
-                                    <div className="project-cover project-cover-fallback" aria-hidden="true">
-                                        <span>{project.title}</span>
-                                    </div>
+                                    <ImagePlaceholder
+                                        variant="featured"
+                                        label={project.title}
+                                    />
                                 )}
 
                                 <div className="project-card-body">

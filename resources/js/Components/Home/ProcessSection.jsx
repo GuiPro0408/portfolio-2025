@@ -1,12 +1,16 @@
+import ImagePlaceholder from '@/Components/Home/ImagePlaceholder';
 import SectionHeading from '@/Components/SectionHeading';
+import { useState } from 'react';
 
-export default function ProcessSection({ steps }) {
+export default function ProcessSection({ steps, settings }) {
+    const [imageFailed, setImageFailed] = useState(false);
+
     return (
         <section className="public-shell section-block reveal" aria-label="Work process">
             <SectionHeading
                 eyebrow="Process"
-                title="How I Work"
-                description="A lightweight, transparent process built for speed and quality."
+                title={settings.process_title}
+                description={settings.process_subtitle}
             />
 
             <ol className="process-grid">
@@ -18,6 +22,19 @@ export default function ProcessSection({ steps }) {
                     </li>
                 ))}
             </ol>
+
+            <div className="process-media-wrap">
+                {settings.process_image_url && !imageFailed ? (
+                    <img
+                        src={settings.process_image_url}
+                        alt="Process section visual"
+                        className="section-media"
+                        onError={() => setImageFailed(true)}
+                    />
+                ) : (
+                    <ImagePlaceholder variant="section" label="Process Visual" />
+                )}
+            </div>
         </section>
     );
 }

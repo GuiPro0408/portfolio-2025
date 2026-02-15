@@ -8,21 +8,32 @@ import PublicLayout from '@/Layouts/PublicLayout';
 import { homeContent } from '@/data/homeContent';
 import { Head } from '@inertiajs/react';
 
-export default function Welcome({ featuredProjects, contact }) {
+export default function Welcome({ featuredProjects, contact, homepageSettings }) {
     return (
         <>
             <Head title="Portfolio" />
 
             <PublicLayout contact={contact}>
-                <HeroSection content={homeContent.hero} contact={contact} />
+                <HeroSection
+                    settings={homepageSettings}
+                    content={homeContent}
+                    contact={contact}
+                />
                 <CredibilityStrip items={homeContent.credibility} />
-                <FeaturedProjectsGrid projects={featuredProjects} />
+                <FeaturedProjectsGrid
+                    projects={featuredProjects}
+                    settings={homepageSettings}
+                />
                 <SkillsServicesSection
                     services={homeContent.services}
                     stack={homeContent.stack}
+                    settings={homepageSettings}
                 />
-                <ProcessSection steps={homeContent.process} />
-                <HomeCtaSection content={homeContent.finalCta} contact={contact} />
+                <ProcessSection
+                    steps={homeContent.process}
+                    settings={homepageSettings}
+                />
+                <HomeCtaSection settings={homepageSettings} contact={contact} />
             </PublicLayout>
         </>
     );

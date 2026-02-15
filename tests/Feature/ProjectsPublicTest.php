@@ -243,6 +243,45 @@ class ProjectsPublicTest extends TestCase
                 }));
     }
 
+    public function test_projects_index_supports_multi_stack_filter(): void
+    {
+        Project::factory()->published()->create([
+            'title' => 'React System',
+            'stack' => 'Laravel, React',
+            'published_at' => '2026-02-01 10:00:00',
+            'sort_order' => 1,
+        ]);
+
+        Project::factory()->published()->create([
+            'title' => 'Vue System',
+            'stack' => 'Laravel, Vue',
+            'published_at' => '2026-01-01 10:00:00',
+            'sort_order' => 2,
+        ]);
+
+        Project::factory()->published()->create([
+            'title' => 'Svelte System',
+            'stack' => 'Laravel, Svelte',
+            'published_at' => '2025-01-01 10:00:00',
+            'sort_order' => 3,
+        ]);
+
+        $response = $this->get(route('projects.index', [
+            'stack' => 'React,Vue',
+            'sort' => 'newest',
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Projects/Index')
+                ->where('filters.stack', 'React,Vue')
+                ->where('projects.data', fn ($projects) => collect($projects)
+                    ->pluck('title')
+                    ->values()
+                    ->all() === ['React System', 'Vue System']));
+    }
+
     public function test_published_project_detail_is_visible(): void
     {
         $project = Project::factory()->published()->create();

@@ -4,6 +4,7 @@ import '../css/styles/base.css';
 import '../css/styles/dashboard-theme.css';
 import '../css/styles/home-sections.css';
 import '../css/styles/public-layout.css';
+import '../css/styles/contact-page.css';
 import './bootstrap';
 
 import { createInertiaApp } from '@inertiajs/react';

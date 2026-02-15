@@ -34,12 +34,17 @@ class ProjectController extends Controller
                     }
                 }
 
-                if ($filters['stack'] !== '') {
+                $selectedStacks = $this->parseStack($filters['stack']);
+
+                if ($selectedStacks !== []) {
                     $stackTokens = collect($this->parseStack($project->stack))
                         ->map(fn (string $token) => Str::lower($token))
                         ->all();
+                    $selectedStackTokens = collect($selectedStacks)
+                        ->map(fn (string $token) => Str::lower($token))
+                        ->all();
 
-                    if (! in_array(Str::lower($filters['stack']), $stackTokens, true)) {
+                    if (! collect($selectedStackTokens)->intersect($stackTokens)->isNotEmpty()) {
                         return false;
                     }
                 }

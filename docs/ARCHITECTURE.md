@@ -22,6 +22,7 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - Reusable UI components live in `resources/js/Components`.
 - App bootstrap and page resolution live in `resources/js/app.jsx`.
 - Global style tokens and section-level styles are split under `resources/css/styles/` to keep concerns maintainable.
+- CSS in `resources/css/styles/` must use nesting for selector relationships to keep style hierarchy explicit and reduce duplicated flat selectors.
 - Dashboard design primitives live under `resources/js/Components/Dashboard` and should be reused across authenticated pages.
 
 ## Data/Schema Boundaries

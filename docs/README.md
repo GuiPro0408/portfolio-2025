@@ -6,6 +6,7 @@
 - [Architecture](ARCHITECTURE.md): Laravel/Inertia boundaries and code placement rules.
 - [Quality](QUALITY.md): golden commands, check expectations, and CI parity.
 - [Deploy](DEPLOY.md): Koyeb deployment runbook, env var contract, and migration flow.
+- [MVP v1](MVP.md): first-shipping scope, data model, and acceptance criteria.
 
 ## Knowledge Base
 - [FAQ](knowledge/faq.md): common process and workflow questions.

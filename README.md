@@ -2,6 +2,14 @@
 
 A modern portfolio application built with Laravel 12 + Breeze (React + Inertia.js) stack, ready for deployment on Koyeb.
 
+## Canonical Documentation
+
+`docs/` is the system of record for this repository:
+- [Docs index](docs/README.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Quality harness](docs/QUALITY.md)
+- [Deploy runbook](docs/DEPLOY.md)
+
 ## Stack
 
 - **Backend**: Laravel 12 (PHP 8.3)
@@ -166,11 +174,9 @@ The default Breeze authentication is available at:
 ## CI/CD
 
 GitHub Actions workflow automatically:
-- Validates Composer configuration
 - Installs PHP and npm dependencies
-- Runs PHP linter (Pint)
-- Builds frontend assets
-- Runs PHPUnit tests
+- Runs the golden check command: `make check`
+- Enforces composer validation, Pint linting, backend tests, and frontend build
 
 The workflow runs on every push and pull request to the `main` branch.
 
@@ -205,6 +211,17 @@ The workflow runs on every push and pull request to the `main` branch.
 
 ## Available Commands
 
+### Harness (Golden Commands)
+
+```bash
+make setup      # Install PHP + Node dependencies
+make dev        # Start native development workflow (composer run dev)
+make check      # Validate + lint + test + frontend build (CI parity)
+make format     # Auto-fix PHP formatting (Pint)
+make test       # Run backend tests
+make build      # Build frontend assets
+```
+
 ### Backend (Laravel)
 
 ```bash
@@ -233,9 +250,8 @@ MIT License. See [LICENSE](LICENSE) for details.
 ## Contributing
 
 Pull requests are welcome! Please ensure:
-- Code follows PSR-12 standards (use `./vendor/bin/pint`)
-- Tests pass (`./vendor/bin/phpunit`)
-- Frontend builds successfully (`npm run build`)
+- `make check` passes locally
+- Docs in `docs/` are updated when behavior/workflow changes
 
 ## Support
 

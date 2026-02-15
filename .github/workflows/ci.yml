@@ -32,9 +32,6 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
-      - name: Validate composer.json and composer.lock
-        run: composer validate --strict
-
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
 
@@ -47,14 +44,5 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Build frontend assets
-        run: npm run build
-
-      - name: Run PHP Linter (Pint)
-        run: ./vendor/bin/pint --test
-
-      - name: Run PHPUnit tests
-        run: ./vendor/bin/phpunit
-        env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ':memory:'
+      - name: Run harness checks
+        run: make check

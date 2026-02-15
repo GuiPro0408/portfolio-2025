@@ -2,6 +2,8 @@
 
 This guide explains how to provision a working PHP/Laravel toolchain for the project inside WSL/Ubuntu when you do **not** have sudo access. The steps complement the high-level notes in `README.md`.
 
+> Canonical architecture/quality/deploy guidance lives in `docs/`: start with [docs/README.md](docs/README.md).
+
 > Prefer using containers? The repository now ships with a `docker-compose.yml`. Follow the “Option A – Docker” section in `README.md` instead of the steps below.
 
 > The commands assume the repository lives at `~/code/GuiPro0408/portfolio-2025`. Adjust paths if yours differ.
@@ -139,5 +141,6 @@ Visit `http://localhost:8000` to access the application.
 - **Laravel Sail**: `./vendor/bin/sail up` (requires Docker Desktop)
 - **Code styling**: `./vendor/bin/pint`
 - **Test suite**: `./vendor/bin/phpunit`
+- **Harness checks**: `make check` (see [docs/QUALITY.md](docs/QUALITY.md))
 
 Keep `README.md` handy for deployment notes (Koyeb) and overall project structure.

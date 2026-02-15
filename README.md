@@ -22,6 +22,7 @@ A modern portfolio application built with Laravel 12 + Breeze (React + Inertia.j
 
 ## Current Product Surface
 
+- MVP v1 status: complete (February 15, 2026)
 - Public homepage, projects index, and project detail pages
 - Authenticated project CRUD under `/dashboard/projects`
 - Admin project list supports search/filter/sort and inline publish/feature toggles

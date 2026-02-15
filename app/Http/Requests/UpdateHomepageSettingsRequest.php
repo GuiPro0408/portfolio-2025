@@ -47,7 +47,7 @@ class UpdateHomepageSettingsRequest extends FormRequest
             }
 
             if ($this->isImageFilename($rawValue)) {
-                $normalized[$field] = '/images/homepage/' . $folder . '/' . $rawValue;
+                $normalized[$field] = '/images/homepage/'.$folder.'/'.$rawValue;
 
                 continue;
             }

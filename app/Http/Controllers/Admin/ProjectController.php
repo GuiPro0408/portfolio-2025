@@ -10,7 +10,8 @@ use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Requests\UpdateProjectSortRequest;
 use App\Models\Project;
 use App\Support\PublicCacheKeys;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
@@ -232,7 +233,10 @@ class ProjectController extends Controller
         ];
     }
 
-    private function applySort(Builder $query, string $sort): void
+    /**
+     * @param  EloquentBuilder<Project>|BaseBuilder  $query
+     */
+    private function applySort(EloquentBuilder|BaseBuilder $query, string $sort): void
     {
         match ($sort) {
             'updated_desc' => $query->orderByDesc('updated_at'),

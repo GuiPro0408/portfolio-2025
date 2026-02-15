@@ -1,0 +1,74 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/dev/php.Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    image: portfolio-2025-app
+    volumes:
+      - ./:/var/www/html
+      - vendor:/var/www/html/vendor
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: portfolio
+      DB_USERNAME: portfolio
+      DB_PASSWORD: secret
+      LOG_CHANNEL: stack
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  vite:
+    image: node:20-bullseye
+    working_dir: /var/www/html
+    command: ["sh", "/var/www/html/docker/dev/vite-entrypoint.sh"]
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "1"
+    volumes:
+      - ./:/var/www/html
+      - node_modules:/var/www/html/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - app
+    networks:
+      - app-network
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: portfolio
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: portfolio
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portfolio -d portfolio"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+volumes:
+  postgres-data:
+  node_modules:
+  vendor:
+
+networks:
+  app-network:
+    driver: bridge

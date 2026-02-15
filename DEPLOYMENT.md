@@ -1,5 +1,8 @@
 # Quick Start Guide for Koyeb Deployment
 
+> Canonical deployment runbook: [docs/DEPLOY.md](docs/DEPLOY.md).  
+> This file remains as a quick-start walkthrough.
+
 ## Prerequisites
 - GitHub account connected to Koyeb
 - Koyeb account (sign up at https://app.koyeb.com)

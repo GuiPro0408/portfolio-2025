@@ -2,6 +2,14 @@
 
 A modern portfolio application built with Laravel 12 + Breeze (React + Inertia.js) stack, ready for deployment on Koyeb.
 
+## Canonical Documentation
+
+`docs/` is the system of record for this repository:
+- [Docs index](docs/README.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Quality harness](docs/QUALITY.md)
+- [Deploy runbook](docs/DEPLOY.md)
+
 ## Stack
 
 - **Backend**: Laravel 12 (PHP 8.3)
@@ -13,56 +21,76 @@ A modern portfolio application built with Laravel 12 + Breeze (React + Inertia.j
 
 ## Local Development
 
-### Prerequisites
+### Option A – Docker (no local PHP)
+
+1. Install Docker Desktop (or Docker Engine + Compose plugin) and make sure it is running.
+2. Copy `.env.docker` to `.env` if you want to tweak the defaults before the first boot. The PHP container will otherwise copy it automatically.
+3. Build the images and start the stack:
+   ```bash
+   docker compose build
+   docker compose up
+   ```
+   The first startup installs Composer and npm dependencies into named volumes.
+4. Once the containers are up, run the database migrations:
+   ```bash
+   docker compose exec app php artisan migrate
+   ```
+5. Visit the services:
+   - App: `http://localhost:8000`
+   - Vite dev server with HMR: `http://localhost:5173`
+6. Run project commands through the containers, for example:
+   ```bash
+   docker compose exec app php artisan test
+   docker compose exec app ./vendor/bin/pint
+   docker compose exec app php artisan queue:listen
+   ```
+   For CI-parity checks in Docker:
+   ```bash
+   make check-docker
+   ```
+7. Stop everything with `Ctrl+C` (foreground) or `docker compose down` when you are done. The `vendor`, `node_modules`, and PostgreSQL data persist in named volumes.
+
+### Option B – Native toolchain
+
+If you prefer to install the toolchain locally, ensure you have:
 
 - PHP 8.3+
 - Composer 2
 - Node.js 20+
 - PostgreSQL (or SQLite for development)
 
-### Setup
+Then follow the usual Laravel flow:
 
 1. Clone the repository:
-```bash
-git clone https://github.com/GuiPro0408/portfolio-2025.git
-cd portfolio-2025
-```
-
+   ```bash
+   git clone https://github.com/GuiPro0408/portfolio-2025.git
+   cd portfolio-2025
+   ```
 2. Install dependencies:
-```bash
-composer install
-npm install
-```
-
-3. Copy environment file and generate application key:
-```bash
-cp .env.example .env
-php artisan key:generate
-```
-
-4. Configure your database in `.env` (use SQLite for quick start):
-```env
-DB_CONNECTION=sqlite
-```
-
+   ```bash
+   composer install
+   npm install
+   ```
+3. Copy environment file and generate the application key:
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+4. Configure your database in `.env` (use SQLite for the quickest start):
+   ```env
+   DB_CONNECTION=sqlite
+   ```
 5. Run migrations:
-```bash
-php artisan migrate
-```
+   ```bash
+   php artisan migrate
+   ```
+6. Start the dev servers:
+   ```bash
+   php artisan serve
+   npm run dev
+   ```
 
-6. Build frontend assets:
-```bash
-npm run dev
-# or for production build
-npm run build
-```
-
-7. Start the development server:
-```bash
-php artisan serve
-```
-
-Visit `http://localhost:8000` in your browser.
+Visit `http://localhost:8000` (and `http://localhost:5173` for Vite) in your browser.
 
 ## Deployment to Koyeb
 
@@ -150,11 +178,9 @@ The default Breeze authentication is available at:
 ## CI/CD
 
 GitHub Actions workflow automatically:
-- Validates Composer configuration
-- Installs PHP and npm dependencies
-- Runs PHP linter (Pint)
-- Builds frontend assets
-- Runs PHPUnit tests
+- Installs PHP and npm dependencies with `make setup-ci`
+- Runs the golden check command: `make check`
+- Enforces composer validation, Pint linting, backend tests, and frontend build
 
 The workflow runs on every push and pull request to the `main` branch.
 
@@ -189,6 +215,19 @@ The workflow runs on every push and pull request to the `main` branch.
 
 ## Available Commands
 
+### Harness (Golden Commands)
+
+```bash
+make setup      # Install PHP + Node dependencies
+make setup-ci   # Deterministic CI install (composer install + npm ci)
+make dev        # Start native development workflow (composer run dev)
+make check      # Validate + lint + test + frontend build (CI parity)
+make check-docker # Run parity checks through docker compose services
+make format     # Auto-fix PHP formatting (Pint)
+make test       # Run backend tests
+make build      # Build frontend assets
+```
+
 ### Backend (Laravel)
 
 ```bash
@@ -217,9 +256,8 @@ MIT License. See [LICENSE](LICENSE) for details.
 ## Contributing
 
 Pull requests are welcome! Please ensure:
-- Code follows PSR-12 standards (use `./vendor/bin/pint`)
-- Tests pass (`./vendor/bin/phpunit`)
-- Frontend builds successfully (`npm run build`)
+- `make check` passes locally
+- Docs in `docs/` are updated when behavior/workflow changes
 
 ## Support
 

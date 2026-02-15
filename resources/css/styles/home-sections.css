@@ -264,6 +264,95 @@
     margin-top: 1rem;
 }
 
+.services-offer-grid {
+    margin-top: 1.5rem;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.service-offer-card {
+    padding: 1rem;
+}
+
+.service-offer-title {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.service-offer-promise {
+    margin: 0.45rem 0 0;
+    color: var(--muted);
+    line-height: 1.5;
+    font-size: 0.95rem;
+}
+
+.service-offer-bullets {
+    margin: 0.65rem 0 0;
+    padding-left: 1rem;
+    color: var(--muted);
+    font-size: 0.86rem;
+    line-height: 1.65;
+}
+
+.deliverables-grid {
+    list-style: none;
+    margin: 0.85rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+
+    & li {
+        border: 1px solid var(--border);
+        border-radius: 0.6rem;
+        padding: 0.48rem 0.6rem;
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: var(--muted);
+        background: rgba(26, 42, 78, 0.18);
+    }
+}
+
+.stack-clusters {
+    margin-top: 0.8rem;
+    display: grid;
+    gap: 0.8rem;
+}
+
+.capability-cluster-title {
+    margin: 0;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.capability-kpi-strip {
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0.65rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    display: grid;
+    gap: 0.55rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    background: rgba(26, 42, 78, 0.14);
+
+    & li {
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: #bcd0ff;
+    }
+}
+
+.capabilities-media-caption {
+    margin: 0.5rem 0 0;
+    color: var(--muted);
+    font-size: 0.84rem;
+    font-style: italic;
+}
+
 .process-grid {
     list-style: none;
     margin: 1.5rem 0 0;

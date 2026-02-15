@@ -25,8 +25,10 @@ export default function Welcome({ featuredProjects, contact, homepageSettings })
                     settings={homepageSettings}
                 />
                 <SkillsServicesSection
-                    services={homeContent.services}
-                    stack={homeContent.stack}
+                    serviceOffers={homeContent.serviceOffers}
+                    deliverables={homeContent.deliverables}
+                    stackGroups={homeContent.stackGroups}
+                    capabilityKpis={homeContent.capabilityKpis}
                     settings={homepageSettings}
                 />
                 <ProcessSection

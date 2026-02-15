@@ -10,21 +10,43 @@ export const homeContent = {
         'Fast iteration cycles with clear communication',
         'From idea to shipped feature with measurable outcomes',
     ],
-    services: [
-        'Product-focused web application development',
-        'Backoffice and admin workflows with Laravel/Inertia',
-        'API design, validation, and reliable data flows',
-        'UI modernization and maintainable frontend architecture',
+    serviceOffers: [
+        {
+            title: 'Build new product',
+            promise: 'From idea to first production release with clear scope.',
+            bullets: ['MVP architecture', 'Ship-ready foundations'],
+        },
+        {
+            title: 'Modernize existing app',
+            promise: 'Improve UX and maintainability without risky rewrites.',
+            bullets: ['Incremental refactor', 'Interface refresh'],
+        },
+        {
+            title: 'Stabilize and scale backend',
+            promise: 'Harden data flows and performance for growth.',
+            bullets: ['API reliability', 'Operational guardrails'],
+        },
+        {
+            title: 'Fractional delivery support',
+            promise: 'Plug into your roadmap with practical weekly execution.',
+            bullets: ['Transparent progress', 'Outcome-focused iterations'],
+        },
     ],
-    stack: [
-        'Laravel',
-        'React',
-        'Inertia.js',
-        'PostgreSQL',
-        'SQLite',
-        'Tailwind CSS',
-        'Docker',
-        'GitHub Actions',
+    deliverables: [
+        'Architecture blueprint',
+        'MVP delivery plan',
+        'Admin workflow setup',
+        'Production release checklist',
+    ],
+    stackGroups: {
+        frontend: ['React', 'Inertia.js', 'Tailwind CSS'],
+        backend: ['Laravel', 'API design', 'Validation'],
+        dataDevops: ['PostgreSQL', 'SQLite', 'Docker', 'GitHub Actions'],
+    },
+    capabilityKpis: [
+        'Fast onboarding',
+        'Clear weekly delivery',
+        'Production-first quality',
     ],
     process: [
         {

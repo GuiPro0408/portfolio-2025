@@ -9,6 +9,7 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - Validation belongs in Form Requests (`app/Http/Requests`) when reusable or non-trivial.
 - Shared Inertia props are defined in `app/Http/Middleware/HandleInertiaRequests.php`.
 - Flash feedback for authenticated UI is shared via Inertia `flash.success` / `flash.error` props.
+- Public page controllers should pass a consistent `contact` prop contract when rendering pages using `PublicLayout`.
 
 ## Business Logic Placement
 - Keep controllers thin: parsing input, auth checks, orchestration only.
@@ -33,6 +34,7 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - Public controllers map model-backed content to explicit Inertia props.
 - Dashboard settings flows use Form Requests for validation and thin controllers for update orchestration.
 - Project list workflow enhancements (search/filter/sort/inline flag updates) belong in admin controllers with explicit query contracts and validated toggle requests.
+- Homepage settings request normalization handles friendly image inputs (filename-only values) and maps them to app-local asset paths before persistence.
 
 ## Where To Put New Code
 - New route: add in `routes/*.php`.

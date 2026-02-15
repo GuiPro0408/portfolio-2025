@@ -65,6 +65,17 @@ MVP contact CTA uses backend-provided config values exposed to frontend props:
 ## Homepage Content Management
 - Homepage primary copy and section image URLs are managed from `/dashboard/homepage`.
 - Missing image URLs use frontend placeholders; no media upload pipeline is part of MVP.
+- Homepage image inputs accept:
+  - absolute URLs (`https://...`)
+  - app paths (`/images/...`)
+  - filename-only values (`*.webp`, `*.png`, etc.) normalized to `/images/homepage/{folder}/...`.
+
+## Public Navigation Consistency
+- Public header/footer use shared `PublicLayout` contract across:
+  - `/`
+  - `/projects`
+  - `/projects/{slug}`
+- Contact CTA visibility depends on `contact` prop from backend on all public pages.
 
 ## Definition Of Done
 - Public pages and admin CRUD routes implemented.

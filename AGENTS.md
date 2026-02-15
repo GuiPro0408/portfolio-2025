@@ -17,17 +17,17 @@ Use this file as the working contract for agents in this repository.
 
 ## Golden Commands
 - `make setup`: install PHP and Node dependencies.
+- `make setup-ci`: deterministic CI install (`composer install` + `npm ci`).
 - `make dev`: run local dev stack (`composer run dev`).
 - `make check`: validate + lint + test + frontend build (CI parity).
+- `make check-docker`: run the same check set through Docker services.
 - `make format`: auto-format PHP with Pint.
 - `make test`: run backend tests.
 - `make build`: build frontend assets.
 
-Docker parity checks:
-- `docker compose exec app composer validate --strict`
-- `docker compose exec app composer run lint:php`
-- `docker compose exec app composer test`
-- `docker compose exec vite npm run build`
+Docker parity:
+- Start stack: `docker compose up -d`
+- Run parity checks: `make check-docker`
 
 ## Safe Feature Workflow
 1. Confirm boundaries in `docs/ARCHITECTURE.md`.
@@ -41,5 +41,6 @@ Docker parity checks:
 - Behavior implemented with correct Laravel/Inertia boundary.
 - Tests added/updated for changed behavior.
 - `make check` passes locally.
+- `make check-docker` passes when Docker workflow is used.
 - CI uses the same check path (`make check`) and passes.
 - Docs remain accurate, with `docs/` as canonical source.

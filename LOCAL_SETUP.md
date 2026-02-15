@@ -12,7 +12,7 @@ This guide explains how to provision a working PHP/Laravel toolchain for the pro
 
 - PHP 8.3 CLI with extensions: `phar`, `iconv`, `fileinfo`, `tokenizer`, `dom`, `simplexml`, `xml`, `xmlreader`, `xmlwriter`
 - Composer 2.x
-- Node.js 20.x (via `nvm` or the Node installer)
+- Node.js 20.x (via `nvm` using `.nvmrc`, or the Node installer)
 - npm 10.x (bundled with Node 20)
 
 If you already have system PHP via apt (with sudo), you can skip to [Install project dependencies](#3-install-project-dependencies). Otherwise follow the next section to create a user-scoped PHP distribution.

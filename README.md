@@ -44,6 +44,10 @@ A modern portfolio application built with Laravel 12 + Breeze (React + Inertia.j
    docker compose exec app ./vendor/bin/pint
    docker compose exec app php artisan queue:listen
    ```
+   For CI-parity checks in Docker:
+   ```bash
+   make check-docker
+   ```
 7. Stop everything with `Ctrl+C` (foreground) or `docker compose down` when you are done. The `vendor`, `node_modules`, and PostgreSQL data persist in named volumes.
 
 ### Option B – Native toolchain
@@ -174,7 +178,7 @@ The default Breeze authentication is available at:
 ## CI/CD
 
 GitHub Actions workflow automatically:
-- Installs PHP and npm dependencies
+- Installs PHP and npm dependencies with `make setup-ci`
 - Runs the golden check command: `make check`
 - Enforces composer validation, Pint linting, backend tests, and frontend build
 
@@ -215,8 +219,10 @@ The workflow runs on every push and pull request to the `main` branch.
 
 ```bash
 make setup      # Install PHP + Node dependencies
+make setup-ci   # Deterministic CI install (composer install + npm ci)
 make dev        # Start native development workflow (composer run dev)
 make check      # Validate + lint + test + frontend build (CI parity)
+make check-docker # Run parity checks through docker compose services
 make format     # Auto-fix PHP formatting (Pint)
 make test       # Run backend tests
 make build      # Build frontend assets

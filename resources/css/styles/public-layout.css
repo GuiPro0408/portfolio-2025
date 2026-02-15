@@ -1,8 +1,8 @@
 .public-page {
     position: relative;
     min-height: 100vh;
-    background: radial-gradient(circle at 0% 0%, #f3f7ff 0, transparent 40%),
-        radial-gradient(circle at 100% 0%, #fff1e6 0, transparent 28%),
+    background: radial-gradient(circle at 0% 0%, #1a2542 0, transparent 40%),
+        radial-gradient(circle at 100% 0%, #2a2038 0, transparent 28%),
         var(--bg);
     overflow-x: hidden;
 }
@@ -11,7 +11,7 @@
     position: absolute;
     inset: -20rem 0 auto;
     height: 28rem;
-    background: linear-gradient(95deg, rgba(31, 79, 213, 0.1), rgba(247, 245, 242, 0));
+    background: linear-gradient(95deg, rgba(91, 140, 255, 0.24), rgba(11, 16, 32, 0));
     pointer-events: none;
 }
 
@@ -25,7 +25,7 @@
     top: 0;
     z-index: 50;
     backdrop-filter: blur(8px);
-    background: rgba(247, 245, 242, 0.82);
+    background: rgba(11, 16, 32, 0.82);
     border-bottom: 1px solid var(--border);
 }
 
@@ -80,7 +80,7 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 1rem;
-    box-shadow: 0 20px 40px rgba(9, 15, 30, 0.04);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
 }
 
 .section-eyebrow {
@@ -148,7 +148,7 @@
 
 .button-primary {
     background: var(--accent);
-    color: #fff;
+    color: #081126;
 }
 
 .button-secondary {
@@ -160,7 +160,7 @@
 .public-footer {
     border-top: 1px solid var(--border);
     margin-top: 3.25rem;
-    background: rgba(255, 255, 255, 0.72);
+    background: rgba(8, 12, 22, 0.72);
 }
 
 .public-footer-inner {

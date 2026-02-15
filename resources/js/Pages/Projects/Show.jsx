@@ -43,7 +43,7 @@ export default function Show({ project }) {
                             />
                         )}
 
-                        <article className="prose prose-slate mt-8 max-w-none whitespace-pre-line leading-8">
+                        <article className="prose prose-invert mt-8 max-w-none whitespace-pre-line leading-8">
                             {project.body}
                         </article>
 

@@ -99,7 +99,7 @@
     border: 1px solid var(--border);
     display: grid;
     place-items: center;
-    color: #2b3350;
+    color: #c8d5ff;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     font-family: 'Sora', sans-serif;
@@ -111,7 +111,7 @@
 
 .image-placeholder-hero {
     aspect-ratio: 16 / 10;
-    background: linear-gradient(135deg, #e3ebff 0%, #f7f5f2 52%, #ffeede 100%);
+    background: linear-gradient(135deg, #243760 0%, #121a2b 52%, #2e2340 100%);
 }
 
 .image-placeholder-featured {
@@ -120,12 +120,12 @@
     border-bottom-right-radius: 0;
     margin-top: 0;
     border-bottom: 1px solid var(--border);
-    background: linear-gradient(155deg, #ebf1ff 0%, #f8f7f4 50%, #faebdf 100%);
+    background: linear-gradient(155deg, #213257 0%, #131b2d 50%, #30253f 100%);
 }
 
 .image-placeholder-section {
     aspect-ratio: 21 / 9;
-    background: linear-gradient(140deg, #edf2ff 0%, #f7f5f2 46%, #fff1e5 100%);
+    background: linear-gradient(140deg, #1f3157 0%, #121a2b 46%, #322741 100%);
 }
 
 .credibility-grid {
@@ -169,7 +169,7 @@
 
     &:hover {
         transform: translateY(-3px);
-        box-shadow: 0 22px 45px rgba(9, 15, 30, 0.07);
+        box-shadow: 0 22px 45px rgba(0, 0, 0, 0.45);
     }
 }
 
@@ -227,10 +227,10 @@
     padding: 0.2rem 0.55rem;
     border-radius: 999px;
     background: var(--accent-soft);
-    border: 1px solid #cad8ff;
+    border: 1px solid #35539a;
     font-size: 0.78rem;
     font-weight: 700;
-    color: #2646a9;
+    color: #9eb8ff;
 }
 
 .capabilities-grid {

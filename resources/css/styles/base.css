@@ -1,13 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap');
 
 :root {
-    --bg: #f7f5f2;
-    --surface: #ffffff;
-    --text: #1a1f2b;
-    --muted: #5f6777;
-    --border: #d4d9e2;
-    --accent: #1f4fd5;
-    --accent-soft: #e8efff;
+    --bg: #0b1020;
+    --surface: #121a2b;
+    --text: #e7edff;
+    --muted: #9aa8c9;
+    --border: #2a3552;
+    --accent: #5b8cff;
+    --accent-soft: #1a2a4e;
 }
 
 * {

@@ -35,7 +35,10 @@ export default function FeaturedProjectsGrid({ projects, settings }) {
                     title={settings.featured_section_title}
                     description={settings.featured_section_subtitle}
                 />
-                <Link href={route('projects.index')} className="section-inline-link">
+                <Link
+                    href={route('projects.index')}
+                    className="section-inline-link section-inline-link-button"
+                >
                     View all projects
                 </Link>
             </div>

@@ -1,3 +1,4 @@
+import PublicLayout from '@/Layouts/PublicLayout';
 import { Head, Link } from '@inertiajs/react';
 
 function formatStack(stack) {
@@ -18,74 +19,69 @@ export default function Show({ project }) {
         <>
             <Head title={project.title} />
 
-            <div className="min-h-screen bg-slate-50 text-slate-900">
-                <header className="border-b border-slate-200 bg-white">
-                    <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-                        <Link href={route('home')} className="text-lg font-semibold">
-                            Guillaume Juste
-                        </Link>
-                        <Link
-                            href={route('projects.index')}
-                            className="text-sm hover:underline"
-                        >
-                            Back to projects
-                        </Link>
-                    </div>
-                </header>
+            <PublicLayout>
+                <section className="public-shell section-block reveal">
+                    <Link href={route('projects.index')} className="section-inline-link">
+                        Back to projects
+                    </Link>
 
-                <main className="mx-auto max-w-3xl px-6 py-10">
-                    <h1 className="text-3xl font-bold">{project.title}</h1>
-                    <p className="mt-3 text-base text-slate-700">{project.summary}</p>
+                    <article className="card-surface project-detail mt-6">
+                        <header className="space-y-4">
+                            <h1 className="hero-title !text-[clamp(2rem,4vw,3rem)]">
+                                {project.title}
+                            </h1>
+                            <p className="hero-description !max-w-3xl">
+                                {project.summary}
+                            </p>
+                        </header>
 
-                    {project.cover_image_url && (
-                        <img
-                            src={project.cover_image_url}
-                            alt={`${project.title} cover`}
-                            className="mt-6 w-full rounded-xl border border-slate-200 object-cover"
-                        />
-                    )}
+                        {project.cover_image_url && (
+                            <img
+                                src={project.cover_image_url}
+                                alt={`${project.title} cover`}
+                                className="project-cover mt-8"
+                            />
+                        )}
 
-                    <article className="prose prose-slate mt-6 max-w-none whitespace-pre-line">
-                        {project.body}
-                    </article>
+                        <article className="prose prose-slate mt-8 max-w-none whitespace-pre-line leading-8">
+                            {project.body}
+                        </article>
 
-                    {tags.length > 0 && (
-                        <div className="mt-6 flex flex-wrap gap-2">
-                            {tags.map((tag) => (
-                                <span
-                                    key={tag}
-                                    className="rounded-full bg-slate-200 px-3 py-1 text-xs font-medium"
+                        {tags.length > 0 && (
+                            <ul className="tag-list mt-8" aria-label="Project stack">
+                                {tags.map((tag) => (
+                                    <li key={tag} className="tag-item">
+                                        {tag}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+
+                        <div className="mt-10 flex flex-wrap gap-3">
+                            {project.repo_url && (
+                                <a
+                                    href={project.repo_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="button-secondary"
                                 >
-                                    {tag}
-                                </span>
-                            ))}
+                                    Repository
+                                </a>
+                            )}
+                            {project.live_url && (
+                                <a
+                                    href={project.live_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="button-primary"
+                                >
+                                    Live demo
+                                </a>
+                            )}
                         </div>
-                    )}
-
-                    <div className="mt-8 flex gap-3">
-                        {project.repo_url && (
-                            <a
-                                href={project.repo_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold"
-                            >
-                                Repository
-                            </a>
-                        )}
-                        {project.live_url && (
-                            <a
-                                href={project.live_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
-                            >
-                                Live demo
-                            </a>
-                        )}
-                    </div>
-                </main>
-            </div>
+                    </article>
+                </section>
+            </PublicLayout>
         </>
     );
 }

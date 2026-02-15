@@ -75,6 +75,97 @@ class ProjectsPublicTest extends TestCase
                 ->contains('Draft Project') === false));
     }
 
+    public function test_homepage_featured_projects_are_limited_and_ordered_for_public_display(): void
+    {
+        HomepageSettings::query()->create(HomepageSettings::defaults());
+
+        Project::factory()->published()->featured()->create([
+            'title' => 'Order A',
+            'sort_order' => 0,
+            'published_at' => '2025-06-01 10:00:00',
+        ]);
+
+        Project::factory()->published()->featured()->create([
+            'title' => 'Order B',
+            'sort_order' => 0,
+            'published_at' => '2024-06-01 10:00:00',
+        ]);
+
+        Project::factory()->published()->featured()->create([
+            'title' => 'Order C',
+            'sort_order' => 1,
+            'published_at' => '2025-01-01 10:00:00',
+        ]);
+
+        Project::factory()->published()->featured()->create([
+            'title' => 'Order D (Not Visible Due To Limit)',
+            'sort_order' => 2,
+            'published_at' => '2026-01-01 10:00:00',
+        ]);
+
+        Project::factory()->published()->create([
+            'title' => 'Published But Not Featured',
+            'sort_order' => 0,
+            'published_at' => '2026-02-01 10:00:00',
+        ]);
+
+        Project::factory()->featured()->create([
+            'title' => 'Featured Draft',
+            'sort_order' => 0,
+            'published_at' => null,
+        ]);
+
+        $response = $this->get(route('home'));
+
+        $response
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Welcome')
+                ->has('featuredProjects', 3)
+                ->where('featuredProjects', fn ($projects) => collect($projects)
+                    ->pluck('title')
+                    ->values()
+                    ->all() === ['Order A', 'Order B', 'Order C']));
+    }
+
+    public function test_projects_index_orders_items_by_sort_order_then_published_at_desc(): void
+    {
+        Project::factory()->published()->create([
+            'title' => 'Project A',
+            'sort_order' => 0,
+            'published_at' => '2025-06-01 10:00:00',
+        ]);
+
+        Project::factory()->published()->create([
+            'title' => 'Project B',
+            'sort_order' => 0,
+            'published_at' => '2024-06-01 10:00:00',
+        ]);
+
+        Project::factory()->published()->create([
+            'title' => 'Project C',
+            'sort_order' => 1,
+            'published_at' => '2026-01-01 10:00:00',
+        ]);
+
+        Project::factory()->create([
+            'title' => 'Draft Project',
+            'sort_order' => 0,
+            'published_at' => null,
+        ]);
+
+        $response = $this->get(route('projects.index'));
+
+        $response
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Projects/Index')
+                ->where('projects.data', fn ($projects) => collect($projects)
+                    ->pluck('title')
+                    ->values()
+                    ->all() === ['Project A', 'Project B', 'Project C']));
+    }
+
     public function test_published_project_detail_is_visible(): void
     {
         $project = Project::factory()->published()->create();

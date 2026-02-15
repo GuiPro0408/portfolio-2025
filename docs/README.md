@@ -4,10 +4,13 @@
 
 ## Core Documents
 - [Architecture](ARCHITECTURE.md): Laravel/Inertia boundaries, dashboard component patterns, and code placement rules.
-- [Quality](QUALITY.md): golden commands, check expectations, and CI parity.
+- [Harness](HARNESS.md): command contract, CI parity mapping, and browser smoke path.
+- [System of record](SYSTEM-OF-RECORD.md): canonical-vs-mirror policy and doc update triggers.
+- [Quality](QUALITY.md): quality expectations and links to harness commands.
 - [Deploy](DEPLOY.md): Koyeb deployment runbook, env var contract, and migration flow.
 - [MVP v1](MVP.md): first-shipping scope, data model, homepage settings scope, and acceptance criteria.
-- [v1.1 Backlog](V1.1-BACKLOG.md): post-MVP prioritized improvements (top 5).
+- [v1.1 Backlog](V1.1-BACKLOG.md): post-MVP prioritized improvements (top 4).
+- [v1.2 Backlog](V1.2-BACKLOG.md): current release scope and milestones.
 
 ## Knowledge Base
 - [FAQ](knowledge/faq.md): common process and workflow questions.

@@ -14,9 +14,9 @@ export default function HeroSection({ settings, content, contact }) {
                     <p className="hero-description">{settings.hero_subheadline}</p>
 
                     <div className="hero-actions">
-                        <a href={`mailto:${contact.email}`} className="button-primary">
+                        <Link href={route('contact.index')} className="button-primary">
                             {settings.hero_primary_cta_label}
-                        </a>
+                        </Link>
                         <Link href={route('projects.index')} className="button-secondary">
                             {settings.hero_secondary_cta_label}
                         </Link>

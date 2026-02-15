@@ -6,6 +6,25 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property string $title
+ * @property string $slug
+ * @property string $summary
+ * @property string $body
+ * @property string|null $stack
+ * @property string|null $cover_image_url
+ * @property string|null $repo_url
+ * @property string|null $live_url
+ * @property bool $is_featured
+ * @property bool $is_published
+ * @property \Illuminate\Support\Carbon|null $published_at
+ * @property int $sort_order
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ *
+ * @method static Builder<self> query()
+ */
 class Project extends Model
 {
     /** @use HasFactory<\Database\Factories\ProjectFactory> */

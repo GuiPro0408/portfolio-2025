@@ -19,7 +19,7 @@ export default function PublicFooter({ contact }) {
                             GitHub
                         </a>
                     )}
-                    {contact?.email && <a href={`mailto:${contact.email}`}>Email</a>}
+                    <a href={route('contact.index')}>Contact</a>
                 </div>
             </div>
         </footer>

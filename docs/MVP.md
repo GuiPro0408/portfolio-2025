@@ -2,6 +2,11 @@
 
 This document defines what ships first for the portfolio product.
 
+## MVP Status
+- Status: Complete
+- Completion date: February 15, 2026
+- Quality gate: `make check` passing
+
 ## Goal
 Deliver a complete first vertical slice with public portfolio discovery and authenticated project management.
 

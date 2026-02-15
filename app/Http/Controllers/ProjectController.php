@@ -23,6 +23,7 @@ class ProjectController extends Controller
             'filters' => [
                 'page' => (int) $request->integer('page', 1),
             ],
+            'contact' => $this->contactPayload(),
         ]);
     }
 
@@ -43,6 +44,7 @@ class ProjectController extends Controller
                 'live_url' => $project->live_url,
                 'published_at' => $project->published_at?->toDateString(),
             ],
+            'contact' => $this->contactPayload(),
         ]);
     }
 
@@ -59,6 +61,18 @@ class ProjectController extends Controller
             'stack' => $project->stack,
             'cover_image_url' => $project->cover_image_url,
             'published_at' => $project->published_at?->toDateString(),
+        ];
+    }
+
+    /**
+     * @return array{email: mixed, linkedin: mixed, github: mixed}
+     */
+    private function contactPayload(): array
+    {
+        return [
+            'email' => config('portfolio.email'),
+            'linkedin' => config('portfolio.linkedin'),
+            'github' => config('portfolio.github'),
         ];
     }
 }

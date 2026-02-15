@@ -14,12 +14,12 @@ function toTags(stack) {
         .slice(0, 3);
 }
 
-export default function Index({ projects }) {
+export default function Index({ projects, contact }) {
     return (
         <>
             <Head title="Projects" />
 
-            <PublicLayout>
+            <PublicLayout contact={contact}>
                 <section className="public-shell section-block reveal">
                     <SectionHeading
                         eyebrow="Portfolio"

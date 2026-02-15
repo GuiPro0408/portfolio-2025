@@ -12,14 +12,14 @@ function formatStack(stack) {
         .filter(Boolean);
 }
 
-export default function Show({ project }) {
+export default function Show({ project, contact }) {
     const tags = formatStack(project.stack);
 
     return (
         <>
             <Head title={project.title} />
 
-            <PublicLayout>
+            <PublicLayout contact={contact}>
                 <section className="public-shell section-block reveal">
                     <Link href={route('projects.index')} className="section-inline-link">
                         Back to projects

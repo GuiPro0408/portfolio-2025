@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * @property int $id
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $sort_order
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Database\Eloquent\Collection<int, Technology> $technologies
  *
  * @method static Builder<self> query()
  */
@@ -75,5 +77,13 @@ class Project extends Model
             ->orderBy('sort_order')
             ->orderByDesc('published_at')
             ->orderByDesc('id');
+    }
+
+    /**
+     * @return BelongsToMany<Technology, $this>
+     */
+    public function technologies(): BelongsToMany
+    {
+        return $this->belongsToMany(Technology::class)->orderBy('name');
     }
 }

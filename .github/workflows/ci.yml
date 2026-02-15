@@ -49,8 +49,16 @@ jobs:
       - name: Run harness checks
         run: make check
 
+      - name: Upload frontend build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: public/build
+          if-no-files-found: error
+
   playwright:
     runs-on: ubuntu-latest
+    needs: build
     env:
       COMPOSER_NO_INTERACTION: 1
 
@@ -74,13 +82,26 @@ jobs:
       - name: Install dependencies
         run: make setup-ci
 
+      - name: Download frontend build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: public
+
       - name: Prepare application
         run: |
           cp .env.example .env
           php artisan key:generate --ansi --force
           touch database/database.sqlite
           php artisan migrate:fresh --seed --force
-          npm run build
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium

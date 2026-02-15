@@ -2,20 +2,28 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Projects\SyncProjectTechnologies;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectFlagsRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Requests\UpdateProjectSortRequest;
 use App\Models\Project;
+use App\Support\PublicCacheKeys;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProjectController extends Controller
 {
+    public function __construct(
+        private readonly SyncProjectTechnologies $syncProjectTechnologies,
+    ) {}
+
     public function index(Request $request): Response
     {
         $filters = $this->normalizedFilters($request);
@@ -62,7 +70,11 @@ class ProjectController extends Controller
 
     public function store(StoreProjectRequest $request)
     {
-        Project::create($request->validated());
+        $project = Project::create($request->validated());
+        if ($this->technologyTablesReady()) {
+            $this->syncProjectTechnologies->sync($project, $project->stack);
+        }
+        $this->clearPublicCaches();
 
         return redirect()
             ->route('dashboard.projects.index')
@@ -71,6 +83,12 @@ class ProjectController extends Controller
 
     public function edit(Project $project): Response
     {
+        $technologyTablesReady = $this->technologyTablesReady();
+
+        if ($technologyTablesReady) {
+            $project->loadMissing('technologies');
+        }
+
         return Inertia::render('Dashboard/Projects/Edit', [
             'project' => [
                 'id' => $project->id,
@@ -78,7 +96,9 @@ class ProjectController extends Controller
                 'slug' => $project->slug,
                 'summary' => $project->summary,
                 'body' => $project->body,
-                'stack' => $project->stack,
+                'stack' => $technologyTablesReady && $project->technologies->isNotEmpty()
+                    ? $project->technologies->pluck('name')->implode(', ')
+                    : $project->stack,
                 'cover_image_url' => $project->cover_image_url,
                 'repo_url' => $project->repo_url,
                 'live_url' => $project->live_url,
@@ -93,6 +113,10 @@ class ProjectController extends Controller
     public function update(UpdateProjectRequest $request, Project $project)
     {
         $project->update($request->validated());
+        if ($this->technologyTablesReady()) {
+            $this->syncProjectTechnologies->sync($project, $project->stack);
+        }
+        $this->clearPublicCaches();
 
         return redirect()
             ->route('dashboard.projects.index')
@@ -115,6 +139,7 @@ class ProjectController extends Controller
         }
 
         $project->save();
+        $this->clearPublicCaches();
 
         return back()->with('success', 'Project status updated.');
     }
@@ -122,6 +147,7 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         $project->delete();
+        $this->clearPublicCaches();
 
         return redirect()
             ->route('dashboard.projects.index')
@@ -130,13 +156,26 @@ class ProjectController extends Controller
 
     public function duplicate(Project $project)
     {
+        $technologyTablesReady = $this->technologyTablesReady();
+
+        if ($technologyTablesReady) {
+            $project->loadMissing('technologies');
+        }
+
         $copy = $project->replicate();
         $copy->title = $project->title.' (Copy)';
         $copy->slug = $this->generateUniqueCopySlug($project->slug);
         $copy->is_featured = false;
         $copy->is_published = false;
         $copy->published_at = null;
+        $copy->stack = $technologyTablesReady && $project->technologies->isNotEmpty()
+            ? $project->technologies->pluck('name')->implode(', ')
+            : $project->stack;
         $copy->save();
+        if ($technologyTablesReady) {
+            $this->syncProjectTechnologies->sync($copy, $copy->stack);
+        }
+        $this->clearPublicCaches();
 
         return redirect()
             ->route('dashboard.projects.edit', $copy)
@@ -148,6 +187,7 @@ class ProjectController extends Controller
         $project->update([
             'sort_order' => $request->validated('sort_order'),
         ]);
+        $this->clearPublicCaches();
 
         return back()->with('success', 'Project sort order updated.');
     }
@@ -215,5 +255,16 @@ class ProjectController extends Controller
         }
 
         return $slug;
+    }
+
+    private function clearPublicCaches(): void
+    {
+        Cache::forget(PublicCacheKeys::HOME_PAYLOAD);
+        Cache::forget(PublicCacheKeys::SITEMAP_XML);
+    }
+
+    private function technologyTablesReady(): bool
+    {
+        return Schema::hasTable('technologies') && Schema::hasTable('project_technology');
     }
 }

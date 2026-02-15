@@ -43,6 +43,9 @@ export default function HeroSection({ settings, content, contact }) {
                             src={settings.hero_image_url}
                             alt="Homepage hero visual"
                             className="hero-media"
+                            loading="eager"
+                            fetchPriority="high"
+                            decoding="async"
                             onError={() => setImageFailed(true)}
                         />
                     )}

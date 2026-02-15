@@ -3,7 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Project;
+use App\Models\User;
+use App\Support\PublicCacheKeys;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class SeoEndpointsTest extends TestCase
@@ -42,5 +45,32 @@ class SeoEndpointsTest extends TestCase
             ->assertSee('User-agent: *', false)
             ->assertSee('Allow: /', false)
             ->assertSee('Sitemap: '.route('seo.sitemap'), false);
+    }
+
+    public function test_sitemap_cache_is_invalidated_when_project_publication_changes(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create([
+            'slug' => 'newly-published-project',
+            'is_published' => false,
+            'published_at' => null,
+        ]);
+
+        Cache::forget(PublicCacheKeys::SITEMAP_XML);
+
+        $this->get(route('seo.sitemap'))
+            ->assertOk()
+            ->assertDontSee(route('projects.show', $project->slug), false);
+
+        $this->actingAs($user)
+            ->patch(route('dashboard.projects.flags.update', $project), [
+                'is_published' => true,
+                'is_featured' => false,
+            ])
+            ->assertRedirect();
+
+        $this->get(route('seo.sitemap'))
+            ->assertOk()
+            ->assertSee(route('projects.show', $project->slug), false);
     }
 }

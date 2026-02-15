@@ -3,8 +3,11 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\Project;
+use App\Models\Technology;
 use App\Models\User;
+use App\Support\PublicCacheKeys;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -62,6 +65,16 @@ class ProjectManagementTest extends TestCase
 
         $project = Project::first();
         $this->assertNotNull($project?->published_at);
+        $this->assertDatabaseHas('technologies', ['name_normalized' => 'laravel', 'name' => 'Laravel']);
+        $this->assertDatabaseHas('technologies', ['name_normalized' => 'react', 'name' => 'React']);
+        $this->assertDatabaseHas('project_technology', [
+            'project_id' => $project?->id,
+            'technology_id' => Technology::query()->where('name_normalized', 'laravel')->value('id'),
+        ]);
+        $this->assertDatabaseHas('project_technology', [
+            'project_id' => $project?->id,
+            'technology_id' => Technology::query()->where('name_normalized', 'react')->value('id'),
+        ]);
     }
 
     public function test_validation_errors_are_returned_for_invalid_payload(): void
@@ -119,6 +132,7 @@ class ProjectManagementTest extends TestCase
         $this->assertSame('new-title', $project->slug);
         $this->assertTrue($project->is_published);
         $this->assertNotNull($project->published_at);
+        $this->assertSame(['laravel'], $project->technologies()->pluck('name_normalized')->all());
     }
 
     public function test_authenticated_user_can_delete_a_project(): void
@@ -334,6 +348,10 @@ class ProjectManagementTest extends TestCase
         $this->assertFalse($copy->is_published);
         $this->assertFalse($copy->is_featured);
         $this->assertNull($copy->published_at);
+        $this->assertSame(
+            $project->technologies()->pluck('name_normalized')->all(),
+            $copy->technologies()->pluck('name_normalized')->all()
+        );
     }
 
     public function test_duplicate_project_slug_suffix_is_incremented_when_needed(): void
@@ -385,5 +403,26 @@ class ProjectManagementTest extends TestCase
 
         $response->assertRedirect(route('dashboard.projects.index'));
         $response->assertSessionHasErrors(['sort_order']);
+    }
+
+    public function test_project_mutations_clear_public_cache_entries(): void
+    {
+        $user = User::factory()->create();
+
+        Cache::put(PublicCacheKeys::HOME_PAYLOAD, ['cached' => true], 600);
+        Cache::put(PublicCacheKeys::SITEMAP_XML, '<xml/>', 600);
+
+        $this->actingAs($user)->post(route('dashboard.projects.store'), [
+            'title' => 'Cache Flush Project',
+            'summary' => 'Summary text',
+            'body' => 'Body text',
+            'stack' => 'Laravel, React',
+            'is_featured' => false,
+            'is_published' => false,
+            'sort_order' => 1,
+        ])->assertRedirect(route('dashboard.projects.index'));
+
+        $this->assertFalse(Cache::has(PublicCacheKeys::HOME_PAYLOAD));
+        $this->assertFalse(Cache::has(PublicCacheKeys::SITEMAP_XML));
     }
 }

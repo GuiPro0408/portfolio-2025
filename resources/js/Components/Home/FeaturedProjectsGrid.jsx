@@ -59,6 +59,8 @@ export default function FeaturedProjectsGrid({ projects, settings }) {
                                         src={imageUrl}
                                         alt={`${project.title} cover`}
                                         className="project-cover"
+                                        loading="lazy"
+                                        decoding="async"
                                         onError={() => handleImageError(project.id)}
                                     />
                                 ) : (

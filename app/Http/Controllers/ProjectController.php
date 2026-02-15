@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Projects\SyncProjectTechnologies;
 use App\Models\Project;
+use App\Models\Technology;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,45 +16,70 @@ class ProjectController extends Controller
     public function index(Request $request): Response
     {
         $filters = $this->normalizedFilters($request);
-        $publishedProjects = Project::query()->published()->get();
-        $availableStacks = $this->availableStacks($publishedProjects);
+        $technologyTablesReady = $this->technologyTablesReady();
+        $normalizedSearch = SyncProjectTechnologies::normalizeToken($filters['q']);
+        $selectedStacks = collect($this->parseStack($filters['stack']))
+            ->map(fn (string $stack) => SyncProjectTechnologies::normalizeToken($stack))
+            ->unique()
+            ->values()
+            ->all();
 
-        $filteredProjects = $publishedProjects
-            ->filter(function (Project $project) use ($filters): bool {
-                if ($filters['q'] !== '') {
-                    $haystack = Str::lower(
-                        implode(' ', [
-                            $project->title,
-                            $project->summary,
-                            $project->stack ?? '',
-                        ])
-                    );
+        $query = Project::query()
+            ->published()
+            ->when($technologyTablesReady, fn (Builder $builder) => $builder->with('technologies'))
+            ->when($filters['q'] !== '', function (Builder $builder) use ($filters, $normalizedSearch): void {
+                $builder->where(function (Builder $searchQuery) use ($filters, $normalizedSearch): void {
+                    $searchQuery
+                        ->where('title', 'like', '%'.$filters['q'].'%')
+                        ->orWhere('summary', 'like', '%'.$filters['q'].'%');
 
-                    if (! Str::contains($haystack, Str::lower($filters['q']))) {
-                        return false;
+                    if ($this->technologyTablesReady()) {
+                        $searchQuery->orWhereHas('technologies', function (Builder $technologyQuery) use ($normalizedSearch): void {
+                            $technologyQuery->where('name_normalized', 'like', '%'.$normalizedSearch.'%');
+                        });
+                    } else {
+                        $searchQuery->orWhere('stack', 'like', '%'.$filters['q'].'%');
                     }
+                });
+            })
+            ->when($selectedStacks !== [], function (Builder $builder) use ($selectedStacks, $technologyTablesReady): void {
+                if ($technologyTablesReady) {
+                    $builder->whereHas('technologies', function (Builder $technologyQuery) use ($selectedStacks): void {
+                        $technologyQuery->whereIn('name_normalized', $selectedStacks);
+                    });
+
+                    return;
                 }
 
-                $selectedStacks = $this->parseStack($filters['stack']);
-
-                if ($selectedStacks !== []) {
-                    $stackTokens = collect($this->parseStack($project->stack))
-                        ->map(fn (string $token) => Str::lower($token))
-                        ->all();
-                    $selectedStackTokens = collect($selectedStacks)
-                        ->map(fn (string $token) => Str::lower($token))
-                        ->all();
-
-                    if (! collect($selectedStackTokens)->intersect($stackTokens)->isNotEmpty()) {
-                        return false;
+                $builder->where(function (Builder $stackQuery) use ($selectedStacks): void {
+                    foreach ($selectedStacks as $token) {
+                        $stackQuery->orWhere('stack', 'like', '%'.$token.'%');
                     }
-                }
-
-                return true;
+                });
             });
 
-        $sortedProjects = $this->sortProjects($filteredProjects, $filters['sort']);
-        $projects = $this->paginateProjects($sortedProjects, $request, $filters, 9);
+        $this->applySort($query, $filters['sort']);
+
+        $projects = $query
+            ->paginate(9)
+            ->withQueryString()
+            ->through(fn (Project $project) => $this->transformProjectCard($project));
+
+        $availableStacks = $technologyTablesReady
+            ? Technology::query()
+                ->whereHas('projects', fn (Builder $builder) => $builder->where('is_published', true))
+                ->orderBy('name')
+                ->pluck('name')
+                ->all()
+            : Project::query()
+                ->published()
+                ->whereNotNull('stack')
+                ->pluck('stack')
+                ->flatMap(fn (?string $stack) => $this->parseStack($stack))
+                ->unique()
+                ->sort(SORT_NATURAL | SORT_FLAG_CASE)
+                ->values()
+                ->all();
 
         return Inertia::render('Projects/Index', [
             'projects' => $projects,
@@ -66,6 +92,9 @@ class ProjectController extends Controller
     public function show(Project $project): Response
     {
         abort_unless($project->is_published, 404);
+        if ($this->technologyTablesReady()) {
+            $project->loadMissing('technologies');
+        }
 
         return Inertia::render('Projects/Show', [
             'project' => [
@@ -74,7 +103,7 @@ class ProjectController extends Controller
                 'slug' => $project->slug,
                 'summary' => $project->summary,
                 'body' => $project->body,
-                'stack' => $project->stack,
+                'stack' => $this->projectStack($project),
                 'cover_image_url' => $project->cover_image_url,
                 'repo_url' => $project->repo_url,
                 'live_url' => $project->live_url,
@@ -94,14 +123,14 @@ class ProjectController extends Controller
             'title' => $project->title,
             'slug' => $project->slug,
             'summary' => $project->summary,
-            'stack' => $project->stack,
+            'stack' => $this->projectStack($project),
             'cover_image_url' => $project->cover_image_url,
             'published_at' => $project->published_at?->toDateString(),
         ];
     }
 
     /**
-     * @return array{q: string, stack: string, sort: string, page: int}
+     * @return array{q: string, stack: string, sort: string}
      */
     private function normalizedFilters(Request $request): array
     {
@@ -113,7 +142,6 @@ class ProjectController extends Controller
             'sort' => in_array($sort, ['editorial', 'newest', 'oldest'], true)
                 ? $sort
                 : 'editorial',
-            'page' => max(1, (int) $request->integer('page', 1)),
         ];
     }
 
@@ -133,81 +161,39 @@ class ProjectController extends Controller
             ->all();
     }
 
-    /**
-     * @return array<int, string>
-     */
-    private function availableStacks(Collection $projects): array
+    private function applySort(Builder $query, string $sort): void
     {
-        return $projects
-            ->flatMap(fn (Project $project) => $this->parseStack($project->stack))
-            ->unique()
-            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
-            ->values()
-            ->all();
-    }
-
-    private function sortProjects(Collection $projects, string $sort): Collection
-    {
-        $values = $projects->values()->all();
-
-        usort($values, fn (Project $left, Project $right) => $this->compareProjects($left, $right, $sort));
-
-        return collect($values);
-    }
-
-    private function compareProjects(Project $left, Project $right, string $sort): int
-    {
-        $leftPublished = $left->published_at?->getTimestamp() ?? 0;
-        $rightPublished = $right->published_at?->getTimestamp() ?? 0;
-
         if ($sort === 'newest') {
-            return [$rightPublished, $right->id] <=> [$leftPublished, $left->id];
+            $query->orderByDesc('published_at')->orderByDesc('id');
+
+            return;
         }
 
         if ($sort === 'oldest') {
-            return [$leftPublished, $left->id] <=> [$rightPublished, $right->id];
+            $query->orderBy('published_at')->orderBy('id');
+
+            return;
         }
 
-        return [
-            $left->sort_order,
-            -1 * $leftPublished,
-            -1 * $left->id,
-        ] <=> [
-            $right->sort_order,
-            -1 * $rightPublished,
-            -1 * $right->id,
-        ];
+        $query->orderBy('sort_order')->orderByDesc('published_at')->orderByDesc('id');
     }
 
-    /**
-     * @param  array{q: string, stack: string, sort: string, page: int}  $filters
-     */
-    private function paginateProjects(
-        Collection $projects,
-        Request $request,
-        array $filters,
-        int $perPage,
-    ): LengthAwarePaginator {
-        $page = $filters['page'];
-        $items = $projects
-            ->forPage($page, $perPage)
-            ->values()
-            ->map(fn (Project $project) => $this->transformProjectCard($project));
+    private function projectStack(Project $project): ?string
+    {
+        if (
+            $this->technologyTablesReady()
+            && $project->relationLoaded('technologies')
+            && $project->technologies->isNotEmpty()
+        ) {
+            return $project->technologies->pluck('name')->implode(', ');
+        }
 
-        return new LengthAwarePaginator(
-            $items,
-            $projects->count(),
-            $perPage,
-            $page,
-            [
-                'path' => $request->url(),
-                'query' => array_filter([
-                    'q' => $filters['q'],
-                    'stack' => $filters['stack'],
-                    'sort' => $filters['sort'],
-                ], fn (string $value) => $value !== ''),
-            ],
-        );
+        return $project->stack;
+    }
+
+    private function technologyTablesReady(): bool
+    {
+        return Schema::hasTable('technologies') && Schema::hasTable('project_technology');
     }
 
     /**

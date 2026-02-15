@@ -55,7 +55,7 @@ export default function Dashboard({ metrics, recentProjects }) {
                         />
                     </section>
 
-                    <section className="dashboard-panel">
+                    <section className="dashboard-panel dashboard-panel-inset">
                         <div className="dashboard-panel-header">
                             <h3 className="dashboard-panel-title">Recent updates</h3>
                             <div className="dashboard-panel-actions">

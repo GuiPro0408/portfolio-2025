@@ -57,4 +57,25 @@ class HomepageSettingsTest extends TestCase
 
         $response->assertSessionHasErrors(['hero_image_url']);
     }
+
+    public function test_homepage_settings_accepts_filename_only_image_inputs(): void
+    {
+        $user = User::factory()->create();
+        HomepageSettings::query()->create(HomepageSettings::defaults());
+
+        $payload = HomepageSettings::defaults();
+        $payload['hero_image_url'] = 'hero-studio-16x10.webp';
+        $payload['featured_image_1_url'] = 'featured-01-16x10.webp';
+        $payload['capabilities_image_url'] = 'capabilities-architecture-21x9.webp';
+
+        $response = $this->actingAs($user)->put(route('dashboard.homepage.update'), $payload);
+
+        $response->assertRedirect(route('dashboard.homepage.edit'));
+
+        $this->assertDatabaseHas('homepage_settings', [
+            'hero_image_url' => '/images/homepage/hero/hero-studio-16x10.webp',
+            'featured_image_1_url' => '/images/homepage/featured/featured-01-16x10.webp',
+            'capabilities_image_url' => '/images/homepage/sections/capabilities-architecture-21x9.webp',
+        ]);
+    }
 }

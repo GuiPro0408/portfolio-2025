@@ -295,8 +295,9 @@ export default function Edit({ settings }) {
                                 <header className="dashboard-form-section-header">
                                     <h3>Image URLs</h3>
                                     <p>
-                                        Use hosted image URLs. Leave blank to fall back to
-                                        placeholders.
+                                        Use full URLs, absolute local paths, or filename-only
+                                        values (auto-mapped to <code>/images/homepage</code>).
+                                        Leave blank to use placeholders.
                                     </p>
                                 </header>
                                 <div className="dashboard-form-grid-2">

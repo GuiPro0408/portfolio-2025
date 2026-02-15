@@ -24,8 +24,10 @@ A modern portfolio application built with Laravel 12 + Breeze (React + Inertia.j
 
 - Public homepage, projects index, and project detail pages
 - Authenticated project CRUD under `/dashboard/projects`
+- Admin project list supports search/filter/sort and inline publish/feature toggles
 - Authenticated homepage content settings under `/dashboard/homepage`
 - Homepage contact links configured via env-backed `config/portfolio.php`
+- Authenticated area uses dark enterprise dashboard theme with flash toasts
 
 ## Local Development
 

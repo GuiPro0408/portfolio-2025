@@ -15,6 +15,7 @@ Deliver a complete first vertical slice with public portfolio discovery and auth
 - Public project detail at `/projects/{slug}` for published projects only.
 - Authenticated project management under `/dashboard/projects/*`.
 - Authenticated homepage settings management under `/dashboard/homepage`.
+- Authenticated dashboard UX with workflow-first project operations (filters and inline flags).
 - One content model: `Project`.
 - One singleton settings model: `HomepageSettings`.
 - Feature tests for visibility, auth protection, and CRUD behavior.
@@ -45,6 +46,10 @@ Deliver a complete first vertical slice with public portfolio discovery and auth
 - Featured homepage section shows published + featured projects only (max 3).
 - If published is enabled and `published_at` is empty, set it automatically.
 - If published is disabled, clear `published_at`.
+- Admin project list supports query filters:
+  - `q`, `status`, `featured`, `sort`
+- Admin inline flag updates are handled through:
+  - `PATCH /dashboard/projects/{project}/flags`
 
 ## Contact
 MVP contact CTA uses backend-provided config values exposed to frontend props:

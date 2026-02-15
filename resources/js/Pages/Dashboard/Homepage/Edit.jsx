@@ -1,3 +1,5 @@
+import DashboardPageHeader from '@/Components/Dashboard/DashboardPageHeader';
+import StickyActionBar from '@/Components/Dashboard/StickyActionBar';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -5,11 +7,32 @@ import TextInput from '@/Components/TextInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 
+function ValidationSummary({ errors }) {
+    const keys = Object.keys(errors);
+
+    if (keys.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="dashboard-validation-summary" role="alert">
+            <p>Please correct the invalid fields before saving.</p>
+            <ul>
+                {keys.map((key) => (
+                    <li key={key}>
+                        <a href={`#${key}`}>{key.replaceAll('_', ' ')}</a>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
 export default function Edit({ settings }) {
     const { data, setData, put, processing, errors } = useForm(settings);
 
-    const submit = (e) => {
-        e.preventDefault();
+    const submit = (event) => {
+        event.preventDefault();
         put(route('dashboard.homepage.update'));
     };
 
@@ -43,21 +66,26 @@ export default function Edit({ settings }) {
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Homepage Settings
-                </h2>
+                <DashboardPageHeader
+                    title="Homepage Settings"
+                    description="Edit hero content, section headings, call-to-actions, and media URLs."
+                />
             }
         >
             <Head title="Homepage Settings" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-5xl sm:px-6 lg:px-8">
-                    <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                        <form onSubmit={submit} className="space-y-8 p-6">
-                            <section className="space-y-4">
-                                <h3 className="text-lg font-semibold text-gray-900">
-                                    Headlines and CTA Copy
-                                </h3>
+            <div className="py-10">
+                <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+                    <div className="dashboard-panel p-6 sm:rounded-xl">
+                        <form onSubmit={submit} className="space-y-8">
+                            <ValidationSummary errors={errors} />
+
+                            <section className="dashboard-form-section">
+                                <header className="dashboard-form-section-header">
+                                    <h3>Headlines and CTA Copy</h3>
+                                    <p>Control the textual narrative users see on the homepage.</p>
+                                </header>
+
                                 <div className="grid gap-4">
                                     {textFields.map(([key, label, type]) => (
                                         <div key={key}>
@@ -66,16 +94,16 @@ export default function Edit({ settings }) {
                                                 <textarea
                                                     id={key}
                                                     rows={3}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                    className="dashboard-textarea"
                                                     value={data[key] ?? ''}
-                                                    onChange={(e) => setData(key, e.target.value)}
+                                                    onChange={(event) => setData(key, event.target.value)}
                                                 />
                                             ) : (
                                                 <TextInput
                                                     id={key}
                                                     className="mt-1 block w-full"
                                                     value={data[key] ?? ''}
-                                                    onChange={(e) => setData(key, e.target.value)}
+                                                    onChange={(event) => setData(key, event.target.value)}
                                                 />
                                             )}
                                             <InputError className="mt-2" message={errors[key]} />
@@ -84,13 +112,12 @@ export default function Edit({ settings }) {
                                 </div>
                             </section>
 
-                            <section className="space-y-4">
-                                <h3 className="text-lg font-semibold text-gray-900">
-                                    Homepage Image URLs
-                                </h3>
-                                <p className="text-sm text-gray-600">
-                                    Leave fields empty to use editorial placeholders.
-                                </p>
+                            <section className="dashboard-form-section">
+                                <header className="dashboard-form-section-header">
+                                    <h3>Homepage Image URLs</h3>
+                                    <p>Leave any field empty to display the built-in placeholder visual.</p>
+                                </header>
+
                                 <div className="grid gap-4">
                                     {imageFields.map(([key, label]) => (
                                         <div key={key}>
@@ -99,7 +126,7 @@ export default function Edit({ settings }) {
                                                 id={key}
                                                 className="mt-1 block w-full"
                                                 value={data[key] ?? ''}
-                                                onChange={(e) => setData(key, e.target.value)}
+                                                onChange={(event) => setData(key, event.target.value)}
                                             />
                                             <InputError className="mt-2" message={errors[key]} />
                                         </div>
@@ -107,7 +134,12 @@ export default function Edit({ settings }) {
                                 </div>
                             </section>
 
-                            <PrimaryButton disabled={processing}>Save Settings</PrimaryButton>
+                            <StickyActionBar>
+                                <div className="dashboard-sticky-actions-inner">
+                                    <p>Updates are visible on the homepage immediately after save.</p>
+                                    <PrimaryButton disabled={processing}>Save Settings</PrimaryButton>
+                                </div>
+                            </StickyActionBar>
                         </form>
                     </div>
                 </div>

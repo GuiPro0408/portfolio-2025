@@ -23,6 +23,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/dashboard/projects', [AdminProjectController::class, 'store'])->name('dashboard.projects.store');
     Route::get('/dashboard/projects/{project}/edit', [AdminProjectController::class, 'edit'])->name('dashboard.projects.edit');
     Route::put('/dashboard/projects/{project}', [AdminProjectController::class, 'update'])->name('dashboard.projects.update');
+    Route::patch('/dashboard/projects/{project}/flags', [AdminProjectController::class, 'updateFlags'])->name('dashboard.projects.flags.update');
     Route::delete('/dashboard/projects/{project}', [AdminProjectController::class, 'destroy'])->name('dashboard.projects.destroy');
     Route::get('/dashboard/homepage', [HomepageSettingsController::class, 'edit'])->name('dashboard.homepage.edit');
     Route::put('/dashboard/homepage', [HomepageSettingsController::class, 'update'])->name('dashboard.homepage.update');

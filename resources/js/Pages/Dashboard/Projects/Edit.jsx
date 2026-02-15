@@ -1,3 +1,4 @@
+import DashboardPageHeader from '@/Components/Dashboard/DashboardPageHeader';
 import ProjectForm from '@/Components/ProjectForm';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
@@ -13,16 +14,17 @@ export default function Edit({ project }) {
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Edit Project
-                </h2>
+                <DashboardPageHeader
+                    title="Edit Project"
+                    description="Update content, publication settings, and ordering metadata."
+                />
             }
         >
             <Head title="Edit Project" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
-                    <div className="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg">
+            <div className="py-10">
+                <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+                    <div className="dashboard-panel p-6 sm:rounded-xl">
                         <ProjectForm
                             data={data}
                             setData={setData}

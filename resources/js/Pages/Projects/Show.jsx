@@ -14,10 +14,21 @@ function formatStack(stack) {
 
 export default function Show({ project, contact }) {
     const tags = formatStack(project.stack);
+    const metaDescription =
+        project.summary ??
+        'Detailed case study of a delivered software project.';
 
     return (
         <>
-            <Head title={project.title} />
+            <Head title={project.title}>
+                <meta name="description" content={metaDescription} />
+                <meta
+                    property="og:title"
+                    content={`${project.title} | Guillaume Juste`}
+                />
+                <meta property="og:description" content={metaDescription} />
+                <meta name="twitter:card" content="summary" />
+            </Head>
 
             <PublicLayout contact={contact}>
                 <section className="public-shell section-block reveal">

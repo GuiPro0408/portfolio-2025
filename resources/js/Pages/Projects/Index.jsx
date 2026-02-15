@@ -15,9 +15,17 @@ function toTags(stack) {
 }
 
 export default function Index({ projects, contact }) {
+    const metaDescription =
+        'Published software projects showcasing delivery quality, architecture, and measurable outcomes.';
+
     return (
         <>
-            <Head title="Projects" />
+            <Head title="Projects">
+                <meta name="description" content={metaDescription} />
+                <meta property="og:title" content="Projects | Guillaume Juste" />
+                <meta property="og:description" content={metaDescription} />
+                <meta name="twitter:card" content="summary" />
+            </Head>
 
             <PublicLayout contact={contact}>
                 <section className="public-shell section-block reveal">

@@ -634,6 +634,12 @@
                 color: var(--dash-text);
                 background: rgba(143, 178, 255, 0.08);
             }
+
+            &.is-active {
+                color: var(--dash-text);
+                background: rgba(143, 178, 255, 0.18);
+                border: 1px solid rgba(143, 178, 255, 0.32);
+            }
         }
     }
 
@@ -731,6 +737,29 @@
         font-weight: 700;
         letter-spacing: 0.07em;
         text-transform: uppercase;
+    }
+
+    & .dashboard-image-suggestions {
+        margin-top: 0.45rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+    }
+
+    & .dashboard-suggestion-chip {
+        border: 1px solid rgba(143, 178, 255, 0.3);
+        border-radius: 9999px;
+        background: rgba(143, 178, 255, 0.1);
+        color: var(--dash-text);
+        font-size: 0.74rem;
+        line-height: 1.2;
+        padding: 0.3rem 0.55rem;
+        transition: background-color 150ms ease, border-color 150ms ease;
+
+        &:hover {
+            background: rgba(143, 178, 255, 0.18);
+            border-color: rgba(143, 178, 255, 0.45);
+        }
     }
 
     & .dashboard-sticky-actions {

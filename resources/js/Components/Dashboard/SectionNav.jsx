@@ -1,4 +1,4 @@
-export default function SectionNav({ sections }) {
+export default function SectionNav({ sections, activeSectionId = null }) {
     const handleJump = (event, id) => {
         event.preventDefault();
 
@@ -24,6 +24,16 @@ export default function SectionNav({ sections }) {
                         <a
                             href={`#${section.id}`}
                             onClick={(event) => handleJump(event, section.id)}
+                            className={
+                                activeSectionId === section.id
+                                    ? 'is-active'
+                                    : undefined
+                            }
+                            aria-current={
+                                activeSectionId === section.id
+                                    ? 'location'
+                                    : undefined
+                            }
                         >
                             {section.label}
                         </a>

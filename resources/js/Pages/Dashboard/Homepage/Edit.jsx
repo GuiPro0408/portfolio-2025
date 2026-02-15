@@ -7,6 +7,16 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { useEffect, useMemo, useState } from 'react';
+
+const imageFieldSuggestions = {
+    hero_image_url: ['hero-studio-16x10.webp'],
+    featured_image_1_url: ['featured-01-16x10.webp'],
+    featured_image_2_url: ['featured-02-16x10.webp'],
+    featured_image_3_url: ['featured-03-16x10.webp'],
+    capabilities_image_url: ['capabilities-architecture-21x9.webp'],
+    process_image_url: ['process-flow-21x9.webp'],
+};
 
 function ValidationSummary({ errors }) {
     const keys = Object.keys(errors);
@@ -58,20 +68,61 @@ function RenderField({ field, data, setData, errors }) {
 
 export default function Edit({ settings }) {
     const { data, setData, put, processing, errors, isDirty } = useForm(settings);
+    const [activeSectionId, setActiveSectionId] = useState('hero');
 
     const submit = (event) => {
         event.preventDefault();
         put(route('dashboard.homepage.update'));
     };
 
-    const sections = [
-        { id: 'hero', label: 'Hero' },
-        { id: 'featured', label: 'Featured' },
-        { id: 'capabilities', label: 'Capabilities' },
-        { id: 'process', label: 'Process' },
-        { id: 'final-cta', label: 'Final CTA' },
-        { id: 'images', label: 'Images' },
-    ];
+    const sections = useMemo(
+        () => [
+            { id: 'hero', label: 'Hero' },
+            { id: 'featured', label: 'Featured' },
+            { id: 'capabilities', label: 'Capabilities' },
+            { id: 'process', label: 'Process' },
+            { id: 'final-cta', label: 'Final CTA' },
+            { id: 'images', label: 'Images' },
+        ],
+        [],
+    );
+
+    useEffect(() => {
+        const sectionElements = sections
+            .map((section) => document.getElementById(section.id))
+            .filter(Boolean);
+
+        if (sectionElements.length === 0) {
+            return undefined;
+        }
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const visibleEntries = entries
+                    .filter((entry) => entry.isIntersecting)
+                    .sort(
+                        (entryA, entryB) =>
+                            entryA.boundingClientRect.top -
+                            entryB.boundingClientRect.top,
+                    );
+
+                if (visibleEntries[0]) {
+                    setActiveSectionId(visibleEntries[0].target.id);
+                }
+            },
+            {
+                rootMargin: '-30% 0px -55% 0px',
+                threshold: [0.1, 0.35, 0.7],
+            },
+        );
+
+        sectionElements.forEach((element) => observer.observe(element));
+
+        return () => {
+            sectionElements.forEach((element) => observer.unobserve(element));
+            observer.disconnect();
+        };
+    }, [sections]);
 
     return (
         <AuthenticatedLayout
@@ -88,7 +139,10 @@ export default function Edit({ settings }) {
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <form onSubmit={submit} className="dashboard-settings-layout">
                         <aside className="dashboard-settings-aside">
-                            <SectionNav sections={sections} />
+                            <SectionNav
+                                sections={sections}
+                                activeSectionId={activeSectionId}
+                            />
                         </aside>
 
                         <section className="space-y-6">
@@ -321,13 +375,33 @@ export default function Edit({ settings }) {
                                         ],
                                         ['process_image_url', 'Process Image URL'],
                                     ].map((field) => (
-                                        <RenderField
-                                            key={field[0]}
-                                            field={field}
-                                            data={data}
-                                            setData={setData}
-                                            errors={errors}
-                                        />
+                                        <div key={field[0]}>
+                                            <RenderField
+                                                field={field}
+                                                data={data}
+                                                setData={setData}
+                                                errors={errors}
+                                            />
+                                            <div className="dashboard-image-suggestions">
+                                                {imageFieldSuggestions[
+                                                    field[0]
+                                                ]?.map((value) => (
+                                                    <button
+                                                        key={`${field[0]}-${value}`}
+                                                        type="button"
+                                                        className="dashboard-suggestion-chip"
+                                                        onClick={() =>
+                                                            setData(
+                                                                field[0],
+                                                                value,
+                                                            )
+                                                        }
+                                                    >
+                                                        Use {value}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
                                     ))}
                                 </div>
                             </article>

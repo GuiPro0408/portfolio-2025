@@ -9,9 +9,18 @@ import { homeContent } from '@/data/homeContent';
 import { Head } from '@inertiajs/react';
 
 export default function Welcome({ featuredProjects, contact, homepageSettings }) {
+    const metaDescription =
+        homepageSettings?.hero_subheadline ??
+        'Full-stack portfolio focused on clean architecture and practical product delivery.';
+
     return (
         <>
-            <Head title="Portfolio" />
+            <Head title="Portfolio">
+                <meta name="description" content={metaDescription} />
+                <meta property="og:title" content="Portfolio | Guillaume Juste" />
+                <meta property="og:description" content={metaDescription} />
+                <meta name="twitter:card" content="summary_large_image" />
+            </Head>
 
             <PublicLayout contact={contact}>
                 <HeroSection

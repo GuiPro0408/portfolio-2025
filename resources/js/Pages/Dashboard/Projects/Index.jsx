@@ -2,6 +2,9 @@ import DashboardPageHeader from '@/Components/Dashboard/DashboardPageHeader';
 import EmptyState from '@/Components/Dashboard/EmptyState';
 import FilterToolbar from '@/Components/Dashboard/FilterToolbar';
 import StatusBadge from '@/Components/Dashboard/StatusBadge';
+import DangerButton from '@/Components/DangerButton';
+import Modal from '@/Components/Modal';
+import SecondaryButton from '@/Components/SecondaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { LoaderCircle, PenSquare, Trash2 } from 'lucide-react';
@@ -25,6 +28,8 @@ export default function Index({ projects, filters }) {
     const initialFilters = { ...defaultFilters, ...(filters ?? {}) };
     const [query, setQuery] = useState(initialFilters.q);
     const [pendingRows, setPendingRows] = useState({});
+    const [projectPendingDelete, setProjectPendingDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const visitWithFilters = (nextFilters) => {
         router.get(route('dashboard.projects.index'), nextFilters, {
@@ -62,13 +67,20 @@ export default function Index({ projects, filters }) {
         return () => window.clearTimeout(timeoutId);
     }, [query]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const deleteProject = (id) => {
-        if (!window.confirm('Delete this project?')) {
+    const deleteProject = () => {
+        if (!projectPendingDelete) {
             return;
         }
 
-        router.delete(route('dashboard.projects.destroy', id), {
+        setIsDeleting(true);
+        router.delete(route('dashboard.projects.destroy', projectPendingDelete.id), {
             preserveScroll: true,
+            onSuccess: () => {
+                setProjectPendingDelete(null);
+            },
+            onFinish: () => {
+                setIsDeleting(false);
+            },
         });
     };
 
@@ -215,7 +227,11 @@ export default function Index({ projects, filters }) {
                                                             </Link>
                                                             <button
                                                                 type="button"
-                                                                onClick={() => deleteProject(project.id)}
+                                                                onClick={() =>
+                                                                    setProjectPendingDelete(
+                                                                        project,
+                                                                    )
+                                                                }
                                                                 className="dashboard-inline-action dashboard-inline-action-danger"
                                                             >
                                                                 <Trash2 size={14} aria-hidden="true" />
@@ -254,6 +270,34 @@ export default function Index({ projects, filters }) {
                     </nav>
                 </div>
             </div>
+
+            <Modal
+                show={projectPendingDelete !== null}
+                onClose={() =>
+                    !isDeleting ? setProjectPendingDelete(null) : undefined
+                }
+                maxWidth="md"
+            >
+                <div className="space-y-4 bg-slate-950 p-6 text-slate-100">
+                    <h2 className="text-lg font-semibold">Delete project?</h2>
+                    <p className="text-sm text-slate-300">
+                        This will permanently remove{' '}
+                        <strong>{projectPendingDelete?.title}</strong>.
+                    </p>
+                    <div className="flex justify-end gap-3">
+                        <SecondaryButton
+                            onClick={() => setProjectPendingDelete(null)}
+                            disabled={isDeleting}
+                            className="!border-slate-600 !bg-slate-900 !text-slate-100 hover:!bg-slate-800"
+                        >
+                            Cancel
+                        </SecondaryButton>
+                        <DangerButton onClick={deleteProject} disabled={isDeleting}>
+                            {isDeleting ? 'Deleting...' : 'Delete'}
+                        </DangerButton>
+                    </div>
+                </div>
+            </Modal>
         </AuthenticatedLayout>
     );
 }

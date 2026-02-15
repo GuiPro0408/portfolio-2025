@@ -21,6 +21,9 @@ Set these in Koyeb (names only, no secrets shown here):
 - `DB_URL`
 - `SESSION_DRIVER`
 - `CACHE_STORE`
+- `PORTFOLIO_EMAIL`
+- `PORTFOLIO_LINKEDIN`
+- `PORTFOLIO_GITHUB`
 
 ## Deployment Flow
 1. Create PostgreSQL database in Koyeb.
@@ -38,7 +41,7 @@ koyeb services exec <service-name>/web -- php artisan migrate --force
 ## Post-Deploy Checks
 1. Open the public app URL.
 2. Confirm auth routes (`/login`, `/register`) render.
-3. Confirm database-backed flows work (login/session/profile).
+3. Confirm database-backed flows work (login/session/profile, projects, homepage settings).
 4. Check logs in Koyeb if any startup or DB errors occur.
 
 ## Operational Notes

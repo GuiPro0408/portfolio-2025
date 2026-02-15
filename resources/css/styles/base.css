@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+
+:root {
+    --bg: #0b1020;
+    --surface: #121a2b;
+    --text: #e7edff;
+    --muted: #9aa8c9;
+    --border: #2a3552;
+    --accent: #5b8cff;
+    --accent-soft: #1a2a4e;
+}
+
+* {
+    border-color: var(--border);
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Sans 3', sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Sora', sans-serif;
+    letter-spacing: -0.01em;
+}
+
+a {
+    color: inherit;
+}
+
+a,
+button {
+    &:focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 2px;
+        border-radius: 6px;
+    }
+}

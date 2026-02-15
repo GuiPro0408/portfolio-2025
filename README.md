@@ -9,6 +9,8 @@ A modern portfolio application built with Laravel 12 + Breeze (React + Inertia.j
 - [Architecture](docs/ARCHITECTURE.md)
 - [Quality harness](docs/QUALITY.md)
 - [Deploy runbook](docs/DEPLOY.md)
+- [MVP scope/status](docs/MVP.md)
+- [v1.1 backlog](docs/V1.1-BACKLOG.md)
 
 ## Stack
 
@@ -19,6 +21,17 @@ A modern portfolio application built with Laravel 12 + Breeze (React + Inertia.j
 - **Database (deferred deployment target)**: PostgreSQL
 - **Deployment**: Koyeb (Docker)
 - **CI**: GitHub Actions
+
+## Current Product Surface
+
+- MVP v1 status: complete (February 15, 2026)
+- Public homepage, projects index, and project detail pages
+- Authenticated project CRUD under `/dashboard/projects`
+- Admin project list supports search/filter/sort and inline publish/feature toggles
+- Authenticated homepage content settings under `/dashboard/homepage`
+- Homepage image fields accept hosted URLs and local filename-based values (auto-mapped to `/images/homepage/*`)
+- Homepage contact links configured via env-backed `config/portfolio.php`
+- Authenticated area uses dark enterprise dashboard theme with flash toasts
 
 ## Local Development
 

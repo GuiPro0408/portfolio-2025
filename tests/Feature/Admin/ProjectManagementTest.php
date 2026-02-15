@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ProjectManagementTest extends TestCase
@@ -170,5 +171,139 @@ class ProjectManagementTest extends TestCase
         $project->refresh();
         $this->assertFalse($project->is_published);
         $this->assertNull($project->published_at);
+    }
+
+    public function test_projects_index_supports_search_filter_and_sort(): void
+    {
+        $user = User::factory()->create();
+
+        Project::factory()->create([
+            'title' => 'Alpha Project',
+            'slug' => 'alpha-project',
+            'is_published' => true,
+            'is_featured' => true,
+        ]);
+
+        Project::factory()->create([
+            'title' => 'Beta Draft',
+            'slug' => 'beta-draft',
+            'is_published' => false,
+            'is_featured' => false,
+        ]);
+
+        Project::factory()->create([
+            'title' => 'Gamma Project',
+            'slug' => 'gamma-project',
+            'is_published' => true,
+            'is_featured' => false,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard.projects.index', [
+            'q' => 'project',
+            'status' => 'published',
+            'featured' => 'all',
+            'sort' => 'title_desc',
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Dashboard/Projects/Index')
+                ->where('filters.q', 'project')
+                ->where('filters.status', 'published')
+                ->where('filters.featured', 'all')
+                ->where('filters.sort', 'title_desc')
+                ->has('projects.data', 2)
+                ->where('projects.data.0.title', 'Gamma Project')
+                ->where('projects.data.1.title', 'Alpha Project'));
+    }
+
+    public function test_projects_index_preserves_query_through_pagination_links(): void
+    {
+        $user = User::factory()->create();
+
+        Project::factory()->count(20)->create([
+            'title' => 'Query Match',
+            'is_published' => true,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard.projects.index', [
+            'q' => 'Query Match',
+            'status' => 'published',
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('projects.next_page_url', function ($url) {
+                    return is_string($url)
+                        && str_contains(urldecode($url), 'q=Query Match')
+                        && str_contains($url, 'status=published');
+                }));
+    }
+
+    public function test_guests_are_redirected_from_project_flags_update(): void
+    {
+        $project = Project::factory()->create();
+
+        $this
+            ->patch(route('dashboard.projects.flags.update', $project), [
+                'is_published' => true,
+                'is_featured' => true,
+            ])
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_authenticated_user_can_update_project_flags_and_publish_timestamp(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create([
+            'is_published' => false,
+            'is_featured' => false,
+            'published_at' => null,
+        ]);
+
+        $this
+            ->actingAs($user)
+            ->patch(route('dashboard.projects.flags.update', $project), [
+                'is_published' => true,
+                'is_featured' => true,
+            ])
+            ->assertRedirect();
+
+        $project->refresh();
+        $this->assertTrue($project->is_published);
+        $this->assertTrue($project->is_featured);
+        $this->assertNotNull($project->published_at);
+
+        $this
+            ->actingAs($user)
+            ->patch(route('dashboard.projects.flags.update', $project), [
+                'is_published' => false,
+                'is_featured' => false,
+            ])
+            ->assertRedirect();
+
+        $project->refresh();
+        $this->assertFalse($project->is_published);
+        $this->assertFalse($project->is_featured);
+        $this->assertNull($project->published_at);
+    }
+
+    public function test_project_flags_validation_rejects_invalid_values(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->from(route('dashboard.projects.index'))
+            ->patch(route('dashboard.projects.flags.update', $project), [
+                'is_published' => 'invalid',
+                'is_featured' => 'invalid',
+            ]);
+
+        $response->assertRedirect(route('dashboard.projects.index'));
+        $response->assertSessionHasErrors(['is_published', 'is_featured']);
     }
 }

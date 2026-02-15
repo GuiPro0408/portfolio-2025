@@ -26,6 +26,42 @@ test('projects page opens project detail', async ({ page }) => {
     await expect(page).toHaveURL(/\/projects\/.+/);
 });
 
+test('projects filters smoke', async ({ page }) => {
+    await page.goto('/projects');
+    await expect(
+        page.getByRole('heading', { name: 'Published Projects' }),
+    ).toBeVisible();
+
+    const filterForm = page.locator('form.projects-filter-form');
+    const stackButton = filterForm.locator('.projects-filter-select-button').first();
+    const sortButton = filterForm.locator('.projects-filter-select-button').nth(1);
+
+    await stackButton.click();
+    const stackOptions = page.locator('.projects-filter-options .projects-filter-option-multi');
+    const stackOptionCount = await stackOptions.count();
+    expect(stackOptionCount).toBeGreaterThan(0);
+
+    await stackOptions.nth(0).click();
+    if (stackOptionCount > 1) {
+        await stackOptions.nth(1).click();
+    }
+    await stackButton.click();
+
+    await sortButton.click();
+    await page.locator('.projects-filter-option', { hasText: 'Newest' }).click();
+
+    await page.getByRole('button', { name: 'Apply' }).click();
+
+    await expect(page).toHaveURL(/\/projects\?/);
+    await expect(page).toHaveURL(/sort=newest/);
+    await expect(page).toHaveURL(/stack=/);
+
+    await page.getByRole('button', { name: 'Reset' }).click();
+    await expect(page).toHaveURL(/\/projects\?sort=editorial$/);
+    await expect(page).not.toHaveURL(/stack=/);
+    await expect(stackButton).toContainText('All stacks');
+});
+
 test('contact form submit smoke', async ({ page }) => {
     await page.goto('/contact');
 

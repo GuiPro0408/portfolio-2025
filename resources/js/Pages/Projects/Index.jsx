@@ -9,7 +9,7 @@ import {
     ListboxOptions,
 } from '@headlessui/react';
 import { Head, Link, router } from '@inertiajs/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 const defaultFilters = {
     q: '',
@@ -100,6 +100,43 @@ function ProjectSkeletonGrid() {
         </div>
     );
 }
+
+const ProjectCard = memo(function ProjectCard({ project }) {
+    const tags = useMemo(() => toTags(project.stack), [project.stack]);
+    const detailHref = route('projects.show', project.slug);
+
+    return (
+        <article className="project-card card-surface">
+            <div className="project-card-body">
+                <h2 className="project-card-title">
+                    <Link href={detailHref} prefetch="hover" cacheFor="30s">
+                        {project.title}
+                    </Link>
+                </h2>
+                <p className="project-card-summary">{project.summary}</p>
+
+                {tags.length > 0 ? (
+                    <ul className="tag-list" aria-label="Project stack">
+                        {tags.map((tag) => (
+                            <li key={`${project.id}-${tag}`} className="tag-item">
+                                {tag}
+                            </li>
+                        ))}
+                    </ul>
+                ) : null}
+
+                <Link
+                    href={detailHref}
+                    className="project-link"
+                    prefetch="hover"
+                    cacheFor="30s"
+                >
+                    View project
+                </Link>
+            </div>
+        </article>
+    );
+});
 
 export default function Index({ projects, contact, filters, availableStacks }) {
     const initialFilters = { ...defaultFilters, ...(filters ?? {}) };
@@ -259,6 +296,7 @@ export default function Index({ projects, contact, filters, availableStacks }) {
     const metaDescription =
         'Published software projects showcasing delivery quality, architecture, and measurable outcomes.';
     const canonicalUrl = route('projects.index');
+    const projectItems = useMemo(() => projects.data ?? [], [projects.data]);
 
     const structuredData = useMemo(
         () => ({
@@ -267,13 +305,13 @@ export default function Index({ projects, contact, filters, availableStacks }) {
             name: 'Published Projects',
             description: metaDescription,
             url: canonicalUrl,
-            hasPart: projects.data.map((project) => ({
+            hasPart: projectItems.map((project) => ({
                 '@type': 'CreativeWork',
                 name: project.title,
                 url: route('projects.show', project.slug),
             })),
         }),
-        [canonicalUrl, metaDescription, projects.data],
+        [canonicalUrl, metaDescription, projectItems],
     );
 
     return (
@@ -346,68 +384,15 @@ export default function Index({ projects, contact, filters, availableStacks }) {
 
                     {isListLoading ? (
                         <ProjectSkeletonGrid />
-                    ) : projects.data.length === 0 ? (
+                    ) : projectItems.length === 0 ? (
                         <p className="card-surface empty-note mt-8">
                             No published projects yet.
                         </p>
                     ) : (
                         <div className="project-grid mt-8">
-                            {projects.data.map((project) => {
-                                const tags = toTags(project.stack);
-
-                                return (
-                                    <article
-                                        key={project.id}
-                                        className="project-card card-surface"
-                                    >
-                                        <div className="project-card-body">
-                                            <h2 className="project-card-title">
-                                                <Link
-                                                    href={route(
-                                                        'projects.show',
-                                                        project.slug,
-                                                    )}
-                                                    prefetch="hover"
-                                                    cacheFor="30s"
-                                                >
-                                                    {project.title}
-                                                </Link>
-                                            </h2>
-                                            <p className="project-card-summary">
-                                                {project.summary}
-                                            </p>
-
-                                            {tags.length > 0 && (
-                                                <ul
-                                                    className="tag-list"
-                                                    aria-label="Project stack"
-                                                >
-                                                    {tags.map((tag) => (
-                                                        <li
-                                                            key={`${project.id}-${tag}`}
-                                                            className="tag-item"
-                                                        >
-                                                            {tag}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            )}
-
-                                            <Link
-                                                href={route(
-                                                    'projects.show',
-                                                    project.slug,
-                                                )}
-                                                className="project-link"
-                                                prefetch="hover"
-                                                cacheFor="30s"
-                                            >
-                                                View project
-                                            </Link>
-                                        </div>
-                                    </article>
-                                );
-                            })}
+                            {projectItems.map((project) => (
+                                <ProjectCard key={project.id} project={project} />
+                            ))}
                         </div>
                     )}
 

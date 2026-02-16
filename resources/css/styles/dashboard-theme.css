@@ -731,6 +731,7 @@
     & .dashboard-virtual-scroll {
         max-height: 66vh;
         overflow: auto;
+        border-top: 1px solid var(--dash-border);
     }
 
     & .dashboard-virtual-row {
@@ -765,6 +766,12 @@
 
     & .dashboard-cell-actions {
         text-align: right;
+    }
+
+    & .dashboard-sort-controls {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
     }
 
     & .dashboard-sort-input {

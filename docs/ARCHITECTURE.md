@@ -24,6 +24,10 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - Global style tokens and section-level styles are split under `resources/css/styles/` to keep concerns maintainable.
 - CSS in `resources/css/styles/` must use nesting for selector relationships to keep style hierarchy explicit and reduce duplicated flat selectors.
 - Dashboard design primitives live under `resources/js/Components/Dashboard` and should be reused across authenticated pages.
+- Shared filtering primitives live under `resources/js/Components/Filters` (`ListboxSelect`, `ActiveFilterChips`) and must be reused between public and dashboard list pages.
+- List pages (`/projects`, `/dashboard/projects`) are server-driven and should use Inertia partial reloads (`only`) rather than local in-memory datasets.
+- Large dashboard collections should use virtualized rendering windows (`@tanstack/react-virtual`) to cap DOM node count while preserving row semantics.
+- Route-level CSS loading is enforced via layout/page imports (`PublicLayout`, `AuthenticatedLayout`, and page-specific imports like `Contact`) instead of app-wide style imports.
 
 ## Data/Schema Boundaries
 - Schema changes: `database/migrations`.
@@ -43,3 +47,4 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - New backend behavior: controller + request validation + service/action class as needed.
 - New reusable UI: create component in `resources/js/Components` and compose from pages/layouts.
 - New business rule: unit test in `tests/Unit` and feature/integration coverage in `tests/Feature`.
+- Bundle hygiene adjustments: prefer route-level lazy boundaries first (Inertia page resolution); add Vite chunk tuning only for verified leakage.

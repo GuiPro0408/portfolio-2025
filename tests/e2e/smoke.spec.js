@@ -32,7 +32,7 @@ test('projects filters smoke', async ({ page }) => {
         page.getByRole('heading', { name: 'Published Projects' }),
     ).toBeVisible();
 
-    const filterForm = page.locator('form.projects-filter-form');
+    const filterForm = page.locator('.projects-filter-form');
     const stackButton = filterForm.locator('.projects-filter-select-button').first();
     const sortButton = filterForm.locator('.projects-filter-select-button').nth(1);
 
@@ -49,14 +49,14 @@ test('projects filters smoke', async ({ page }) => {
 
     await sortButton.click();
     await page.locator('.projects-filter-option', { hasText: 'Newest' }).click();
-
-    await page.getByRole('button', { name: 'Apply' }).click();
+    await page.waitForTimeout(450);
 
     await expect(page).toHaveURL(/\/projects\?/);
     await expect(page).toHaveURL(/sort=newest/);
     await expect(page).toHaveURL(/stack=/);
 
     await page.getByRole('button', { name: 'Reset' }).click();
+    await page.waitForTimeout(450);
     await expect(page).toHaveURL(/\/projects\?sort=editorial$/);
     await expect(page).not.toHaveURL(/stack=/);
     await expect(stackButton).toContainText('All stacks');

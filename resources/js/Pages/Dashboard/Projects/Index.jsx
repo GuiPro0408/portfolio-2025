@@ -8,8 +8,9 @@ import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Copy, LoaderCircle, PenSquare, Trash2 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const defaultFilters = {
     q: '',
@@ -29,7 +30,10 @@ function DashboardSkeletonRows() {
     return (
         <div className="dashboard-skeleton-rows" aria-busy="true">
             {Array.from({ length: 8 }).map((_, index) => (
-                <div key={`dashboard-skeleton-${index}`} className="dashboard-skeleton-row">
+                <div
+                    key={`dashboard-skeleton-${index}`}
+                    className="dashboard-skeleton-row"
+                >
                     <div className="skeleton-line skeleton-title" />
                     <div className="skeleton-line" />
                     <div className="skeleton-line skeleton-short" />
@@ -38,6 +42,134 @@ function DashboardSkeletonRows() {
         </div>
     );
 }
+
+const ProjectRow = memo(function ProjectRow({
+    project,
+    sortValue,
+    isPending,
+    isSortPending,
+    isDuplicatePending,
+    onTogglePublish,
+    onToggleFeatured,
+    onSortChange,
+    onSaveSort,
+    onDuplicate,
+    onDelete,
+}) {
+    return (
+        <div className="dashboard-virtual-row" role="row">
+            <div className="dashboard-cell" role="cell">
+                <p className="dashboard-row-title">{project.title}</p>
+                <p className="dashboard-meta-text">/{project.slug}</p>
+            </div>
+
+            <div className="dashboard-cell" role="cell">
+                <div className="dashboard-badge-row">
+                    <StatusBadge tone={project.is_published ? 'success' : 'warning'}>
+                        {project.is_published ? 'Published' : 'Draft'}
+                    </StatusBadge>
+                    <StatusBadge tone={project.is_featured ? 'featured' : 'default'}>
+                        {project.is_featured ? 'Featured' : 'Standard'}
+                    </StatusBadge>
+                </div>
+
+                <div className="dashboard-toggle-row">
+                    <button
+                        type="button"
+                        className="dashboard-toggle-btn"
+                        onClick={() => onTogglePublish(project)}
+                        disabled={isPending}
+                    >
+                        Toggle publish
+                    </button>
+                    <button
+                        type="button"
+                        className="dashboard-toggle-btn"
+                        onClick={() => onToggleFeatured(project)}
+                        disabled={isPending}
+                    >
+                        Toggle featured
+                    </button>
+                    {isPending ? (
+                        <span className="dashboard-toggle-loading">
+                            <LoaderCircle size={13} className="animate-spin" />
+                            Saving
+                        </span>
+                    ) : null}
+                </div>
+            </div>
+
+            <div className="dashboard-cell" role="cell">
+                <p className="dashboard-meta-text">
+                    {formatUpdatedAt(project.updated_at)}
+                </p>
+            </div>
+
+            <div className="dashboard-cell" role="cell">
+                <div className="dashboard-sort-controls">
+                    <input
+                        type="number"
+                        min={0}
+                        value={sortValue}
+                        onChange={(event) =>
+                            onSortChange(project.id, event.target.value)
+                        }
+                        className="dashboard-sort-input"
+                        disabled={isSortPending}
+                    />
+                    <button
+                        type="button"
+                        className="dashboard-toggle-btn"
+                        onClick={() => onSaveSort(project)}
+                        disabled={isSortPending}
+                    >
+                        Save
+                    </button>
+                    {isSortPending ? (
+                        <LoaderCircle
+                            size={13}
+                            className="animate-spin text-slate-300"
+                        />
+                    ) : null}
+                </div>
+            </div>
+
+            <div className="dashboard-cell dashboard-cell-actions" role="cell">
+                <div className="dashboard-row-actions">
+                    <Link
+                        href={route('dashboard.projects.edit', project.id)}
+                        className="dashboard-inline-action"
+                    >
+                        <PenSquare size={14} aria-hidden="true" />
+                        Edit
+                    </Link>
+                    <button
+                        type="button"
+                        onClick={() => onDuplicate(project)}
+                        className="dashboard-inline-action"
+                        disabled={isDuplicatePending}
+                    >
+                        {isDuplicatePending ? (
+                            <LoaderCircle size={14} className="animate-spin" aria-hidden="true" />
+                        ) : (
+                            <Copy size={14} aria-hidden="true" />
+                        )}
+                        Duplicate
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => onDelete(project)}
+                        className="dashboard-inline-action dashboard-inline-action-danger"
+                        disabled={isPending}
+                    >
+                        <Trash2 size={14} aria-hidden="true" />
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+});
 
 export default function Index({ projects, filters }) {
     const initialFilters = { ...defaultFilters, ...(filters ?? {}) };
@@ -56,6 +188,16 @@ export default function Index({ projects, filters }) {
     const [pendingDuplicateId, setPendingDuplicateId] = useState(null);
     const [isFilterAccordionOpen, setIsFilterAccordionOpen] = useState(true);
 
+    const projectsData = projects.data;
+    const scrollParentRef = useRef(null);
+
+    const rowVirtualizer = useVirtualizer({
+        count: projectsData.length,
+        getScrollElement: () => scrollParentRef.current,
+        estimateSize: () => 144,
+        overscan: 5,
+    });
+
     useEffect(() => {
         setQuery(initialFilters.q);
         setStatus(initialFilters.status);
@@ -63,7 +205,12 @@ export default function Index({ projects, filters }) {
         setSort(initialFilters.sort);
         setIsListLoading(false);
         setShowListSkeleton(false);
-    }, [initialFilters.q, initialFilters.status, initialFilters.featured, initialFilters.sort]);
+    }, [
+        initialFilters.q,
+        initialFilters.status,
+        initialFilters.featured,
+        initialFilters.sort,
+    ]);
 
     useEffect(() => {
         if (!isListLoading) {
@@ -77,6 +224,10 @@ export default function Index({ projects, filters }) {
 
         return () => window.clearTimeout(timeoutId);
     }, [isListLoading]);
+
+    useEffect(() => {
+        rowVirtualizer.measure();
+    }, [rowVirtualizer, projectsData]);
 
     const statusOptions = useMemo(
         () => [
@@ -179,17 +330,27 @@ export default function Index({ projects, filters }) {
         }, 300);
 
         return () => window.clearTimeout(timeoutId);
-    }, [query, status, featured, sort, initialFilters.q, initialFilters.status, initialFilters.featured, initialFilters.sort, visitWithFilters]);
+    }, [
+        query,
+        status,
+        featured,
+        sort,
+        initialFilters.q,
+        initialFilters.status,
+        initialFilters.featured,
+        initialFilters.sort,
+        visitWithFilters,
+    ]);
 
     useEffect(() => {
         const nextSortValues = {};
 
-        projects.data.forEach((project) => {
+        projectsData.forEach((project) => {
             nextSortValues[project.id] = String(project.sort_order);
         });
 
         setSortValues(nextSortValues);
-    }, [projects.data]);
+    }, [projectsData]);
 
     const updateFilter = useCallback((key, value) => {
         if (key === 'status') {
@@ -247,7 +408,15 @@ export default function Index({ projects, filters }) {
         }
 
         return chips;
-    }, [query, status, featured, sort, statusLabelByValue, featuredLabelByValue, sortLabelByValue]);
+    }, [
+        query,
+        status,
+        featured,
+        sort,
+        statusLabelByValue,
+        featuredLabelByValue,
+        sortLabelByValue,
+    ]);
 
     const removeChip = useCallback((chip) => {
         if (chip.key === 'q') {
@@ -300,14 +469,32 @@ export default function Index({ projects, filters }) {
                 preserveScroll: true,
                 onFinish: () => {
                     setPendingRows((currentRows) => {
-                        const { [project.id]: removed, ...remainingRows } =
-                            currentRows;
+                        const { [project.id]: removed, ...remainingRows } = currentRows;
+                        void removed;
                         return remainingRows;
                     });
                 },
             },
         );
     }, []);
+
+    const onTogglePublish = useCallback(
+        (project) => {
+            toggleFlags(project, {
+                is_published: !project.is_published,
+            });
+        },
+        [toggleFlags],
+    );
+
+    const onToggleFeatured = useCallback(
+        (project) => {
+            toggleFlags(project, {
+                is_featured: !project.is_featured,
+            });
+        },
+        [toggleFlags],
+    );
 
     const updateSortValue = useCallback((projectId, value) => {
         setSortValues((currentValues) => ({
@@ -316,38 +503,41 @@ export default function Index({ projects, filters }) {
         }));
     }, []);
 
-    const saveSortOrder = useCallback((project) => {
-        const nextSortOrder = Number.parseInt(
-            sortValues[project.id] ?? String(project.sort_order),
-            10,
-        );
+    const saveSortOrder = useCallback(
+        (project) => {
+            const nextSortOrder = Number.parseInt(
+                sortValues[project.id] ?? String(project.sort_order),
+                10,
+            );
 
-        if (Number.isNaN(nextSortOrder) || nextSortOrder < 0) {
-            return;
-        }
+            if (Number.isNaN(nextSortOrder) || nextSortOrder < 0) {
+                return;
+            }
 
-        setPendingSortRows((currentRows) => ({
-            ...currentRows,
-            [project.id]: true,
-        }));
+            setPendingSortRows((currentRows) => ({
+                ...currentRows,
+                [project.id]: true,
+            }));
 
-        router.patch(
-            route('dashboard.projects.sort.update', project.id),
-            {
-                sort_order: nextSortOrder,
-            },
-            {
-                preserveScroll: true,
-                onFinish: () => {
-                    setPendingSortRows((currentRows) => {
-                        const { [project.id]: removed, ...remainingRows } =
-                            currentRows;
-                        return remainingRows;
-                    });
+            router.patch(
+                route('dashboard.projects.sort.update', project.id),
+                {
+                    sort_order: nextSortOrder,
                 },
-            },
-        );
-    }, [sortValues]);
+                {
+                    preserveScroll: true,
+                    onFinish: () => {
+                        setPendingSortRows((currentRows) => {
+                            const { [project.id]: removed, ...remainingRows } = currentRows;
+                            void removed;
+                            return remainingRows;
+                        });
+                    },
+                },
+            );
+        },
+        [sortValues],
+    );
 
     const duplicateProject = useCallback((project) => {
         setPendingDuplicateId(project.id);
@@ -363,6 +553,8 @@ export default function Index({ projects, filters }) {
             },
         );
     }, []);
+
+    const virtualRows = rowVirtualizer.getVirtualItems();
 
     return (
         <AuthenticatedLayout
@@ -390,9 +582,7 @@ export default function Index({ projects, filters }) {
                             type="button"
                             className="dashboard-filter-accordion-trigger"
                             onClick={() =>
-                                setIsFilterAccordionOpen(
-                                    (currentValue) => !currentValue,
-                                )
+                                setIsFilterAccordionOpen((currentValue) => !currentValue)
                             }
                             aria-expanded={isFilterAccordionOpen}
                             aria-controls="dashboard-project-filters"
@@ -443,7 +633,7 @@ export default function Index({ projects, filters }) {
                             <div className="p-4">
                                 <DashboardSkeletonRows />
                             </div>
-                        ) : projects.data.length === 0 ? (
+                        ) : projectsData.length === 0 ? (
                             <EmptyState
                                 title="No matching projects"
                                 description="Try adjusting your filters or create a new project."
@@ -454,160 +644,68 @@ export default function Index({ projects, filters }) {
                                 }
                             />
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="dashboard-table min-w-full text-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Title</th>
-                                            <th>Status</th>
-                                            <th>Updated</th>
-                                            <th>Sort</th>
-                                            <th className="text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {projects.data.map((project) => {
-                                            const isPending = pendingRows[project.id] === true;
-                                            const isSortPending =
-                                                pendingSortRows[project.id] === true;
-                                            const isDuplicatePending =
-                                                pendingDuplicateId === project.id;
+                            <div className="dashboard-virtual-table" role="table" aria-label="Projects">
+                                <div className="dashboard-virtual-row dashboard-virtual-row-head" role="row">
+                                    <div className="dashboard-cell" role="columnheader">Title</div>
+                                    <div className="dashboard-cell" role="columnheader">Status</div>
+                                    <div className="dashboard-cell" role="columnheader">Updated</div>
+                                    <div className="dashboard-cell" role="columnheader">Sort</div>
+                                    <div className="dashboard-cell dashboard-cell-actions" role="columnheader">Actions</div>
+                                </div>
+
+                                <div
+                                    ref={scrollParentRef}
+                                    className="dashboard-virtual-scroll"
+                                    role="rowgroup"
+                                >
+                                    <div
+                                        style={{
+                                            height: `${rowVirtualizer.getTotalSize()}px`,
+                                            position: 'relative',
+                                            width: '100%',
+                                        }}
+                                    >
+                                        {virtualRows.map((virtualRow) => {
+                                            const project = projectsData[virtualRow.index];
 
                                             return (
-                                                <tr key={project.id}>
-                                                    <td>
-                                                        <p className="dashboard-row-title">{project.title}</p>
-                                                        <p className="dashboard-meta-text">/{project.slug}</p>
-                                                    </td>
-                                                    <td>
-                                                        <div className="dashboard-badge-row">
-                                                            <StatusBadge tone={project.is_published ? 'success' : 'warning'}>
-                                                                {project.is_published ? 'Published' : 'Draft'}
-                                                            </StatusBadge>
-                                                            <StatusBadge tone={project.is_featured ? 'featured' : 'default'}>
-                                                                {project.is_featured ? 'Featured' : 'Standard'}
-                                                            </StatusBadge>
-                                                        </div>
-
-                                                        <div className="dashboard-toggle-row">
-                                                            <button
-                                                                type="button"
-                                                                className="dashboard-toggle-btn"
-                                                                onClick={() =>
-                                                                    toggleFlags(project, {
-                                                                        is_published: !project.is_published,
-                                                                    })
-                                                                }
-                                                                disabled={isPending}
-                                                            >
-                                                                Toggle publish
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                className="dashboard-toggle-btn"
-                                                                onClick={() =>
-                                                                    toggleFlags(project, {
-                                                                        is_featured: !project.is_featured,
-                                                                    })
-                                                                }
-                                                                disabled={isPending}
-                                                            >
-                                                                Toggle featured
-                                                            </button>
-                                                            {isPending ? (
-                                                                <span className="dashboard-toggle-loading">
-                                                                    <LoaderCircle size={13} className="animate-spin" />
-                                                                    Saving
-                                                                </span>
-                                                            ) : null}
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <p className="dashboard-meta-text">
-                                                            {formatUpdatedAt(project.updated_at)}
-                                                        </p>
-                                                    </td>
-                                                    <td>
-                                                        <div className="flex items-center gap-2">
-                                                            <input
-                                                                type="number"
-                                                                min={0}
-                                                                value={
-                                                                    sortValues[project.id] ??
-                                                                    String(project.sort_order)
-                                                                }
-                                                                onChange={(event) =>
-                                                                    updateSortValue(project.id, event.target.value)
-                                                                }
-                                                                className="dashboard-sort-input"
-                                                                disabled={isSortPending}
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                className="dashboard-toggle-btn"
-                                                                onClick={() => saveSortOrder(project)}
-                                                                disabled={isSortPending}
-                                                            >
-                                                                Save
-                                                            </button>
-                                                            {isSortPending ? (
-                                                                <LoaderCircle
-                                                                    size={13}
-                                                                    className="animate-spin text-slate-300"
-                                                                />
-                                                            ) : null}
-                                                        </div>
-                                                    </td>
-                                                    <td className="text-right">
-                                                        <div className="dashboard-row-actions">
-                                                            <Link
-                                                                href={route('dashboard.projects.edit', project.id)}
-                                                                className="dashboard-inline-action"
-                                                            >
-                                                                <PenSquare size={14} aria-hidden="true" />
-                                                                Edit
-                                                            </Link>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => duplicateProject(project)}
-                                                                className="dashboard-inline-action"
-                                                                disabled={isDuplicatePending}
-                                                            >
-                                                                {isDuplicatePending ? (
-                                                                    <LoaderCircle
-                                                                        size={14}
-                                                                        className="animate-spin"
-                                                                        aria-hidden="true"
-                                                                    />
-                                                                ) : (
-                                                                    <Copy size={14} aria-hidden="true" />
-                                                                )}
-                                                                Duplicate
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setProjectPendingDelete(project)}
-                                                                className="dashboard-inline-action dashboard-inline-action-danger"
-                                                                disabled={isPending}
-                                                            >
-                                                                <Trash2 size={14} aria-hidden="true" />
-                                                                Delete
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
+                                                <div
+                                                    key={project.id}
+                                                    data-index={virtualRow.index}
+                                                    ref={rowVirtualizer.measureElement}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        top: 0,
+                                                        left: 0,
+                                                        width: '100%',
+                                                        transform: `translateY(${virtualRow.start}px)`,
+                                                    }}
+                                                >
+                                                    <ProjectRow
+                                                        project={project}
+                                                        sortValue={
+                                                            sortValues[project.id] ?? String(project.sort_order)
+                                                        }
+                                                        isPending={pendingRows[project.id] === true}
+                                                        isSortPending={pendingSortRows[project.id] === true}
+                                                        isDuplicatePending={pendingDuplicateId === project.id}
+                                                        onTogglePublish={onTogglePublish}
+                                                        onToggleFeatured={onToggleFeatured}
+                                                        onSortChange={updateSortValue}
+                                                        onSaveSort={saveSortOrder}
+                                                        onDuplicate={duplicateProject}
+                                                        onDelete={setProjectPendingDelete}
+                                                    />
+                                                </div>
                                             );
                                         })}
-                                    </tbody>
-                                </table>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </section>
 
-                    <nav
-                        className="dashboard-pagination"
-                        aria-label="Projects pagination"
-                    >
+                    <nav className="dashboard-pagination" aria-label="Projects pagination">
                         <p className="dashboard-meta-text">
                             Page {projects.current_page} of {projects.last_page}
                         </p>
@@ -639,16 +737,13 @@ export default function Index({ projects, filters }) {
 
             <Modal
                 show={projectPendingDelete !== null}
-                onClose={() =>
-                    !isDeleting ? setProjectPendingDelete(null) : undefined
-                }
+                onClose={() => (!isDeleting ? setProjectPendingDelete(null) : undefined)}
                 maxWidth="md"
             >
                 <div className="space-y-4 bg-slate-950 p-6 text-slate-100">
                     <h2 className="text-lg font-semibold">Delete project?</h2>
                     <p className="text-sm text-slate-300">
-                        This will permanently remove{' '}
-                        <strong>{projectPendingDelete?.title}</strong>.
+                        This will permanently remove <strong>{projectPendingDelete?.title}</strong>.
                     </p>
                     <div className="flex justify-end gap-3">
                         <SecondaryButton

@@ -26,7 +26,7 @@ This sequence is the canonical non-browser CI quality path.
   - `npm run test:e2e`
 - CI job prerequisites:
   - seeded SQLite database
-  - built frontend assets
+  - built frontend assets restored from the `frontend-build` artifact produced by the `build` job
   - running PHP application server
 
 ## Change Rules

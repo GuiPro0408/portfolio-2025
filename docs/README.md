@@ -10,7 +10,7 @@
 - [Deploy](DEPLOY.md): Koyeb deployment runbook, env var contract, and migration flow.
 - [MVP v1](MVP.md): first-shipping scope, data model, homepage settings scope, and acceptance criteria.
 - [v1.1 Backlog](V1.1-BACKLOG.md): post-MVP prioritized improvements (top 4).
-- [v1.2 Backlog](V1.2-BACKLOG.md): current release scope and milestones.
+- [v1.2 Backlog](V1.2-BACKLOG.md): completed release scope and closure notes.
 
 ## Knowledge Base
 - [FAQ](knowledge/faq.md): common process and workflow questions.

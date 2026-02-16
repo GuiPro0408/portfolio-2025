@@ -30,15 +30,16 @@ A modern portfolio application built with Laravel 12 + Breeze (React + Inertia.j
 - MVP v1 status: complete (February 15, 2026)
 - Public homepage, projects index, and project detail pages
 - Public contact page at `/contact` with anti-spam guarded form submission
-- Public projects supports keyword, stack, and sort query filters
+- Public projects supports SQL-backed keyword, stack, and sort query filters
 - Authenticated project CRUD under `/dashboard/projects`
 - Admin project list supports search/filter/sort and inline publish/feature toggles
 - Admin project list supports duplicate and inline sort-order update actions
+- Project stack is normalized through relational technologies data (with compatibility mirror field retained)
 - Authenticated homepage content settings under `/dashboard/homepage`
 - Homepage image fields accept hosted URLs and local filename-based values (auto-mapped to `/images/homepage/*`)
 - Homepage contact links configured via env-backed `config/portfolio.php`
 - Authenticated area uses dark enterprise dashboard theme with flash toasts
-- SEO endpoints are available at `/sitemap.xml` and `/robots.txt`
+- SEO endpoints are available at `/sitemap.xml` and `/robots.txt` (cached public payload flow)
 
 ## Local Development
 
@@ -131,6 +132,7 @@ GitHub Actions workflow automatically:
 - Validates docs system-of-record consistency with `make docs-check`
 - Runs the golden check command: `make check`
 - Enforces composer validation, Pint linting, backend tests, and frontend build
+- Uploads `public/build` from the build job and reuses it in Playwright job
 - Runs Playwright browser smoke coverage with `npm run test:e2e`
 
 The workflow runs on every push and pull request to the `main` branch.

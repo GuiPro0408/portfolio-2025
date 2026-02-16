@@ -33,6 +33,8 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - Schema changes: `database/migrations`.
 - Seed data: `database/seeders`.
 - Test data factories: `database/factories`.
+- Project stack taxonomy is modeled relationally (`projects` <-> `technologies` via pivot) and should be the filtering source of truth.
+- Public payload caching (homepage/sitemap) must use explicit cache keys with clear invalidation on project/homepage-admin writes.
 
 ## Content Configuration Pattern
 - Structured content entities (for example homepage copy/images) are modeled in Eloquent (`app/Models`) and edited through authenticated dashboard routes.

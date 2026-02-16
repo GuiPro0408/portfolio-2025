@@ -1,12 +1,14 @@
 import InputError from '@/Components/InputError';
+import ListboxSelect from '@/Components/Filters/ListboxSelect';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import StickyActionBar from '@/Components/Dashboard/StickyActionBar';
 import TextInput from '@/Components/TextInput';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
+import { useEffect, useMemo, useState } from 'react';
 
 function parseDateValue(value) {
     if (!value || typeof value !== 'string') {
@@ -99,7 +101,58 @@ export default function ProjectForm({
     onSubmit,
     submitLabel,
 }) {
-    const selectedPublishedAt = parseDateValue(data.published_at);
+    const today = useMemo(() => new Date(), []);
+    const selectedPublishedAt = useMemo(
+        () => parseDateValue(data.published_at),
+        [data.published_at],
+    );
+    const [displayMonth, setDisplayMonth] = useState(
+        () => selectedPublishedAt ?? today,
+    );
+
+    const monthOptions = useMemo(
+        () =>
+            Array.from({ length: 12 }, (_, month) => ({
+                value: month,
+                label: new Intl.DateTimeFormat('en', {
+                    month: 'long',
+                }).format(new Date(2026, month, 1)),
+            })),
+        [],
+    );
+
+    const yearOptions = useMemo(() => {
+        const currentYear = today.getFullYear();
+
+        return Array.from({ length: 31 }, (_, index) => {
+            const year = currentYear - 20 + index;
+
+            return {
+                value: year,
+                label: String(year),
+            };
+        });
+    }, [today]);
+
+    useEffect(() => {
+        const nextSelectedDate = parseDateValue(data.published_at);
+
+        if (!nextSelectedDate) {
+            return;
+        }
+
+        setDisplayMonth(
+            new Date(
+                nextSelectedDate.getFullYear(),
+                nextSelectedDate.getMonth(),
+                1,
+            ),
+        );
+    }, [data.published_at]);
+
+    const updateDisplayMonth = (nextMonth, nextYear) => {
+        setDisplayMonth(new Date(nextYear, nextMonth, 1));
+    };
 
     return (
         <form onSubmit={onSubmit} className="space-y-8">
@@ -257,6 +310,45 @@ export default function ProjectForm({
                                         transition
                                         className="dashboard-modern-date-panel"
                                     >
+                                        <div className="dashboard-modern-date-controls">
+                                            <ListboxSelect
+                                                label="Month"
+                                                value={displayMonth.getMonth()}
+                                                onChange={(nextMonth) =>
+                                                    updateDisplayMonth(
+                                                        Number(nextMonth),
+                                                        displayMonth.getFullYear(),
+                                                    )
+                                                }
+                                                options={monthOptions}
+                                                labelClassName="dashboard-modern-date-listbox-label"
+                                                containerClassName="dashboard-modern-date-listbox"
+                                                buttonClassName="dashboard-modern-date-listbox-button"
+                                                iconClassName="dashboard-modern-date-listbox-icon"
+                                                optionsClassName="dashboard-modern-date-listbox-options"
+                                                optionClassName="dashboard-modern-date-listbox-option"
+                                                ariaLabel="Select month"
+                                            />
+                                            <ListboxSelect
+                                                label="Year"
+                                                value={displayMonth.getFullYear()}
+                                                onChange={(nextYear) =>
+                                                    updateDisplayMonth(
+                                                        displayMonth.getMonth(),
+                                                        Number(nextYear),
+                                                    )
+                                                }
+                                                options={yearOptions}
+                                                labelClassName="dashboard-modern-date-listbox-label"
+                                                containerClassName="dashboard-modern-date-listbox"
+                                                buttonClassName="dashboard-modern-date-listbox-button"
+                                                iconClassName="dashboard-modern-date-listbox-icon"
+                                                optionsClassName="dashboard-modern-date-listbox-options"
+                                                optionClassName="dashboard-modern-date-listbox-option"
+                                                ariaLabel="Select year"
+                                            />
+                                        </div>
+
                                         <DayPicker
                                             mode="single"
                                             selected={selectedPublishedAt ?? undefined}
@@ -268,6 +360,10 @@ export default function ProjectForm({
                                             }}
                                             showOutsideDays
                                             weekStartsOn={1}
+                                            month={displayMonth}
+                                            startMonth={new Date(2000, 0)}
+                                            endMonth={new Date(today.getFullYear() + 10, 11)}
+                                            onMonthChange={setDisplayMonth}
                                             className="dashboard-daypicker"
                                             classNames={{
                                                 root: 'dashboard-daypicker',
@@ -291,14 +387,7 @@ export default function ProjectForm({
                                                 selected: 'is-selected',
                                                 outside: 'is-outside',
                                             }}
-                                            components={{
-                                                Chevron: ({ orientation, ...props }) =>
-                                                    orientation === 'left' ? (
-                                                        <ChevronLeft size={16} {...props} />
-                                                    ) : (
-                                                        <ChevronRight size={16} {...props} />
-                                                    ),
-                                            }}
+                                            hideNavigation
                                         />
 
                                         <div className="dashboard-modern-date-actions">

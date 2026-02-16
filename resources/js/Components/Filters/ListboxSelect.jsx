@@ -38,7 +38,7 @@ export default function ListboxSelect({
                     <ListboxOptions className={optionsClassName}>
                         {options.map((option) => (
                             <ListboxOption
-                                key={option.value || 'all'}
+                                key={String(option.value ?? 'all')}
                                 value={option.value}
                                 className={optionClassName}
                             >

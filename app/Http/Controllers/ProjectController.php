@@ -238,6 +238,7 @@ class ProjectController extends Controller
             ->withQueryString()
             ->through(fn (Project $project) => $this->transformProjectCard($project));
     }
+
     /**
      * @return array{email: mixed, linkedin: mixed, github: mixed}
      */

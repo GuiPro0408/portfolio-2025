@@ -253,6 +253,7 @@ class ProjectController extends Controller
 
         Cache::forget(PublicCacheKeys::SITEMAP_XML);
     }
+
     /**
      * @param  array{q: string, status: string, featured: string, sort: string}  $filters
      */

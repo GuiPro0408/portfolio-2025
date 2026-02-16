@@ -956,90 +956,185 @@
         }
     }
 
-    & .dashboard-modern-datepicker-wrap {
-        margin-top: 0.25rem;
-
-        & .react-datepicker-wrapper {
-            width: 100%;
-        }
-
-        & .react-datepicker__input-container {
-            width: 100%;
-        }
+    & .dashboard-modern-datefield {
+        position: relative;
+        width: 100%;
     }
 
-    & .dashboard-modern-datepicker-input {
+    & .dashboard-modern-date-trigger {
         width: 100%;
         border-radius: 0.7rem;
         border: 1px solid var(--dash-border-strong);
         background: #0f172a;
         color: var(--dash-text);
         min-height: 2.7rem;
-        padding: 0 0.75rem;
+        padding: 0.58rem 0.75rem;
         font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.55rem;
+        text-align: left;
+
+        &:hover {
+            background: #111c33;
+            border-color: #4f6897;
+        }
     }
 
-    & .dashboard-modern-datepicker-popper {
-        z-index: 50;
+    & .dashboard-modern-date-value {
+        font-weight: 600;
+        color: #d2defa;
     }
 
-    & .dashboard-modern-datepicker-calendar {
+    & .dashboard-modern-date-panel {
+        position: absolute;
+        bottom: calc(100% + 0.45rem);
+        left: 0;
+        z-index: 60;
+        width: min(20rem, calc(100vw - 3rem));
+        border-radius: 0.85rem;
         border: 1px solid var(--dash-border-strong);
-        border-radius: 0.75rem;
-        overflow: hidden;
-        background: #0f172a;
-        color: var(--dash-text);
-        font-family: inherit;
-        box-shadow: 0 16px 34px rgba(0, 0, 0, 0.4);
+        background: rgba(12, 18, 32, 0.98);
+        padding: 0.75rem;
+        box-shadow: 0 20px 36px rgba(0, 0, 0, 0.44);
+        transform-origin: bottom left;
+        transition: opacity 160ms ease, transform 160ms ease;
 
-        & .react-datepicker__header {
-            border-bottom: 1px solid var(--dash-border-strong);
-            background: #111a2f;
-        }
-
-        & .react-datepicker__current-month,
-        & .react-datepicker-time__header,
-        & .react-datepicker-year-header {
-            color: var(--dash-text);
-            font-size: 0.85rem;
-            font-weight: 700;
-        }
-
-        & .react-datepicker__day-name,
-        & .react-datepicker__day,
-        & .react-datepicker__time-name {
-            color: #c8d5f5;
-        }
-
-        & .react-datepicker__day:hover,
-        & .react-datepicker__month-text:hover,
-        & .react-datepicker__quarter-text:hover,
-        & .react-datepicker__year-text:hover {
-            background: rgba(91, 140, 255, 0.22);
-        }
-
-        & .react-datepicker__day--selected,
-        & .react-datepicker__day--keyboard-selected {
-            background: #5b8cff;
-            color: #071226;
-            font-weight: 700;
-        }
-
-        & .react-datepicker__navigation-icon::before {
-            border-color: #9eb7f3;
+        &[data-closed] {
+            opacity: 0;
+            transform: translateY(0.5rem) scale(0.98);
         }
     }
 
-    & .react-datepicker__close-icon {
-        right: 0.45rem;
+    & .dashboard-daypicker {
+        margin: 0;
+    }
 
-        &::after {
-            background: #334b83;
-            font-size: 0.78rem;
-            line-height: 1;
-            width: 1rem;
-            height: 1rem;
-            padding-top: 1px;
+    & .dashboard-daypicker-month {
+        width: 100%;
+    }
+
+    & .dashboard-daypicker-month-caption {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2rem;
+        margin-bottom: 0.2rem;
+    }
+
+    & .dashboard-daypicker-caption-label {
+        color: var(--dash-text);
+        font-size: 0.84rem;
+        font-weight: 700;
+    }
+
+    & .dashboard-daypicker-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.15rem;
+    }
+
+    & .dashboard-daypicker-nav-button {
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--dash-border-strong);
+        background: #111a30;
+        color: #acc1f5;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        &:hover {
+            background: #182544;
+        }
+    }
+
+    & .dashboard-daypicker-grid {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0.25rem;
+    }
+
+    & .dashboard-daypicker-weekday {
+        color: var(--dash-muted);
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        text-align: center;
+    }
+
+    & .dashboard-daypicker-day-cell {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    & .dashboard-daypicker-day {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.55rem;
+        border: 1px solid transparent;
+        background: transparent;
+        color: #d4e0fb;
+        font-size: 0.82rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 120ms ease, border-color 120ms ease;
+
+        &:hover {
+            background: rgba(91, 140, 255, 0.2);
+            border-color: rgba(91, 140, 255, 0.38);
+        }
+    }
+
+    & .dashboard-daypicker-day-cell.is-today .dashboard-daypicker-day,
+    & .dashboard-daypicker-day.is-today {
+        border-color: #5b8cff;
+        color: #dce8ff;
+    }
+
+    & .dashboard-daypicker-day-cell.is-selected .dashboard-daypicker-day,
+    & .dashboard-daypicker-day.is-selected {
+        background: #5b8cff;
+        border-color: #5b8cff;
+        color: #071226;
+        font-weight: 700;
+    }
+
+    & .dashboard-daypicker-day-cell.is-outside .dashboard-daypicker-day,
+    & .dashboard-daypicker-day.is-outside {
+        color: #6f83af;
+    }
+
+    & .dashboard-modern-date-actions {
+        margin-top: 0.6rem;
+        padding-top: 0.6rem;
+        border-top: 1px solid var(--dash-border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.45rem;
+    }
+
+    & .dashboard-modern-date-action {
+        border: 1px solid var(--dash-border-strong);
+        border-radius: 0.5rem;
+        background: #101a31;
+        color: #d5e2ff;
+        font-size: 0.76rem;
+        font-weight: 700;
+        padding: 0.28rem 0.55rem;
+
+        &:hover {
+            background: #1a2744;
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
     }
 

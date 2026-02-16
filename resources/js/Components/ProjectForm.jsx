@@ -3,8 +3,10 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import StickyActionBar from '@/Components/Dashboard/StickyActionBar';
 import TextInput from '@/Components/TextInput';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { DayPicker } from 'react-day-picker';
+import 'react-day-picker/dist/style.css';
 
 function parseDateValue(value) {
     if (!value || typeof value !== 'string') {
@@ -32,6 +34,18 @@ function formatDateValue(value) {
     const day = String(value.getDate()).padStart(2, '0');
 
     return `${year}-${month}-${day}`;
+}
+
+function formatHumanDate(value) {
+    if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+        return 'Select publication date';
+    }
+
+    return new Intl.DateTimeFormat('en', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+    }).format(value);
 }
 
 function ValidationSummary({ errors }) {
@@ -85,6 +99,8 @@ export default function ProjectForm({
     onSubmit,
     submitLabel,
 }) {
+    const selectedPublishedAt = parseDateValue(data.published_at);
+
     return (
         <form onSubmit={onSubmit} className="space-y-8">
             <ValidationSummary errors={errors} />
@@ -224,22 +240,91 @@ export default function ProjectForm({
                 <div className="grid gap-5 md:grid-cols-2">
                     <div>
                         <InputLabel htmlFor="published_at" value="Published At" />
-                        <div className="dashboard-modern-datepicker-wrap">
-                            <DatePicker
-                                id="published_at"
-                                selected={parseDateValue(data.published_at)}
-                                onChange={(nextDate) =>
-                                    setData('published_at', formatDateValue(nextDate))
-                                }
-                                dateFormat="yyyy-MM-dd"
-                                placeholderText="YYYY-MM-DD"
-                                className="dashboard-modern-datepicker-input"
-                                calendarClassName="dashboard-modern-datepicker-calendar"
-                                popperClassName="dashboard-modern-datepicker-popper"
-                                showPopperArrow={false}
-                                isClearable
-                            />
-                        </div>
+                        <Popover className="dashboard-modern-datefield mt-1">
+                            {({ close }) => (
+                                <>
+                                    <PopoverButton
+                                        id="published_at"
+                                        className="dashboard-modern-date-trigger"
+                                    >
+                                        <span className="dashboard-modern-date-value">
+                                            {formatHumanDate(selectedPublishedAt)}
+                                        </span>
+                                        <CalendarDays size={16} aria-hidden="true" />
+                                    </PopoverButton>
+
+                                    <PopoverPanel
+                                        transition
+                                        className="dashboard-modern-date-panel"
+                                    >
+                                        <DayPicker
+                                            mode="single"
+                                            selected={selectedPublishedAt ?? undefined}
+                                            onSelect={(nextDate) => {
+                                                setData('published_at', formatDateValue(nextDate));
+                                                if (nextDate) {
+                                                    close();
+                                                }
+                                            }}
+                                            showOutsideDays
+                                            weekStartsOn={1}
+                                            className="dashboard-daypicker"
+                                            classNames={{
+                                                root: 'dashboard-daypicker',
+                                                months: 'dashboard-daypicker-months',
+                                                month: 'dashboard-daypicker-month',
+                                                nav: 'dashboard-daypicker-nav',
+                                                button_previous: 'dashboard-daypicker-nav-button',
+                                                button_next: 'dashboard-daypicker-nav-button',
+                                                month_caption: 'dashboard-daypicker-month-caption',
+                                                caption_label: 'dashboard-daypicker-caption-label',
+                                                month_grid: 'dashboard-daypicker-grid',
+                                                weekdays: 'dashboard-daypicker-weekdays',
+                                                weekday: 'dashboard-daypicker-weekday',
+                                                weeks: 'dashboard-daypicker-weeks',
+                                                week: 'dashboard-daypicker-week',
+                                                day: 'dashboard-daypicker-day-cell',
+                                                day_button: 'dashboard-daypicker-day',
+                                            }}
+                                            modifiersClassNames={{
+                                                today: 'is-today',
+                                                selected: 'is-selected',
+                                                outside: 'is-outside',
+                                            }}
+                                            components={{
+                                                Chevron: ({ orientation, ...props }) =>
+                                                    orientation === 'left' ? (
+                                                        <ChevronLeft size={16} {...props} />
+                                                    ) : (
+                                                        <ChevronRight size={16} {...props} />
+                                                    ),
+                                            }}
+                                        />
+
+                                        <div className="dashboard-modern-date-actions">
+                                            <button
+                                                type="button"
+                                                className="dashboard-modern-date-action"
+                                                onClick={() => {
+                                                    setData('published_at', formatDateValue(new Date()));
+                                                    close();
+                                                }}
+                                            >
+                                                Today
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="dashboard-modern-date-action"
+                                                onClick={() => setData('published_at', '')}
+                                                disabled={!selectedPublishedAt}
+                                            >
+                                                Clear
+                                            </button>
+                                        </div>
+                                    </PopoverPanel>
+                                </>
+                            )}
+                        </Popover>
                         <FieldHelp>Pick a publication date. Leave empty to auto-use today when publishing.</FieldHelp>
                         <InputError className="mt-2" message={errors.published_at} />
                     </div>

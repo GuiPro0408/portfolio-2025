@@ -136,18 +136,29 @@ class ProjectController extends Controller
             $project->loadMissing('technologies');
         }
 
+        $originalTechnologyIds = $technologyTablesReady
+            ? $project->technologies->pluck('id')->all()
+            : [];
+
+        $stackMirror = $technologyTablesReady && $project->technologies->isNotEmpty()
+            ? $project->technologies->pluck('name')->implode(', ')
+            : $project->stack;
+
         $copy = $project->replicate();
         $copy->title = $project->title.' (Copy)';
         $copy->slug = $this->generateUniqueCopySlug($project->slug);
         $copy->is_featured = false;
         $copy->is_published = false;
         $copy->published_at = null;
-        $copy->stack = $technologyTablesReady && $project->technologies->isNotEmpty()
-            ? $project->technologies->pluck('name')->implode(', ')
-            : $project->stack;
+        $copy->stack = $stackMirror;
         $copy->save();
+
         if ($technologyTablesReady) {
-            $this->syncProjectTechnologies->sync($copy, $copy->stack);
+            if ($originalTechnologyIds !== []) {
+                $copy->technologies()->sync($originalTechnologyIds);
+            } else {
+                $this->syncProjectTechnologies->sync($copy, $copy->stack);
+            }
         }
         $this->clearPublicCaches();
 

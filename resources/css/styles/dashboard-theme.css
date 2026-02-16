@@ -956,7 +956,19 @@
         }
     }
 
-    & .dashboard-date-input {
+    & .dashboard-modern-datepicker-wrap {
+        margin-top: 0.25rem;
+
+        & .react-datepicker-wrapper {
+            width: 100%;
+        }
+
+        & .react-datepicker__input-container {
+            width: 100%;
+        }
+    }
+
+    & .dashboard-modern-datepicker-input {
         width: 100%;
         border-radius: 0.7rem;
         border: 1px solid var(--dash-border-strong);
@@ -964,6 +976,71 @@
         color: var(--dash-text);
         min-height: 2.7rem;
         padding: 0 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    & .dashboard-modern-datepicker-popper {
+        z-index: 50;
+    }
+
+    & .dashboard-modern-datepicker-calendar {
+        border: 1px solid var(--dash-border-strong);
+        border-radius: 0.75rem;
+        overflow: hidden;
+        background: #0f172a;
+        color: var(--dash-text);
+        font-family: inherit;
+        box-shadow: 0 16px 34px rgba(0, 0, 0, 0.4);
+
+        & .react-datepicker__header {
+            border-bottom: 1px solid var(--dash-border-strong);
+            background: #111a2f;
+        }
+
+        & .react-datepicker__current-month,
+        & .react-datepicker-time__header,
+        & .react-datepicker-year-header {
+            color: var(--dash-text);
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        & .react-datepicker__day-name,
+        & .react-datepicker__day,
+        & .react-datepicker__time-name {
+            color: #c8d5f5;
+        }
+
+        & .react-datepicker__day:hover,
+        & .react-datepicker__month-text:hover,
+        & .react-datepicker__quarter-text:hover,
+        & .react-datepicker__year-text:hover {
+            background: rgba(91, 140, 255, 0.22);
+        }
+
+        & .react-datepicker__day--selected,
+        & .react-datepicker__day--keyboard-selected {
+            background: #5b8cff;
+            color: #071226;
+            font-weight: 700;
+        }
+
+        & .react-datepicker__navigation-icon::before {
+            border-color: #9eb7f3;
+        }
+    }
+
+    & .react-datepicker__close-icon {
+        right: 0.45rem;
+
+        &::after {
+            background: #334b83;
+            font-size: 0.78rem;
+            line-height: 1;
+            width: 1rem;
+            height: 1rem;
+            padding-top: 1px;
+        }
     }
 
     & .dashboard-textarea {

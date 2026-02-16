@@ -3,6 +3,36 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import StickyActionBar from '@/Components/Dashboard/StickyActionBar';
 import TextInput from '@/Components/TextInput';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+
+function parseDateValue(value) {
+    if (!value || typeof value !== 'string') {
+        return null;
+    }
+
+    const [year, month, day] = value.split('-').map((token) => Number.parseInt(token, 10));
+
+    if (!year || !month || !day) {
+        return null;
+    }
+
+    const parsed = new Date(year, month - 1, day);
+
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatDateValue(value) {
+    if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+        return '';
+    }
+
+    const year = String(value.getFullYear());
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
 
 function ValidationSummary({ errors }) {
     const keys = Object.keys(errors);
@@ -194,13 +224,22 @@ export default function ProjectForm({
                 <div className="grid gap-5 md:grid-cols-2">
                     <div>
                         <InputLabel htmlFor="published_at" value="Published At" />
-                        <input
-                            id="published_at"
-                            type="date"
-                            className="dashboard-date-input mt-1 block w-full"
-                            value={data.published_at}
-                            onChange={(event) => setData('published_at', event.target.value)}
-                        />
+                        <div className="dashboard-modern-datepicker-wrap">
+                            <DatePicker
+                                id="published_at"
+                                selected={parseDateValue(data.published_at)}
+                                onChange={(nextDate) =>
+                                    setData('published_at', formatDateValue(nextDate))
+                                }
+                                dateFormat="yyyy-MM-dd"
+                                placeholderText="YYYY-MM-DD"
+                                className="dashboard-modern-datepicker-input"
+                                calendarClassName="dashboard-modern-datepicker-calendar"
+                                popperClassName="dashboard-modern-datepicker-popper"
+                                showPopperArrow={false}
+                                isClearable
+                            />
+                        </div>
                         <FieldHelp>Pick a publication date. Leave empty to auto-use today when publishing.</FieldHelp>
                         <InputError className="mt-2" message={errors.published_at} />
                     </div>

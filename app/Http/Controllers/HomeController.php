@@ -13,12 +13,13 @@ class HomeController extends Controller
 {
     public function index(): Response
     {
+        $technologyTablesReady = $this->technologyTablesReady();
+
         $payload = Cache::remember(
-            PublicCacheKeys::HOME_PAYLOAD,
+            PublicCacheKeys::homePayload($technologyTablesReady),
             now()->addMinutes(10),
-            function (): array {
+            function () use ($technologyTablesReady): array {
                 $homepageSettings = HomepageSettings::current();
-                $technologyTablesReady = $this->technologyTablesReady();
 
                 $featuredQuery = Project::query()
                     ->published()

@@ -47,7 +47,9 @@ class HomepageSettingsController extends Controller
     {
         $settings = HomepageSettings::current();
         $settings->update($request->validated());
-        Cache::forget(PublicCacheKeys::HOME_PAYLOAD);
+        foreach (PublicCacheKeys::homePayloadVariants() as $homePayloadKey) {
+            Cache::forget($homePayloadKey);
+        }
 
         return redirect()
             ->route('dashboard.homepage.edit')

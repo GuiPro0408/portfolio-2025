@@ -247,7 +247,10 @@ class ProjectController extends Controller
 
     private function clearPublicCaches(): void
     {
-        Cache::forget(PublicCacheKeys::HOME_PAYLOAD);
+        foreach (PublicCacheKeys::homePayloadVariants() as $homePayloadKey) {
+            Cache::forget($homePayloadKey);
+        }
+
         Cache::forget(PublicCacheKeys::SITEMAP_XML);
     }
     /**

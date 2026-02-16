@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateHomepageSettingsRequest;
 use App\Models\HomepageSettings;
+use App\Support\PublicCacheKeys;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -45,6 +47,9 @@ class HomepageSettingsController extends Controller
     {
         $settings = HomepageSettings::current();
         $settings->update($request->validated());
+        foreach (PublicCacheKeys::homePayloadVariants() as $homePayloadKey) {
+            Cache::forget($homePayloadKey);
+        }
 
         return redirect()
             ->route('dashboard.homepage.edit')

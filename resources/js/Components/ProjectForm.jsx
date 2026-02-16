@@ -1,8 +1,54 @@
 import InputError from '@/Components/InputError';
+import ListboxSelect from '@/Components/Filters/ListboxSelect';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import StickyActionBar from '@/Components/Dashboard/StickyActionBar';
 import TextInput from '@/Components/TextInput';
+import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
+import { CalendarDays } from 'lucide-react';
+import { DayPicker } from 'react-day-picker';
+import 'react-day-picker/dist/style.css';
+import { useEffect, useMemo, useState } from 'react';
+
+function parseDateValue(value) {
+    if (!value || typeof value !== 'string') {
+        return null;
+    }
+
+    const [year, month, day] = value.split('-').map((token) => Number.parseInt(token, 10));
+
+    if (!year || !month || !day) {
+        return null;
+    }
+
+    const parsed = new Date(year, month - 1, day);
+
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatDateValue(value) {
+    if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+        return '';
+    }
+
+    const year = String(value.getFullYear());
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
+function formatHumanDate(value) {
+    if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+        return 'Select publication date';
+    }
+
+    return new Intl.DateTimeFormat('en', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+    }).format(value);
+}
 
 function ValidationSummary({ errors }) {
     const keys = Object.keys(errors);
@@ -29,6 +75,24 @@ function FieldHelp({ children }) {
     return <p className="dashboard-field-help">{children}</p>;
 }
 
+function ToggleField({ id, label, checked, onChange }) {
+    return (
+        <button
+            id={id}
+            type="button"
+            role="switch"
+            aria-checked={checked}
+            className="dashboard-switch-field"
+            onClick={() => onChange(!checked)}
+        >
+            <span className={`dashboard-switch-track ${checked ? 'is-on' : ''}`}>
+                <span className="dashboard-switch-thumb" />
+            </span>
+            <span>{label}</span>
+        </button>
+    );
+}
+
 export default function ProjectForm({
     data,
     setData,
@@ -37,6 +101,59 @@ export default function ProjectForm({
     onSubmit,
     submitLabel,
 }) {
+    const today = useMemo(() => new Date(), []);
+    const selectedPublishedAt = useMemo(
+        () => parseDateValue(data.published_at),
+        [data.published_at],
+    );
+    const [displayMonth, setDisplayMonth] = useState(
+        () => selectedPublishedAt ?? today,
+    );
+
+    const monthOptions = useMemo(
+        () =>
+            Array.from({ length: 12 }, (_, month) => ({
+                value: month,
+                label: new Intl.DateTimeFormat('en', {
+                    month: 'long',
+                }).format(new Date(2026, month, 1)),
+            })),
+        [],
+    );
+
+    const yearOptions = useMemo(() => {
+        const currentYear = today.getFullYear();
+
+        return Array.from({ length: 31 }, (_, index) => {
+            const year = currentYear - 20 + index;
+
+            return {
+                value: year,
+                label: String(year),
+            };
+        });
+    }, [today]);
+
+    useEffect(() => {
+        const nextSelectedDate = parseDateValue(data.published_at);
+
+        if (!nextSelectedDate) {
+            return;
+        }
+
+        setDisplayMonth(
+            new Date(
+                nextSelectedDate.getFullYear(),
+                nextSelectedDate.getMonth(),
+                1,
+            ),
+        );
+    }, [data.published_at]);
+
+    const updateDisplayMonth = (nextMonth, nextYear) => {
+        setDisplayMonth(new Date(nextYear, nextMonth, 1));
+    };
+
     return (
         <form onSubmit={onSubmit} className="space-y-8">
             <ValidationSummary errors={errors} />
@@ -176,39 +293,145 @@ export default function ProjectForm({
                 <div className="grid gap-5 md:grid-cols-2">
                     <div>
                         <InputLabel htmlFor="published_at" value="Published At" />
-                        <TextInput
-                            id="published_at"
-                            type="datetime-local"
-                            className="mt-1 block w-full"
-                            value={data.published_at}
-                            onChange={(event) => setData('published_at', event.target.value)}
-                        />
-                        <FieldHelp>When empty and “Published” is enabled, the current time is used.</FieldHelp>
+                        <Popover className="dashboard-modern-datefield mt-1">
+                            {({ close }) => (
+                                <>
+                                    <PopoverButton
+                                        id="published_at"
+                                        className="dashboard-modern-date-trigger"
+                                    >
+                                        <span className="dashboard-modern-date-value">
+                                            {formatHumanDate(selectedPublishedAt)}
+                                        </span>
+                                        <CalendarDays size={16} aria-hidden="true" />
+                                    </PopoverButton>
+
+                                    <PopoverPanel
+                                        transition
+                                        className="dashboard-modern-date-panel"
+                                    >
+                                        <div className="dashboard-modern-date-controls">
+                                            <ListboxSelect
+                                                label="Month"
+                                                value={displayMonth.getMonth()}
+                                                onChange={(nextMonth) =>
+                                                    updateDisplayMonth(
+                                                        Number(nextMonth),
+                                                        displayMonth.getFullYear(),
+                                                    )
+                                                }
+                                                options={monthOptions}
+                                                labelClassName="dashboard-modern-date-listbox-label"
+                                                containerClassName="dashboard-modern-date-listbox"
+                                                buttonClassName="dashboard-modern-date-listbox-button"
+                                                iconClassName="dashboard-modern-date-listbox-icon"
+                                                optionsClassName="dashboard-modern-date-listbox-options"
+                                                optionClassName="dashboard-modern-date-listbox-option"
+                                                ariaLabel="Select month"
+                                            />
+                                            <ListboxSelect
+                                                label="Year"
+                                                value={displayMonth.getFullYear()}
+                                                onChange={(nextYear) =>
+                                                    updateDisplayMonth(
+                                                        displayMonth.getMonth(),
+                                                        Number(nextYear),
+                                                    )
+                                                }
+                                                options={yearOptions}
+                                                labelClassName="dashboard-modern-date-listbox-label"
+                                                containerClassName="dashboard-modern-date-listbox"
+                                                buttonClassName="dashboard-modern-date-listbox-button"
+                                                iconClassName="dashboard-modern-date-listbox-icon"
+                                                optionsClassName="dashboard-modern-date-listbox-options"
+                                                optionClassName="dashboard-modern-date-listbox-option"
+                                                ariaLabel="Select year"
+                                            />
+                                        </div>
+
+                                        <DayPicker
+                                            mode="single"
+                                            selected={selectedPublishedAt ?? undefined}
+                                            onSelect={(nextDate) => {
+                                                setData('published_at', formatDateValue(nextDate));
+                                                if (nextDate) {
+                                                    close();
+                                                }
+                                            }}
+                                            showOutsideDays
+                                            weekStartsOn={1}
+                                            month={displayMonth}
+                                            startMonth={new Date(2000, 0)}
+                                            endMonth={new Date(today.getFullYear() + 10, 11)}
+                                            onMonthChange={setDisplayMonth}
+                                            className="dashboard-daypicker"
+                                            classNames={{
+                                                root: 'dashboard-daypicker',
+                                                months: 'dashboard-daypicker-months',
+                                                month: 'dashboard-daypicker-month',
+                                                nav: 'dashboard-daypicker-nav',
+                                                button_previous: 'dashboard-daypicker-nav-button',
+                                                button_next: 'dashboard-daypicker-nav-button',
+                                                month_caption: 'dashboard-daypicker-month-caption',
+                                                caption_label: 'dashboard-daypicker-caption-label',
+                                                month_grid: 'dashboard-daypicker-grid',
+                                                weekdays: 'dashboard-daypicker-weekdays',
+                                                weekday: 'dashboard-daypicker-weekday',
+                                                weeks: 'dashboard-daypicker-weeks',
+                                                week: 'dashboard-daypicker-week',
+                                                day: 'dashboard-daypicker-day-cell',
+                                                day_button: 'dashboard-daypicker-day',
+                                            }}
+                                            modifiersClassNames={{
+                                                today: 'is-today',
+                                                selected: 'is-selected',
+                                                outside: 'is-outside',
+                                            }}
+                                            hideNavigation
+                                        />
+
+                                        <div className="dashboard-modern-date-actions">
+                                            <button
+                                                type="button"
+                                                className="dashboard-modern-date-action"
+                                                onClick={() => {
+                                                    setData('published_at', formatDateValue(new Date()));
+                                                    close();
+                                                }}
+                                            >
+                                                Today
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="dashboard-modern-date-action"
+                                                onClick={() => setData('published_at', '')}
+                                                disabled={!selectedPublishedAt}
+                                            >
+                                                Clear
+                                            </button>
+                                        </div>
+                                    </PopoverPanel>
+                                </>
+                            )}
+                        </Popover>
+                        <FieldHelp>Pick a publication date. Leave empty to auto-use today when publishing.</FieldHelp>
                         <InputError className="mt-2" message={errors.published_at} />
                     </div>
 
                     <div className="dashboard-flag-grid">
-                        <label className="dashboard-toggle-field">
-                            <input
-                                id="is_featured"
-                                type="checkbox"
-                                className="dashboard-checkbox"
-                                checked={data.is_featured}
-                                onChange={(event) => setData('is_featured', event.target.checked)}
-                            />
-                            <span>Featured project</span>
-                        </label>
+                        <ToggleField
+                            id="is_featured"
+                            label="Featured project"
+                            checked={data.is_featured}
+                            onChange={(nextValue) => setData('is_featured', nextValue)}
+                        />
 
-                        <label className="dashboard-toggle-field">
-                            <input
-                                id="is_published"
-                                type="checkbox"
-                                className="dashboard-checkbox"
-                                checked={data.is_published}
-                                onChange={(event) => setData('is_published', event.target.checked)}
-                            />
-                            <span>Published project</span>
-                        </label>
+                        <ToggleField
+                            id="is_published"
+                            label="Published project"
+                            checked={data.is_published}
+                            onChange={(nextValue) => setData('is_published', nextValue)}
+                        />
                     </div>
                 </div>
             </section>

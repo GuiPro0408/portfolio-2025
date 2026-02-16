@@ -218,6 +218,35 @@ class ProjectsPublicTest extends TestCase
                     ->all() === ['Laravel', 'React', 'Vue']));
     }
 
+    public function test_projects_index_search_matches_related_technology_names(): void
+    {
+        Project::factory()->published()->create([
+            'title' => 'Warehouse Suite',
+            'summary' => 'Internal logistics suite',
+            'stack' => 'Laravel, React',
+        ]);
+
+        Project::factory()->published()->create([
+            'title' => 'Accounting Desk',
+            'summary' => 'Accounting operations',
+            'stack' => 'Laravel, Vue',
+        ]);
+
+        $response = $this->get(route('projects.index', [
+            'q' => 'react',
+            'sort' => 'editorial',
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Projects/Index')
+                ->where('projects.data', fn ($projects) => collect($projects)
+                    ->pluck('title')
+                    ->values()
+                    ->all() === ['Warehouse Suite']));
+    }
+
     public function test_projects_index_preserves_public_filters_through_pagination_links(): void
     {
         Project::factory()->count(12)->published()->create([

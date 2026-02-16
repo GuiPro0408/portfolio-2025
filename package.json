@@ -25,6 +25,9 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
-        "lucide-react": "0.487.0"
+        "@tanstack/react-virtual": "3.13.18",
+        "date-fns": "4.1.0",
+        "lucide-react": "0.487.0",
+        "react-day-picker": "9.13.2"
     }
 }

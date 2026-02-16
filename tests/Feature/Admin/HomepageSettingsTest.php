@@ -4,7 +4,9 @@ namespace Tests\Feature\Admin;
 
 use App\Models\HomepageSettings;
 use App\Models\User;
+use App\Support\PublicCacheKeys;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class HomepageSettingsTest extends TestCase
@@ -77,5 +79,19 @@ class HomepageSettingsTest extends TestCase
             'featured_image_1_url' => '/images/homepage/featured/featured-01-16x10.webp',
             'capabilities_image_url' => '/images/homepage/sections/capabilities-architecture-21x9.webp',
         ]);
+    }
+
+    public function test_homepage_settings_update_clears_public_home_cache(): void
+    {
+        $user = User::factory()->create();
+        HomepageSettings::query()->create(HomepageSettings::defaults());
+        Cache::put(PublicCacheKeys::HOME_PAYLOAD, ['cached' => true], 600);
+
+        $this
+            ->actingAs($user)
+            ->put(route('dashboard.homepage.update'), HomepageSettings::defaults())
+            ->assertRedirect(route('dashboard.homepage.edit'));
+
+        $this->assertFalse(Cache::has(PublicCacheKeys::HOME_PAYLOAD));
     }
 }

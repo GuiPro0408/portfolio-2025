@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Actions\Projects\SyncProjectTechnologies;
+use App\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -10,6 +12,13 @@ use Illuminate\Support\Str;
  */
 class ProjectFactory extends Factory
 {
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Project $project): void {
+            app(SyncProjectTechnologies::class)->sync($project, $project->stack);
+        });
+    }
+
     /**
      * Define the model's default state.
      *

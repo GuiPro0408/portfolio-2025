@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -239,12 +238,6 @@ class ProjectController extends Controller
             ->withQueryString()
             ->through(fn (Project $project) => $this->transformProjectCard($project));
     }
-
-    private function technologyTablesReady(): bool
-    {
-        return Schema::hasTable('technologies') && Schema::hasTable('project_technology');
-    }
-
     /**
      * @return array{email: mixed, linkedin: mixed, github: mixed}
      */

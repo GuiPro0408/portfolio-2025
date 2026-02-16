@@ -15,7 +15,6 @@ use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -240,12 +239,6 @@ class ProjectController extends Controller
         Cache::forget(PublicCacheKeys::HOME_PAYLOAD);
         Cache::forget(PublicCacheKeys::SITEMAP_XML);
     }
-
-    private function technologyTablesReady(): bool
-    {
-        return Schema::hasTable('technologies') && Schema::hasTable('project_technology');
-    }
-
     /**
      * @param  array{q: string, status: string, featured: string, sort: string}  $filters
      */

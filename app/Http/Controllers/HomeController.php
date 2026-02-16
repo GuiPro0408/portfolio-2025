@@ -6,7 +6,6 @@ use App\Models\HomepageSettings;
 use App\Models\Project;
 use App\Support\PublicCacheKeys;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -84,10 +83,5 @@ class HomeController extends Controller
                 'github' => config('portfolio.github'),
             ],
         ]);
-    }
-
-    private function technologyTablesReady(): bool
-    {
-        return Schema::hasTable('technologies') && Schema::hasTable('project_technology');
     }
 }

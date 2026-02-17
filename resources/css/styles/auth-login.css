@@ -2,7 +2,6 @@
     min-height: 100vh;
     display: grid;
     place-items: center;
-    padding: 1.5rem 1rem;
 
     & .guest-card-shell {
         width: min(100%, 28rem);
@@ -21,7 +20,7 @@
         radial-gradient(circle at 100% 100%, rgba(42, 32, 56, 0.55), transparent 34%),
         var(--bg);
     color: var(--text);
-    padding: 1.25rem;
+    place-content: center;
 
     & .owner-login-grid {
         width: min(1120px, 100%);

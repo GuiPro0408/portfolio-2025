@@ -31,6 +31,24 @@ test('public navigation smoke', async ({ page }) => {
     ).toBeVisible();
 });
 
+test('public mobile navigation smoke', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+
+    const menuButton = page.getByRole('button', { name: /open menu/i });
+    await expect(menuButton).toBeVisible();
+    await menuButton.click();
+
+    const mobileNav = page.getByRole('navigation', { name: 'Mobile primary' });
+    await expect(mobileNav.getByRole('link', { name: 'Contact' })).toBeVisible();
+    await mobileNav.getByRole('link', { name: 'Contact' }).click();
+
+    await expect(page).toHaveURL(/\/contact$/);
+    await expect(
+        page.getByRole('heading', { name: 'Start a conversation' }),
+    ).toBeVisible();
+});
+
 test('projects page opens project detail', async ({ page }) => {
     await page.goto('/projects');
     await expect(

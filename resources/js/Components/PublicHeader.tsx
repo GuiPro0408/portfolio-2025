@@ -25,13 +25,9 @@ export default function PublicHeader({ contact: _contact }: PublicHeaderProps) {
                     <Link href={route('contact.index')} className="nav-cta">
                         Contact
                     </Link>
-                    {auth?.user ? (
+                    {auth?.user && (
                         <Link href={route('dashboard')} className="nav-link">
                             Dashboard
-                        </Link>
-                    ) : (
-                        <Link href={route('login')} className="nav-link">
-                            Log in
                         </Link>
                     )}
                 </nav>

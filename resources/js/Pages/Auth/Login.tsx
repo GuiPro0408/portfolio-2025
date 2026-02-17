@@ -48,17 +48,17 @@ export default function Login({
 
             <section className="owner-login-page">
                 <div className="owner-login-grid">
-                    <aside className="owner-login-hero">
+                    <aside className="owner-login-hero reveal">
                         <div>
-                            <p className="owner-login-meta">Private Access</p>
-                            <h1 className="owner-login-title">Owner Access</h1>
-                            <p className="owner-login-subtitle">
+                            <p className="owner-login-meta reveal owner-login-stagger-1">Private Access</p>
+                            <h1 className="owner-login-title reveal owner-login-stagger-2">Owner Access</h1>
+                            <p className="owner-login-subtitle reveal owner-login-stagger-3">
                                 Access is reserved for the portfolio owner to
                                 manage projects, homepage content, and incoming
                                 contact leads.
                             </p>
                             {heroImageUrl && (
-                                <figure className="owner-login-hero-media">
+                                <figure className="owner-login-hero-media reveal owner-login-stagger-4">
                                     <img
                                         src={heroImageUrl}
                                         alt="Portfolio studio workspace"
@@ -66,29 +66,29 @@ export default function Login({
                                     />
                                 </figure>
                             )}
-                            <ul className="owner-login-highlights">
+                            <ul className="owner-login-highlights reveal owner-login-stagger-5">
                                 <li>Project publishing and ordering controls</li>
                                 <li>Homepage content and featured cards</li>
                                 <li>Owner-only moderation workflow</li>
                             </ul>
                         </div>
-                        <p className="owner-login-brand">Guillaume Juste</p>
+                        <p className="owner-login-brand reveal owner-login-stagger-6">Guillaume Juste</p>
                     </aside>
 
-                    <section className="owner-login-panel" aria-label="Login">
-                        <p className="owner-login-panel-eyebrow">Welcome back</p>
-                        <h2 className="owner-login-panel-title">Sign in</h2>
-                        <p className="owner-login-panel-copy">
+                    <section className="owner-login-panel reveal owner-login-stagger-2" aria-label="Login">
+                        <p className="owner-login-panel-eyebrow reveal owner-login-stagger-3">Welcome back</p>
+                        <h2 className="owner-login-panel-title reveal owner-login-stagger-4">Sign in</h2>
+                        <p className="owner-login-panel-copy reveal owner-login-stagger-5">
                             Use your owner credentials to access the dashboard.
                         </p>
 
                         {status && (
-                            <div className="mb-4 text-sm font-medium text-green-600">
+                            <div className="owner-login-status">
                                 {status}
                             </div>
                         )}
 
-                        <form className="owner-login-form" onSubmit={submit}>
+                        <form className="owner-login-form reveal owner-login-stagger-6" onSubmit={submit}>
                             <div className="owner-login-row">
                                 <InputLabel htmlFor="email" value="Email" />
 
@@ -131,7 +131,7 @@ export default function Login({
                                     />
                                     <button
                                         type="button"
-                                        className="owner-login-password-toggle absolute inset-y-0 right-0 me-2 my-1 inline-flex items-center rounded px-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                        className="owner-login-password-toggle absolute inset-y-0 right-0 me-2 my-1 inline-flex items-center rounded px-2"
                                         onClick={() => setShowPassword((value) => !value)}
                                         aria-label={
                                             showPassword ? 'Hide password' : 'Show password'
@@ -169,7 +169,7 @@ export default function Login({
                                             )
                                         }
                                     />
-                                    <span className="ms-2 text-sm text-gray-600">
+                                    <span className="owner-login-remember-label">
                                         Remember me
                                     </span>
                                 </label>
@@ -179,7 +179,7 @@ export default function Login({
                                 {canResetPassword && (
                                     <Link
                                         href={route('password.request')}
-                                        className="owner-login-link rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                        className="owner-login-link"
                                     >
                                         Forgot your password?
                                     </Link>

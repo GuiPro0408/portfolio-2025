@@ -13,46 +13,187 @@
     }
 }
 
+/* ── Aurora background animation ────────────────────────── */
+
+@keyframes aurora-drift {
+    0% {
+        background-position: 0% 50%, 100% 50%, center;
+    }
+
+    50% {
+        background-position: 100% 30%, 0% 70%, center;
+    }
+
+    100% {
+        background-position: 0% 50%, 100% 50%, center;
+    }
+}
+
+@keyframes orb-float {
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.18;
+    }
+
+    33% {
+        transform: translate(30px, -20px) scale(1.08);
+        opacity: 0.24;
+    }
+
+    66% {
+        transform: translate(-20px, 15px) scale(0.95);
+        opacity: 0.14;
+    }
+}
+
 .owner-login-page {
+    position: relative;
     min-height: 100vh;
     background:
-        radial-gradient(circle at 0% 0%, rgba(91, 140, 255, 0.22), transparent 42%),
-        radial-gradient(circle at 100% 100%, rgba(42, 32, 56, 0.55), transparent 34%),
+        radial-gradient(ellipse 80% 60% at 0% 0%, rgba(91, 140, 255, 0.22), transparent 50%),
+        radial-gradient(ellipse 70% 50% at 100% 100%, rgba(42, 32, 56, 0.55), transparent 40%),
         var(--bg);
+    background-size: 200% 200%, 200% 200%, auto;
+    animation: aurora-drift 18s ease-in-out infinite;
     color: var(--text);
     place-content: center;
+    overflow: hidden;
+    padding: 1.25rem;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+    }
+
+    /* ── Floating accent orb (atmosphere) ─────────────── */
+
+    &::before {
+        content: '';
+        position: absolute;
+        width: 420px;
+        height: 420px;
+        top: 10%;
+        right: -8%;
+        border-radius: 50%;
+        background: radial-gradient(
+            circle,
+            rgba(91, 140, 255, 0.18) 0%,
+            rgba(91, 140, 255, 0.04) 50%,
+            transparent 70%
+        );
+        filter: blur(60px);
+        pointer-events: none;
+        animation: orb-float 14s ease-in-out infinite;
+        z-index: 0;
+
+        @media (prefers-reduced-motion: reduce) {
+            animation: none;
+        }
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        width: 320px;
+        height: 320px;
+        bottom: 5%;
+        left: -5%;
+        border-radius: 50%;
+        background: radial-gradient(
+            circle,
+            rgba(120, 80, 200, 0.12) 0%,
+            rgba(120, 80, 200, 0.03) 50%,
+            transparent 70%
+        );
+        filter: blur(50px);
+        pointer-events: none;
+        animation: orb-float 20s ease-in-out infinite reverse;
+        z-index: 0;
+
+        @media (prefers-reduced-motion: reduce) {
+            animation: none;
+        }
+    }
+
+    /* ── Stagger delays for reveal animations ────────── */
+
+    & .owner-login-stagger-1 { animation-delay: 60ms; }
+    & .owner-login-stagger-2 { animation-delay: 140ms; }
+    & .owner-login-stagger-3 { animation-delay: 220ms; }
+    & .owner-login-stagger-4 { animation-delay: 310ms; }
+    & .owner-login-stagger-5 { animation-delay: 400ms; }
+    & .owner-login-stagger-6 { animation-delay: 490ms; }
+
+    /* ── Grid layout ─────────────────────────────────── */
 
     & .owner-login-grid {
-        width: min(1120px, 100%);
+        position: relative;
+        z-index: 1;
+        width: min(1200px, 100%);
         margin: 0 auto;
         min-height: calc(100vh - 2.5rem);
         display: grid;
-        gap: 1rem;
+        gap: 1.25rem;
         align-items: stretch;
     }
+
+    /* ── Shared panel styles ─────────────────────────── */
 
     & .owner-login-hero,
     & .owner-login-panel {
         border-radius: 1rem;
         border: 1px solid var(--border);
-        box-shadow: 0 18px 35px rgba(0, 0, 0, 0.35);
+        box-shadow:
+            0 18px 35px rgba(0, 0, 0, 0.35),
+            0 0 50px rgba(91, 140, 255, 0.04);
+        backdrop-filter: blur(12px);
+        transition: box-shadow 0.4s ease, border-color 0.4s ease;
     }
+
+    /* ── Hero panel ──────────────────────────────────── */
 
     & .owner-login-hero {
         background:
-            linear-gradient(145deg, rgba(91, 140, 255, 0.2), rgba(18, 26, 43, 0.9)),
-            linear-gradient(180deg, rgba(23, 33, 54, 0.7), rgba(18, 26, 43, 0.96));
-        padding: 1.5rem;
+            linear-gradient(145deg, rgba(91, 140, 255, 0.18), rgba(18, 26, 43, 0.92)),
+            linear-gradient(180deg, rgba(23, 33, 54, 0.72), rgba(18, 26, 43, 0.97));
+        padding: 1.75rem;
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
+        justify-content: space-between;
+
+        &:hover {
+            box-shadow:
+                0 22px 45px rgba(0, 0, 0, 0.4),
+                0 0 60px rgba(91, 140, 255, 0.08);
+        }
     }
 
+    /* ── Form panel ──────────────────────────────────── */
+
     & .owner-login-panel {
-        background: linear-gradient(180deg, rgba(23, 33, 54, 0.7), rgba(18, 26, 43, 0.96));
-        padding: 1.5rem;
+        background: linear-gradient(180deg, rgba(23, 33, 54, 0.72), rgba(18, 26, 43, 0.97));
+        padding: 1.75rem;
         width: min(100%, 34rem);
         margin-left: auto;
+
+        &:hover {
+            box-shadow:
+                0 22px 45px rgba(0, 0, 0, 0.4),
+                0 0 60px rgba(91, 140, 255, 0.08);
+            border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+        }
+    }
+
+    /* ── Hero typography ─────────────────────────────── */
+
+    & .owner-login-meta {
+        margin: 0;
+        font-size: var(--fs-meta);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 600;
     }
 
     & .owner-login-title {
@@ -71,12 +212,17 @@
         line-height: 1.45;
     }
 
+    /* ── Hero media (image) ──────────────────────────── */
+
     & .owner-login-hero-media {
-        margin: 1rem 0 0;
+        position: relative;
+        margin: 1.25rem 0 0;
         border-radius: 0.85rem;
         overflow: hidden;
         border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--border));
-        box-shadow: 0 14px 28px rgba(7, 14, 29, 0.35);
+        box-shadow:
+            0 14px 28px rgba(7, 14, 29, 0.35),
+            0 0 30px rgba(91, 140, 255, 0.06);
         aspect-ratio: 16 / 10;
 
         & img {
@@ -84,65 +230,91 @@
             height: 100%;
             object-fit: cover;
             display: block;
+            transition: transform 0.6s ease;
+        }
+
+        &:hover img {
+            transform: scale(1.04);
+        }
+
+        /* Shimmer border overlay */
+        &::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(
+                105deg,
+                transparent 40%,
+                rgba(91, 140, 255, 0.08) 50%,
+                transparent 60%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 4s ease-in-out infinite;
+            pointer-events: none;
+
+            @media (prefers-reduced-motion: reduce) {
+                animation: none;
+                background: none;
+            }
         }
     }
 
-    & .owner-login-meta {
-        margin: 0;
-        font-size: var(--fs-meta);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #afbddb;
-    }
-
-    & .owner-login-form {
-        margin-top: 1rem;
-    }
-
-    & .owner-login-row + .owner-login-row {
-        margin-top: 1rem;
-    }
-
-    & .owner-login-actions {
-        margin-top: 1.35rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-    }
+    /* ── Hero highlights ─────────────────────────────── */
 
     & .owner-login-highlights {
         margin: 0;
         padding: 0;
         list-style: none;
         display: grid;
-        gap: 0.5rem;
+        gap: 0.55rem;
         color: #cfdbfb;
         font-size: var(--fs-body-sm);
 
         & li {
             position: relative;
-            padding-left: 1rem;
+            padding-left: 1.15rem;
+            transition: color 0.2s ease;
 
             &::before {
                 content: '';
                 position: absolute;
                 left: 0;
                 top: 0.48rem;
-                width: 0.38rem;
-                height: 0.38rem;
+                width: 0.4rem;
+                height: 0.4rem;
                 border-radius: 999px;
-                background: color-mix(in srgb, var(--accent) 78%, #dce8ff);
+                background: var(--accent);
+                box-shadow: 0 0 6px rgba(91, 140, 255, 0.5);
+                transition: box-shadow 0.2s ease;
+            }
+
+            &:hover {
+                color: var(--text);
+
+                &::before {
+                    box-shadow: 0 0 10px rgba(91, 140, 255, 0.7);
+                }
             }
         }
     }
+
+    & .owner-login-brand {
+        margin: 0;
+        font-family: 'Sora', sans-serif;
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #dce7ff;
+        letter-spacing: -0.01em;
+    }
+
+    /* ── Form panel typography ────────────────────────── */
 
     & .owner-login-panel-eyebrow {
         margin: 0;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: #a8b8de;
+        color: var(--accent);
         font-size: var(--fs-meta);
         font-weight: 700;
     }
@@ -160,73 +332,194 @@
         font-size: var(--fs-body-sm);
     }
 
+    /* ── Status message ──────────────────────────────── */
+
+    & .owner-login-status {
+        margin: 0.75rem 0;
+        padding: 0.55rem 0.85rem;
+        font-size: var(--fs-body-sm);
+        font-weight: 500;
+        color: #7be2c9;
+        background: rgba(123, 226, 201, 0.08);
+        border: 1px solid rgba(123, 226, 201, 0.2);
+        border-radius: 0.55rem;
+    }
+
+    /* ── Form layout ─────────────────────────────────── */
+
+    & .owner-login-form {
+        margin-top: 1.25rem;
+    }
+
+    & .owner-login-row + .owner-login-row {
+        margin-top: 1.15rem;
+    }
+
+    & .owner-login-actions {
+        margin-top: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    /* ── Label overrides ─────────────────────────────── */
+
     & .text-gray-700,
     & .text-gray-600 {
         color: var(--muted);
     }
 
-    & .text-green-600 {
-        color: #7be2c9;
-    }
+    /* ── Input field styling ─────────────────────────── */
 
     & input[type='email'],
-    & input[type='password'] {
-        background: rgba(10, 16, 30, 0.78);
+    & input[type='password'],
+    & input[type='text'] {
+        background: rgba(10, 16, 30, 0.82);
         color: var(--text);
-        border-color: #344566;
+        border: 1px solid #344566;
+        border-radius: 0.55rem;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+
+        &:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(91, 140, 255, 0.2), 0 0 16px rgba(91, 140, 255, 0.08);
+            outline: none;
+        }
     }
 
     & input::placeholder {
         color: #8193bc;
     }
 
+    /* ── Checkbox styling ────────────────────────────── */
+
     & input[type='checkbox'] {
         background-color: #0f172a;
         border-color: #344566;
+        border-radius: 4px;
+        transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+
+        &:checked {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        &:focus {
+            box-shadow: 0 0 0 3px rgba(91, 140, 255, 0.2);
+            border-color: var(--accent);
+        }
+    }
+
+    & .owner-login-remember-label {
+        margin-left: 0.5rem;
+        font-size: var(--fs-body-sm);
+        color: var(--muted);
+        transition: color 0.2s ease;
+        user-select: none;
+
+        &:hover {
+            color: var(--text);
+        }
+    }
+
+    /* ── Forgot password link ────────────────────────── */
+
+    & .owner-login-link {
+        font-size: var(--fs-body-sm);
+        color: color-mix(in srgb, var(--accent) 80%, #ffffff);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        text-decoration-thickness: 1px;
+        border-radius: 0.35rem;
+        padding: 0.15rem 0.25rem;
+        transition: color 0.2s ease, text-decoration-color 0.2s ease;
+
+        &:hover {
+            color: #ffffff;
+            text-decoration-color: var(--accent);
+        }
+
+        &:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 2px;
+        }
     }
 
     & a {
         color: #c7d6ff;
     }
 
-    & .owner-login-link {
-        text-underline-offset: 3px;
-    }
-
-    & .owner-login-brand {
-        margin: 0;
-        font-family: 'Sora', sans-serif;
-        font-weight: 700;
-        font-size: 1.05rem;
-        color: #dce7ff;
-    }
+    /* ── Password toggle button ──────────────────────── */
 
     & .owner-login-password-toggle {
         color: #b5c3e9;
+        border-radius: 0.35rem;
+        transition: color 0.2s ease, background-color 0.2s ease;
 
         &:hover {
             color: #f0f5ff;
+            background: rgba(91, 140, 255, 0.1);
+        }
+
+        &:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 2px;
         }
     }
+
+    /* ── Submit button ───────────────────────────────── */
 
     & .owner-login-submit {
         border-color: color-mix(in srgb, var(--accent) 60%, #ffffff);
         background:
-            linear-gradient(140deg, rgba(132, 167, 255, 0.2), rgba(84, 123, 225, 0.12)),
-            linear-gradient(180deg, rgba(40, 69, 140, 0.92), rgba(22, 38, 80, 0.92));
-        box-shadow: inset 0 1px 0 rgba(196, 216, 255, 0.2), 0 10px 22px rgba(22, 42, 91, 0.4);
+            linear-gradient(140deg, rgba(132, 167, 255, 0.22), rgba(84, 123, 225, 0.14)),
+            linear-gradient(180deg, rgba(40, 69, 140, 0.94), rgba(22, 38, 80, 0.94));
+        box-shadow:
+            inset 0 1px 0 rgba(196, 216, 255, 0.22),
+            0 10px 22px rgba(22, 42, 91, 0.4),
+            0 0 20px rgba(91, 140, 255, 0.08);
+        transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+
+        &:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow:
+                inset 0 1px 0 rgba(196, 216, 255, 0.28),
+                0 14px 30px rgba(22, 42, 91, 0.5),
+                0 0 30px rgba(91, 140, 255, 0.14);
+            filter: brightness(1.08);
+        }
+
+        &:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow:
+                inset 0 1px 0 rgba(196, 216, 255, 0.15),
+                0 6px 14px rgba(22, 42, 91, 0.35);
+            filter: brightness(0.98);
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: saturate(0.6);
+        }
     }
 
+    /* ── Responsive desktop layout ───────────────────── */
+
     @media (min-width: 1024px) {
+        padding: 2rem;
+
         & .owner-login-grid {
             grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.92fr);
-            gap: 1.5rem;
+            gap: 2rem;
             min-height: auto;
         }
 
         & .owner-login-hero,
         & .owner-login-panel {
-            padding: 2rem;
+            padding: 2.5rem;
         }
 
         & .owner-login-panel {

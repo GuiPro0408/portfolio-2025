@@ -4,6 +4,7 @@
         "module": "ESNext",
         "moduleResolution": "Bundler",
         "jsx": "react-jsx",
+        "noEmit": true,
         "strict": false,
         "allowJs": true,
         "checkJs": false,
@@ -11,10 +12,9 @@
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "skipLibCheck": true,
-        "baseUrl": ".",
         "paths": {
-            "@/*": ["resources/js/*"],
-            "ziggy-js": ["vendor/tightenco/ziggy"]
+            "@/*": ["./resources/js/*"],
+            "ziggy-js": ["./vendor/tightenco/ziggy"]
         },
         "types": ["vite/client"]
     },

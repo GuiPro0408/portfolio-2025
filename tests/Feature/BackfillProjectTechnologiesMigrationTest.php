@@ -22,9 +22,9 @@ class BackfillProjectTechnologiesMigrationTest extends TestCase
         ]);
         $project->technologies()->sync([$technology->id]);
 
-        /** @var \Illuminate\Database\Migrations\Migration $migration */
         $migration = require database_path('migrations/2026_02_16_000007_backfill_project_technologies_table.php');
-        $migration->down();
+        $this->assertTrue(method_exists($migration, 'down'));
+        call_user_func([$migration, 'down']);
 
         $this->assertDatabaseHas('technologies', [
             'id' => $technology->id,

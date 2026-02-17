@@ -7,4 +7,8 @@ interface ZiggyRoute {
 
 declare const route: ZiggyRoute;
 
+interface Window {
+    axios: typeof import('axios').default;
+}
+
 declare module '*.css';

@@ -1,5 +1,22 @@
 import { expect, test } from '@playwright/test';
 
+function requiredEnv(name) {
+    const value = process.env[name];
+
+    if (!value || value.trim() === '') {
+        throw new Error(`Missing required environment variable: ${name}`);
+    }
+
+    return value;
+}
+
+function e2eCredentials() {
+    return {
+        email: requiredEnv('E2E_LOGIN_EMAIL'),
+        password: requiredEnv('E2E_LOGIN_PASSWORD'),
+    };
+}
+
 test('public navigation smoke', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('link', { name: 'Home' })).toBeVisible();
@@ -77,9 +94,11 @@ test('contact form submit smoke', async ({ page }) => {
 });
 
 test('dashboard auth smoke', async ({ page }) => {
+    const { email, password } = e2eCredentials();
+
     await page.goto('/login');
-    await page.getByLabel('Email').fill('test@example.com');
-    await page.getByLabel('Password').fill('password');
+    await page.getByLabel('Email').fill(email);
+    await page.getByLabel('Password').fill(password);
     await page.getByRole('button', { name: 'Log in' }).click();
 
     await expect(page).toHaveURL(/\/dashboard$/);

@@ -110,16 +110,23 @@ If you already have system PHP via apt (with sudo), you can skip to [Install pro
    touch database/database.sqlite
    ```
 
+   Configure owner credentials so seeding can create the login account:
+
+   ```dotenv
+   PORTFOLIO_OWNER_EMAIL=owner@example.com
+   PORTFOLIO_OWNER_PASSWORD=your-local-owner-password
+   ```
+
 2. Generate the Laravel application key:
 
    ```bash
    php artisan key:generate
    ```
 
-3. Run database migrations:
+3. Run database migrations with seed data:
 
    ```bash
-   php artisan migrate
+   php artisan migrate --seed
    ```
 
 ## 5. Run the App

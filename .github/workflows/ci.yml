@@ -94,6 +94,8 @@ jobs:
           php artisan key:generate --ansi --force
           touch database/database.sqlite
           php artisan migrate:fresh --seed --force
+          echo "E2E_LOGIN_EMAIL=$(awk -F= '/^PORTFOLIO_OWNER_EMAIL=/{print $2}' .env)" >> $GITHUB_ENV
+          echo "E2E_LOGIN_PASSWORD=$(awk -F= '/^PORTFOLIO_OWNER_PASSWORD=/{print $2}' .env)" >> $GITHUB_ENV
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4

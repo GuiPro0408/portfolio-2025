@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Projects\ResolvePublicProjectsIndex;
+use App\Actions\Public\ResolveContactPayload;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -12,6 +13,7 @@ use Inertia\Response;
 class ProjectController extends Controller
 {
     public function __construct(
+        private readonly ResolveContactPayload $resolveContactPayload,
         private readonly ResolvePublicProjectsIndex $resolvePublicProjectsIndex,
     ) {}
 
@@ -24,7 +26,7 @@ class ProjectController extends Controller
             'projects' => fn (): LengthAwarePaginator => $this->resolvePublicProjectsIndex->resolveProjectsPayload($filters, $technologyTablesReady),
             'filters' => $filters,
             'availableStacks' => fn (): array => $this->resolvePublicProjectsIndex->resolveAvailableStacks($technologyTablesReady),
-            'contact' => $this->contactPayload(),
+            'contact' => $this->resolveContactPayload->resolve(),
         ]);
     }
 
@@ -51,19 +53,7 @@ class ProjectController extends Controller
                 'live_url' => $project->live_url,
                 'published_at' => $project->published_at?->toDateString(),
             ],
-            'contact' => $this->contactPayload(),
+            'contact' => $this->resolveContactPayload->resolve(),
         ]);
-    }
-
-    /**
-     * @return array{email: mixed, linkedin: mixed, github: mixed}
-     */
-    private function contactPayload(): array
-    {
-        return [
-            'email' => config('portfolio.email'),
-            'linkedin' => config('portfolio.linkedin'),
-            'github' => config('portfolio.github'),
-        ];
     }
 }

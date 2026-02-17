@@ -95,6 +95,21 @@ class HomepageSettingsTest extends TestCase
         $this->assertFalse(Cache::has(PublicCacheKeys::HOME_PAYLOAD));
     }
 
+    public function test_homepage_settings_current_returns_singleton_row(): void
+    {
+        HomepageSettings::query()->create([
+            ...HomepageSettings::defaults(),
+            'singleton_key' => 1,
+        ]);
+
+        $first = HomepageSettings::current();
+        $second = HomepageSettings::current();
+
+        $this->assertSame($first->id, $second->id);
+        $this->assertSame(1, $first->singleton_key);
+        $this->assertDatabaseCount('homepage_settings', 1);
+    }
+
     public function test_non_owner_cannot_access_homepage_settings(): void
     {
         $user = User::factory()->create();

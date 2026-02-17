@@ -6,6 +6,7 @@ import ListboxSelect, {
 } from '@/Components/Filters/ListboxSelect';
 import SectionHeading from '@/Components/SectionHeading';
 import PublicLayout from '@/Layouts/PublicLayout';
+import type { ContactPayload, PaginationShape } from '@/types/contracts';
 import {
     Listbox,
     ListboxButton,
@@ -26,25 +27,13 @@ interface ProjectCardData {
     published_at: string | null;
 }
 
-interface ContactPayload {
-    email?: string | null;
-    linkedin?: string | null;
-    github?: string | null;
-}
-
 interface ProjectsFilters {
     q: string;
     stack: string;
     sort: string;
 }
 
-interface PaginatedProjects {
-    data: ProjectCardData[];
-    current_page: number;
-    last_page: number;
-    prev_page_url: string | null;
-    next_page_url: string | null;
-}
+type PaginatedProjects = PaginationShape<ProjectCardData>;
 
 interface ProjectsIndexProps {
     projects: PaginatedProjects;
@@ -309,7 +298,7 @@ export default function Index({
     }, [visitWithFilters]);
 
     const activeFilterChips = useMemo(() => {
-        const chips = [];
+        const chips: ActiveFilterChip[] = [];
 
         if (query.trim() !== '') {
             chips.push({

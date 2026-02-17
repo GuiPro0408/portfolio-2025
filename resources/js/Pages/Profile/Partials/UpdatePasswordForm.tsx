@@ -1,0 +1,158 @@
+import InputError from '@/Components/InputError';
+import InputLabel from '@/Components/InputLabel';
+import PrimaryButton from '@/Components/PrimaryButton';
+import StickyActionBar from '@/Components/Dashboard/StickyActionBar';
+import TextInput from '@/Components/TextInput';
+import type { TextInputHandle } from '@/Components/TextInput';
+import { Transition } from '@headlessui/react';
+import { useForm } from '@inertiajs/react';
+import { useRef } from 'react';
+import type { FormEvent } from 'react';
+
+interface UpdatePasswordFormProps {
+    className?: string;
+}
+
+interface UpdatePasswordFormData {
+    current_password: string;
+    password: string;
+    password_confirmation: string;
+}
+
+type UpdatePasswordErrors = Partial<Record<keyof UpdatePasswordFormData, string>>;
+
+export default function UpdatePasswordForm({ className = '' }: UpdatePasswordFormProps) {
+    const passwordInput = useRef<TextInputHandle>(null);
+    const currentPasswordInput = useRef<TextInputHandle>(null);
+
+    const {
+        data,
+        setData,
+        errors,
+        put,
+        reset,
+        processing,
+        recentlySuccessful,
+    } = useForm<UpdatePasswordFormData>({
+        current_password: '',
+        password: '',
+        password_confirmation: '',
+    });
+
+    const updatePassword = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        put(route('password.update'), {
+            preserveScroll: true,
+            onSuccess: () => reset(),
+            onError: (formErrors: UpdatePasswordErrors) => {
+                if (formErrors.password) {
+                    reset('password', 'password_confirmation');
+                    passwordInput.current?.focus();
+                }
+
+                if (formErrors.current_password) {
+                    reset('current_password');
+                    currentPasswordInput.current?.focus();
+                }
+            },
+        });
+    };
+
+    return (
+        <section className={className}>
+            <header>
+                <h2 className="text-lg font-medium text-gray-900">
+                    Update Password
+                </h2>
+
+                <p className="mt-1 text-sm text-gray-600">
+                    Ensure your account is using a long, random password to stay
+                    secure.
+                </p>
+            </header>
+
+            <form onSubmit={updatePassword} className="mt-6 space-y-6">
+                <div>
+                    <InputLabel
+                        htmlFor="current_password"
+                        value="Current Password"
+                    />
+
+                    <TextInput
+                        id="current_password"
+                        ref={currentPasswordInput}
+                        value={data.current_password}
+                        onChange={(event) =>
+                            setData('current_password', event.target.value)
+                        }
+                        type="password"
+                        className="mt-1 block w-full"
+                        autoComplete="current-password"
+                    />
+
+                    <InputError
+                        message={errors.current_password}
+                        className="mt-2"
+                    />
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="password" value="New Password" />
+
+                    <TextInput
+                        id="password"
+                        ref={passwordInput}
+                        value={data.password}
+                        onChange={(event) =>
+                            setData('password', event.target.value)
+                        }
+                        type="password"
+                        className="mt-1 block w-full"
+                        autoComplete="new-password"
+                    />
+
+                    <InputError message={errors.password} className="mt-2" />
+                </div>
+
+                <div>
+                    <InputLabel
+                        htmlFor="password_confirmation"
+                        value="Confirm Password"
+                    />
+
+                    <TextInput
+                        id="password_confirmation"
+                        value={data.password_confirmation}
+                        onChange={(event) =>
+                            setData('password_confirmation', event.target.value)
+                        }
+                        type="password"
+                        className="mt-1 block w-full"
+                        autoComplete="new-password"
+                    />
+
+                    <InputError
+                        message={errors.password_confirmation}
+                        className="mt-2"
+                    />
+                </div>
+
+                <StickyActionBar>
+                    <div className="dashboard-sticky-actions-inner">
+                        <Transition
+                            show={recentlySuccessful}
+                            enter="transition ease-in-out"
+                            enterFrom="opacity-0"
+                            leave="transition ease-in-out"
+                            leaveTo="opacity-0"
+                        >
+                            <p>Saved.</p>
+                        </Transition>
+                        <PrimaryButton disabled={processing}>Save</PrimaryButton>
+                    </div>
+                </StickyActionBar>
+            </form>
+        </section>
+    );
+}

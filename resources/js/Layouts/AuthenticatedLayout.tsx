@@ -4,26 +4,10 @@ import ToastStack from '@/Components/Dashboard/ToastStack';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
+import type { AuthenticatedPageProps } from '@/types/contracts';
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-
-interface AuthUser {
-    name: string;
-    email: string;
-}
-
-interface FlashPayload {
-    success?: string | null;
-    error?: string | null;
-}
-
-interface SharedPageProps extends Record<string, unknown> {
-    auth: {
-        user: AuthUser;
-    };
-    flash?: FlashPayload;
-}
 
 interface AuthenticatedLayoutProps {
     header?: ReactNode;
@@ -34,7 +18,7 @@ export default function AuthenticatedLayout({
     header,
     children,
 }: AuthenticatedLayoutProps) {
-    const page = usePage<SharedPageProps>();
+    const page = usePage<AuthenticatedPageProps>();
     const user = page.props.auth.user;
     const flash = page.props.flash ?? {};
 

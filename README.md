@@ -54,10 +54,11 @@ A modern portfolio application built with Laravel 12 + Breeze (React + Inertia.j
    docker compose up -d
    ```
    The first startup installs Composer and npm dependencies into named volumes.
-4. Once the containers are up, run the database migrations:
+4. Once the containers are up, run migrations with seeding so the owner account exists:
    ```bash
-   docker compose exec app php artisan migrate
+   docker compose exec app php artisan migrate --seed
    ```
+   The seeded owner credentials come from `PORTFOLIO_OWNER_EMAIL` and `PORTFOLIO_OWNER_PASSWORD` in `.env` (defaults are provided in `.env.docker`).
 5. Visit the services:
    - App: `http://localhost:8000`
    - Vite dev server with HMR: `http://localhost:5173`
@@ -108,10 +109,11 @@ Then follow the usual Laravel flow:
    PORTFOLIO_OWNER_PASSWORD=your-local-owner-password
    ```
    Keep `DB_URL` empty during local SQLite development. When set, `DB_URL` overrides connection behavior.
-5. Run migrations:
+5. Run migrations with seeding:
    ```bash
-   php artisan migrate
+   php artisan migrate --seed
    ```
+   This creates the owner account from `PORTFOLIO_OWNER_EMAIL` and `PORTFOLIO_OWNER_PASSWORD`.
 6. Start the dev servers:
    ```bash
    php artisan serve

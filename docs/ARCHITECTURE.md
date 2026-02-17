@@ -18,6 +18,9 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - Put reusable domain/business logic in dedicated classes under `app/` (for example `app/Actions` or `app/Services`).
 - List query/filter/sort orchestration lives in action classes under `app/Actions/Projects` (public and admin index resolvers).
 - Project duplication behavior lives in `app/Actions/Projects/DuplicateProject`.
+- Shared public contact payload resolution lives in `app/Actions/Public/ResolveContactPayload` and is reused by public controllers.
+- Home page payload assembly and caching live in `app/Actions/Home/ResolveHomePayload`.
+- Sitemap XML construction lives in `app/Actions/Seo/BuildSitemapXml`.
 - Public cache invalidation behavior lives in `app/Actions/Cache/InvalidatePublicCaches` and is reused by admin write flows.
 - Keep persistence concerns in Eloquent models (`app/Models`) and migrations (`database/migrations`).
 
@@ -25,7 +28,8 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - Inertia page entrypoints live in `resources/js/Pages`.
 - Layout shells live in `resources/js/Layouts`.
 - Reusable UI components live in `resources/js/Components`.
-- App bootstrap and page resolution live in `resources/js/app.jsx`.
+- App bootstrap and page resolution live in `resources/js/app.tsx`.
+- Frontend source under `resources/js` is TypeScript-only (`.ts` / `.tsx`) with strict type checking.
 - Global style tokens and section-level styles are split under `resources/css/styles/` to keep concerns maintainable.
 - CSS in `resources/css/styles/` must use nesting for selector relationships to keep style hierarchy explicit and reduce duplicated flat selectors.
 - Dashboard design primitives live under `resources/js/Components/Dashboard` and should be reused across authenticated pages.

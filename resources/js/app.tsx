@@ -1,5 +1,6 @@
 import '../css/app.css';
 import '../css/styles/animations.css';
+import '../css/styles/auth-login.css';
 import '../css/styles/base.css';
 import './bootstrap';
 

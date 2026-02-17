@@ -388,14 +388,12 @@ export default function Index({
                 ) : null}
                 <meta property="og:title" content="Projects | Guillaume Juste" />
                 <meta property="og:description" content={metaDescription} />
+                {socialImage ? <meta property="og:image" content={socialImage} /> : null}
                 {socialImage ? (
-                    <>
-                        <meta property="og:image" content={socialImage} />
-                        <meta
-                            property="og:image:alt"
-                            content="Portfolio projects cover image"
-                        />
-                    </>
+                    <meta
+                        property="og:image:alt"
+                        content="Portfolio projects cover image"
+                    />
                 ) : null}
                 <meta
                     name="twitter:card"

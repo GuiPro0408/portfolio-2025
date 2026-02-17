@@ -60,14 +60,12 @@ export default function Welcome({
                 ) : null}
                 <meta property="og:title" content="Portfolio | Guillaume Juste" />
                 <meta property="og:description" content={metaDescription} />
+                {socialImage ? <meta property="og:image" content={socialImage} /> : null}
                 {socialImage ? (
-                    <>
-                        <meta property="og:image" content={socialImage} />
-                        <meta
-                            property="og:image:alt"
-                            content="Guillaume Juste portfolio cover image"
-                        />
-                    </>
+                    <meta
+                        property="og:image:alt"
+                        content="Guillaume Juste portfolio cover image"
+                    />
                 ) : null}
                 <meta
                     name="twitter:card"

@@ -70,14 +70,12 @@ export default function Contact({ contact, formStartedAt }: ContactPageProps) {
                 ) : null}
                 <meta property="og:title" content="Contact | Guillaume Juste" />
                 <meta property="og:description" content={metaDescription} />
+                {socialImage ? <meta property="og:image" content={socialImage} /> : null}
                 {socialImage ? (
-                    <>
-                        <meta property="og:image" content={socialImage} />
-                        <meta
-                            property="og:image:alt"
-                            content="Guillaume Juste portfolio contact page image"
-                        />
-                    </>
+                    <meta
+                        property="og:image:alt"
+                        content="Guillaume Juste portfolio contact page image"
+                    />
                 ) : null}
                 <meta
                     name="twitter:card"

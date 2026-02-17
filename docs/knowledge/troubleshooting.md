@@ -127,3 +127,20 @@ Actions:
    ```bash
    docker compose logs app | grep -iE '\"level\":\"(error|critical|alert|emergency)\"|\\berror\\b'
    ```
+
+## 10) Home page returns 200 but appears blank
+Symptom:
+- `GET /` is `200`, but the UI is empty/blank.
+
+Actions:
+1. Check browser console for runtime errors such as:
+   - `Cannot convert a Symbol value to a string`
+2. Confirm the issue from CLI with Playwright:
+   ```bash
+   node -e "const { chromium } = require('playwright'); (async()=>{ const browser = await chromium.launch({headless:true}); const page = await browser.newPage(); page.on('pageerror', e=>console.log('PAGEERROR', e.message)); page.on('console', m=>m.type()==='error' && console.log('CONSOLE', m.text())); await page.goto('http://localhost:8000', {waitUntil:'networkidle'}); console.log('bodyTextLength', (await page.locator('body').innerText()).length); await browser.close(); })();"
+   ```
+3. Check for React fragments inside Inertia `<Head>` blocks:
+   ```bash
+   rg -n "<Head|<>|</>" resources/js/Pages -S
+   ```
+4. If fragments are found inside `<Head>`, replace grouped fragments with separate conditional nodes.

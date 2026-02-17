@@ -23,6 +23,7 @@ check:
 	composer run lint:php
 	composer run lint:static
 	composer test
+	npm run lint
 	npm run typecheck
 	npm run build
 
@@ -34,12 +35,14 @@ docs-check:
 
 check-docker:
 	./scripts/check-docs.sh
+	docker compose exec -T app sh -lc 'while [ ! -f vendor/autoload.php ]; do echo "Waiting for Composer dependencies..."; sleep 1; done'
 	docker compose exec -T app composer validate --strict
 	docker compose exec -T app composer run lint:php
 	docker compose exec -T app composer run lint:static
-	docker compose exec -T app composer test
-	docker compose exec -T vite npm run typecheck
-	docker compose exec -T vite npm run build
+	docker compose exec -T -e APP_ENV=testing app composer test
+	docker compose exec -T -u node vite npm run lint
+	docker compose exec -T -u node vite npm run typecheck
+	docker compose exec -T -u node vite npm run build
 
 format:
 	composer run format:php

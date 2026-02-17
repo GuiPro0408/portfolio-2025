@@ -39,7 +39,12 @@ Actions:
    ```bash
    docker compose ps
    ```
-3. Retry `make check-docker`.
+3. If `app` exits with Composer write errors under `/var/www/html/vendor`, recreate the dependency volumes:
+   ```bash
+   docker compose down -v
+   docker compose up -d
+   ```
+4. Retry `make check-docker`.
 
 ## 4) `make dev` fails on a fresh clone
 Symptom:
@@ -66,6 +71,21 @@ Actions:
    npm run build
    ```
 3. Fix import/path errors, then rerun `make check`.
+
+## 8) Frontend lint fails during `make check`
+Symptom:
+- `npm run lint` reports ESLint rule violations.
+
+Actions:
+1. Run lint standalone to isolate:
+   ```bash
+   npm run lint
+   ```
+2. If safe to auto-fix stylistic findings:
+   ```bash
+   npm run lint:fix
+   ```
+3. Re-run `make check`.
 
 ## 6) Tests pass locally but fail in CI
 Symptom:

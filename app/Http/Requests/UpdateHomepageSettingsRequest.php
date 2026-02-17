@@ -47,7 +47,13 @@ class UpdateHomepageSettingsRequest extends FormRequest
                 continue;
             }
 
-            if ($this->isImageFilename($rawValue)) {
+            if ($this->isAppPathReference($rawValue)) {
+                $normalized[$field] = $this->normalizeAppPathReference($rawValue);
+
+                continue;
+            }
+
+            if (! str_contains($rawValue, '/') && $this->isImageFilename($rawValue)) {
                 $normalized[$field] = '/images/homepage/'.$folder.'/'.$rawValue;
 
                 continue;
@@ -115,6 +121,15 @@ class UpdateHomepageSettingsRequest extends FormRequest
     private function isAppPathReference(string $value): bool
     {
         return Str::startsWith($value, ['/images/', 'images/']) && $this->isImageFilename($value);
+    }
+
+    private function normalizeAppPathReference(string $value): string
+    {
+        if (Str::startsWith($value, 'images/')) {
+            return '/'.$value;
+        }
+
+        return $value;
     }
 
     private function isImageFilename(string $value): bool

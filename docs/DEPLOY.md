@@ -23,6 +23,7 @@ Set these in Koyeb (names only, no secrets shown here):
 - `CACHE_STORE`
 - `PORTFOLIO_EMAIL`
 - `PORTFOLIO_OWNER_EMAIL`
+- `PORTFOLIO_OWNER_PASSWORD`
 - `PORTFOLIO_LINKEDIN`
 - `PORTFOLIO_GITHUB`
 
@@ -32,8 +33,14 @@ Set these in Koyeb (names only, no secrets shown here):
 3. Configure the environment variables above.
 4. Deploy from `main`.
 
-## Migrations
-After first deploy and after each migration change, run:
+## Database Bootstrap And Migrations
+After the first deploy, bootstrap schema and owner account with:
+
+```bash
+koyeb services exec <service-name>/web -- php artisan migrate --seed --force
+```
+
+For subsequent deploys that only need schema changes, run:
 
 ```bash
 koyeb services exec <service-name>/web -- php artisan migrate --force

@@ -27,8 +27,9 @@ This sequence is the canonical non-browser CI quality path.
 3. `composer run lint:php`
 4. `composer run lint:static`
 5. `composer test`
-6. `npm run typecheck`
-7. `npm run build`
+6. `npm run lint`
+7. `npm run typecheck`
+8. `npm run build`
 
 ## Browser Smoke Path
 - Browser smoke tests run through Playwright with:

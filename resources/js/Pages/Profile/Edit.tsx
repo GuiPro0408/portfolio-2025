@@ -8,9 +8,10 @@ import UpdateProfileInformationForm from './Partials/UpdateProfileInformationFor
 interface EditProfilePageProps {
     mustVerifyEmail: boolean;
     status?: string;
+    canDeleteAccount: boolean;
 }
 
-export default function Edit({ mustVerifyEmail, status }: EditProfilePageProps) {
+export default function Edit({ mustVerifyEmail, status, canDeleteAccount }: EditProfilePageProps) {
     return (
         <AuthenticatedLayout
             header={
@@ -37,7 +38,18 @@ export default function Edit({ mustVerifyEmail, status }: EditProfilePageProps) 
                     </div>
 
                     <div className="dashboard-panel p-4 shadow sm:rounded-xl sm:p-8">
-                        <DeleteUserForm className="max-w-xl" />
+                        {canDeleteAccount ? (
+                            <DeleteUserForm className="max-w-xl" />
+                        ) : (
+                            <section className="max-w-xl space-y-3">
+                                <h2 className="text-lg font-medium text-gray-900">
+                                    Delete Account
+                                </h2>
+                                <p className="text-sm text-gray-600">
+                                    Account deletion is disabled for the configured owner account.
+                                </p>
+                            </section>
+                        )}
                     </div>
                 </div>
             </div>

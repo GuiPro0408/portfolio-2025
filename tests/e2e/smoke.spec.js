@@ -66,14 +66,12 @@ test('projects filters smoke', async ({ page }) => {
 
     await sortButton.click();
     await page.locator('.projects-filter-option', { hasText: 'Newest' }).click();
-    await page.waitForTimeout(450);
 
     await expect(page).toHaveURL(/\/projects\?/);
     await expect(page).toHaveURL(/sort=newest/);
     await expect(page).toHaveURL(/stack=/);
 
     await page.getByRole('button', { name: 'Reset' }).click();
-    await page.waitForTimeout(450);
     await expect(page).toHaveURL(/\/projects\?sort=editorial$/);
     await expect(page).not.toHaveURL(/stack=/);
     await expect(stackButton).toContainText('All stacks');
@@ -85,7 +83,17 @@ test('contact form submit smoke', async ({ page }) => {
     await page.getByLabel('Name').fill('Playwright Tester');
     await page.getByLabel('Email').fill('playwright@example.com');
     await page.getByLabel('Message').fill('Smoke test contact submission.');
-    await page.waitForTimeout(3200);
+    const startedAtInput = page.locator('input[name="form_started_at"]');
+    await startedAtInput.waitFor({ state: 'attached' });
+
+    const startedAtRaw = await startedAtInput.inputValue();
+    const startedAt = Number.parseInt(startedAtRaw, 10);
+    expect(Number.isNaN(startedAt)).toBe(false);
+
+    await expect
+        .poll(() => Math.floor(Date.now() / 1000) - startedAt)
+        .toBeGreaterThanOrEqual(3);
+
     await page.getByRole('button', { name: 'Send message' }).click();
 
     await expect(

@@ -148,6 +148,10 @@ export default function Contact({ contact, formStartedAt }: ContactPageProps) {
                                     type="hidden"
                                     name="form_started_at"
                                     value={data.form_started_at}
+                                    onChange={(event) => {
+                                        const parsed = Number.parseInt(event.target.value, 10);
+                                        setData('form_started_at', Number.isNaN(parsed) ? 0 : parsed);
+                                    }}
                                 />
 
                                 <label htmlFor="name" className="contact-field">

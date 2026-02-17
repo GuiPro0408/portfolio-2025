@@ -6,6 +6,7 @@ ARG GID=1000
 RUN apt-get update && apt-get install -y \
         bash \
         git \
+        gosu \
         unzip \
         libpq-dev \
         libzip-dev \
@@ -33,8 +34,6 @@ WORKDIR /var/www/html
 
 COPY docker/dev/php-entrypoint.sh /usr/local/bin/php-dev-entrypoint
 RUN chmod +x /usr/local/bin/php-dev-entrypoint
-
-USER laravel
 
 ENV PATH="/var/www/html/vendor/bin:${PATH}" \
     COMPOSER_HOME="/home/laravel/.composer"

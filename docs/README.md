@@ -4,7 +4,7 @@
 
 ## Core Documents
 - [Architecture](ARCHITECTURE.md): Laravel/Inertia boundaries, dashboard component patterns, action placement rules, and public cache invalidation flow.
-- [Harness](HARNESS.md): command contract, CI parity mapping, and browser smoke path.
+- [Harness](HARNESS.md): command contract, CI parity mapping, frontend lint/typecheck/build gates, and browser smoke path.
 - [System of record](SYSTEM-OF-RECORD.md): canonical-vs-mirror policy and doc update triggers.
 - [Quality](QUALITY.md): quality expectations and links to harness commands.
 - [Deploy](DEPLOY.md): Koyeb deployment runbook, env var contract, and migration flow.

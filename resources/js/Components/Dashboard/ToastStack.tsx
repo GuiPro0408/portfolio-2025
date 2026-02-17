@@ -35,9 +35,11 @@ export default function ToastStack({ flash }: ToastStackProps) {
     }, [key]);
 
     useEffect(() => {
+        const timers = timersRef.current;
+
         return () => {
-            timersRef.current.forEach((timerId) => window.clearTimeout(timerId));
-            timersRef.current.clear();
+            timers.forEach((timerId) => window.clearTimeout(timerId));
+            timers.clear();
         };
     }, []);
 

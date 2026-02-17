@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Support\OwnerAuthorization;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,9 +19,12 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $isOwner = OwnerAuthorization::isOwner($request->user());
+
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            'canDeleteAccount' => ! $isOwner,
         ]);
     }
 
@@ -45,6 +49,10 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        if (OwnerAuthorization::isOwner($request->user())) {
+            return Redirect::route('profile.edit')->with('error', 'Owner account deletion is disabled.');
+        }
+
         $request->validate([
             'password' => ['required', 'current_password'],
         ]);

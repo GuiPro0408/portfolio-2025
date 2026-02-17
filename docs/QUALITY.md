@@ -10,7 +10,7 @@ Command-level definitions are canonical in [`docs/HARNESS.md`](HARNESS.md).
 
 ## Test Expectations
 - Backend behavior changes require tests in `tests/Feature` and/or `tests/Unit`.
-- Frontend changes must pass `npm run typecheck` and `npm run build`.
+- Frontend changes must pass `npm run lint`, `npm run typecheck`, and `npm run build`.
 - Browser-critical paths should be covered by Playwright smoke tests when affected.
 - For list UX changes, verify debounced server-driven filters, partial reload contracts (`only` props), and active-filter chips behavior.
 - Perceived-performance UX changes must verify skeleton behavior (visible during list transitions, no flashing on unrelated actions).

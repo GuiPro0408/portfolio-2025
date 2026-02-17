@@ -52,6 +52,11 @@ Copy the generated key (starts with `base64:...`).
    | `DB_URL` | (from step 2) |
    | `SESSION_DRIVER` | `database` |
    | `CACHE_STORE` | `database` |
+   | `PORTFOLIO_EMAIL` | `you@example.com` |
+   | `PORTFOLIO_OWNER_EMAIL` | `owner@example.com` |
+   | `PORTFOLIO_OWNER_PASSWORD` | `<strong-random-password>` |
+   | `PORTFOLIO_LINKEDIN` | `https://www.linkedin.com/in/your-handle` |
+   | `PORTFOLIO_GITHUB` | `https://github.com/your-handle` |
 
    **Important**: Replace `your-service.koyeb.app` with your actual Koyeb service URL (you'll get this after creating the service).
 
@@ -68,8 +73,8 @@ After the first deployment completes:
 # Login to Koyeb
 koyeb login
 
-# Run migrations
-koyeb services exec portfolio-app/web -- php artisan migrate --force
+# First deploy bootstrap (schema + owner account)
+koyeb services exec portfolio-app/web -- php artisan migrate --seed --force
 ```
 
 **Option B: Using Web Terminal**
@@ -85,9 +90,10 @@ Your application is now live at: `https://your-service.koyeb.app`
 
 Default routes:
 - Home: `/`
-- Register: `/register`
 - Login: `/login`
-- Dashboard: `/dashboard` (requires login)
+- Contact: `/contact`
+- Projects: `/projects`
+- Dashboard: `/dashboard` (requires owner login + verified email)
 
 ## Updating the Application
 After pushing changes to GitHub:

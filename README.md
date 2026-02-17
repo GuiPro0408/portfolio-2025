@@ -136,7 +136,7 @@ GitHub Actions workflow automatically:
 - Installs PHP and npm dependencies with `make setup-ci`
 - Validates docs system-of-record consistency with `make docs-check`
 - Runs the golden check command: `make check`
-- Enforces docs checks, composer validation, Pint linting, static analysis, backend tests, TypeScript type-checking, and frontend build
+- Enforces docs checks, composer validation, Pint linting, static analysis, backend tests, frontend ESLint linting, TypeScript type-checking, and frontend build
 - Uploads `public/build` from the build job and reuses it in Playwright job
 - Runs Playwright browser smoke coverage with `npm run test:e2e`
 
@@ -181,6 +181,7 @@ make setup
 make docs-check
 make check
 make analyse
+npm run lint
 npm run test:e2e
 ```
 

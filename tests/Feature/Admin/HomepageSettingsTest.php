@@ -81,6 +81,27 @@ class HomepageSettingsTest extends TestCase
         ]);
     }
 
+    public function test_homepage_settings_accepts_app_path_image_inputs_and_normalizes_relative_paths(): void
+    {
+        $user = $this->ownerUser();
+        HomepageSettings::query()->create(HomepageSettings::defaults());
+
+        $payload = HomepageSettings::defaults();
+        $payload['hero_image_url'] = '/images/custom/hero.webp';
+        $payload['featured_image_1_url'] = 'images/custom/featured.webp';
+        $payload['process_image_url'] = '/images/sections/process.webp';
+
+        $response = $this->actingAs($user)->put(route('dashboard.homepage.update'), $payload);
+
+        $response->assertRedirect(route('dashboard.homepage.edit'));
+
+        $this->assertDatabaseHas('homepage_settings', [
+            'hero_image_url' => '/images/custom/hero.webp',
+            'featured_image_1_url' => '/images/custom/featured.webp',
+            'process_image_url' => '/images/sections/process.webp',
+        ]);
+    }
+
     public function test_homepage_settings_update_clears_public_home_cache(): void
     {
         $user = $this->ownerUser();

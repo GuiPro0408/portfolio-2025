@@ -19,6 +19,7 @@ Laravel 12 + Breeze (React + Inertia) portfolio application.
 
 ### Docker workflow
 ```bash
+cp .env.docker.example .env.docker.local
 docker compose up -d
 make check-docker
 ```

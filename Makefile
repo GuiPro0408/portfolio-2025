@@ -1,4 +1,4 @@
-.PHONY: setup setup-ci ensure-deps local-preflight dev run-project-locally run-project-docker check docs-check check-docker format test build analyse typecheck
+.PHONY: setup setup-ci ensure-deps ensure-docker-env local-preflight dev run-project-locally run-project-docker check docs-check check-docker format test build analyse typecheck
 
 setup:
 	composer install --prefer-dist --no-interaction
@@ -67,7 +67,14 @@ dev: local-preflight
 
 run-project-locally: dev
 
-run-project-docker:
+ensure-docker-env:
+	@set -eu; \
+	if [ ! -f .env.docker.local ]; then \
+		echo "No .env.docker.local found. Copying from .env.docker.example..."; \
+		cp .env.docker.example .env.docker.local; \
+	fi
+
+run-project-docker: ensure-docker-env
 	docker compose up -d
 	@echo "Docker stack started."
 	@docker compose ps

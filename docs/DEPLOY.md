@@ -8,6 +8,10 @@ Deployment is currently deferred while active development continues on SQLite lo
 - Host: Koyeb
 - Database: Koyeb PostgreSQL
 
+Production note:
+- Local Docker env files (`.env.docker.local`, `.env.docker.example`) are for developer machines only.
+- Koyeb production must use platform-configured environment variables.
+
 ## Required Environment Variables
 Set these in Koyeb (names only, no secrets shown here):
 

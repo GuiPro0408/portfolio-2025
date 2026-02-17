@@ -8,13 +8,15 @@ This file is a short entry point. Keep deep setup and workflow contracts in cano
 
 ### Docker-first
 ```bash
+cp .env.docker.example .env.docker.local
 docker compose up -d
 make check-docker
 ```
 
 Notes:
-- Docker app startup runs `php artisan migrate --seed --force` when `AUTO_MIGRATE_AND_SEED=true` (see `.env.docker`).
+- Docker app startup runs `php artisan migrate --seed --force` when `AUTO_MIGRATE_AND_SEED=true` (see `.env.docker.local`).
 - Docker seeding skips demo projects by default via `PORTFOLIO_SEED_PROJECTS=false`.
+- `.env.docker.local` is local-only and should not be committed.
 
 ### Native toolchain
 ```bash

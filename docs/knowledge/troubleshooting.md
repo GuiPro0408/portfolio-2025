@@ -45,6 +45,10 @@ Actions:
    docker compose up -d
    ```
 4. Retry `make check-docker`.
+5. If Docker reports missing `.env.docker.local`, create it from template:
+   ```bash
+   cp .env.docker.example .env.docker.local
+   ```
 
 ## 4) `make dev` fails on a fresh clone
 Symptom:

@@ -30,9 +30,9 @@ fi
 
 cd "${APP_DIR}"
 
-if [[ ! -f .env && -f .env.docker ]]; then
-    echo "[php-dev-entrypoint] Bootstrapping .env from .env.docker"
-    cp .env.docker .env
+if [[ "${APP_ENV:-local}" != "production" ]] && [[ ! -f .env && -f .env.docker.local ]]; then
+    echo "[php-dev-entrypoint] Bootstrapping .env from .env.docker.local"
+    cp .env.docker.local .env
 fi
 
 # Avoid stale cached config from host/local runs pinning Docker to wrong DB settings.

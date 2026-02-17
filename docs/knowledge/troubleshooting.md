@@ -164,3 +164,15 @@ Actions:
    docker compose up -d --build app
    docker compose logs --tail=200 app
    ```
+
+## 12) Accidentally used dev compose for production
+Symptom:
+- Production run picked up dev-only settings (`APP_ENV=local`, bind mounts, Vite dev server).
+
+Actions:
+1. Use Koyeb + repository `Dockerfile` as the primary production path.
+2. If self-hosting with Compose, use:
+   ```bash
+   docker compose -f docker-compose.prod.yml up -d
+   ```
+3. Do not rely on `.env.docker.local` in production.

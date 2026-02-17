@@ -24,6 +24,11 @@ docker compose up -d
 make check-docker
 ```
 
+Notes:
+- `docker-compose.yml` is development-only.
+- Production uses Koyeb with the root `Dockerfile` (canonical: `docs/DEPLOY.md`).
+- `docker-compose.prod.yml` is available for self-hosted production parity.
+
 ### Native workflow
 ```bash
 make setup

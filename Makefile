@@ -1,4 +1,4 @@
-.PHONY: setup setup-ci ensure-deps ensure-docker-env local-preflight dev run-project-locally run-project-docker check docs-check check-docker format test build analyse typecheck
+.PHONY: setup setup-ci ensure-deps ensure-docker-env local-preflight dev run-project-locally run-project-docker run-project-docker-prod prod-readiness check docs-check check-docker format test build analyse typecheck
 
 setup:
 	composer install --prefer-dist --no-interaction
@@ -17,12 +17,12 @@ ensure-deps:
 local-preflight: ensure-deps
 	@set -eu; \
 	if command -v docker >/dev/null 2>&1; then \
-		running_services=$$(docker compose ps --status running --services 2>/dev/null || true); \
+		running_services=$$(docker compose -f docker-compose.yml ps --status running --services 2>/dev/null || true); \
 		if [ -n "$$running_services" ]; then \
 			echo "Docker services are currently running:"; \
 			echo "$$running_services"; \
 			echo "Stop Docker services before native local run:"; \
-			echo "  docker compose down"; \
+			echo "  docker compose -f docker-compose.yml down"; \
 			exit 1; \
 		fi; \
 	fi
@@ -75,9 +75,17 @@ ensure-docker-env:
 	fi
 
 run-project-docker: ensure-docker-env
-	docker compose up -d
+	docker compose -f docker-compose.yml up -d
 	@echo "Docker stack started."
-	@docker compose ps
+	@docker compose -f docker-compose.yml ps
+
+run-project-docker-prod:
+	docker compose -f docker-compose.prod.yml up -d
+	@echo "Production compose stack started."
+	@docker compose -f docker-compose.prod.yml ps
+
+prod-readiness:
+	./scripts/check-prod-readiness.sh
 
 check:
 	$(MAKE) docs-check
@@ -94,19 +102,20 @@ analyse:
 
 docs-check:
 	./scripts/check-docs.sh
+	./scripts/check-prod-readiness.sh
 	node scripts/check-agent-contract.mjs
 	node scripts/check-memory-registry.mjs
 
 check-docker:
 	$(MAKE) docs-check
-	docker compose exec -T app sh -lc 'while [ ! -f vendor/autoload.php ]; do echo "Waiting for Composer dependencies..."; sleep 1; done'
-	docker compose exec -T app composer validate --strict
-	docker compose exec -T app composer run lint:php
-	docker compose exec -T app composer run lint:static
-	docker compose exec -T -e APP_ENV=testing app composer test
-	docker compose exec -T -u node vite npm run lint
-	docker compose exec -T -u node vite npm run typecheck
-	docker compose exec -T -u node vite npm run build
+	docker compose -f docker-compose.yml exec -T app sh -lc 'while [ ! -f vendor/autoload.php ]; do echo "Waiting for Composer dependencies..."; sleep 1; done'
+	docker compose -f docker-compose.yml exec -T app composer validate --strict
+	docker compose -f docker-compose.yml exec -T app composer run lint:php
+	docker compose -f docker-compose.yml exec -T app composer run lint:static
+	docker compose -f docker-compose.yml exec -T -e APP_ENV=testing app composer test
+	docker compose -f docker-compose.yml exec -T -u node vite npm run lint
+	docker compose -f docker-compose.yml exec -T -u node vite npm run typecheck
+	docker compose -f docker-compose.yml exec -T -u node vite npm run build
 
 format:
 	composer run format:php

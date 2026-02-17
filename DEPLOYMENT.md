@@ -12,6 +12,11 @@ This file is a quick entry point. Operational deployment contracts are defined i
    - First deploy: `koyeb services exec <service>/web -- php artisan migrate --seed --force`
    - Subsequent deploys: `koyeb services exec <service>/web -- php artisan migrate --force`
 
+Production env policy:
+- `.env.docker.local` and `.env.docker.example` are local-only developer files.
+- Koyeb production must use platform environment variables.
+- `docker-compose.yml` is development-only; use `docker-compose.prod.yml` only for self-hosted production parity.
+
 ## Post-Deploy Verification
 - Public app loads.
 - Owner authentication + verification flow works.

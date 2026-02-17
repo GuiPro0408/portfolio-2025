@@ -8,6 +8,7 @@ This document is the single source of truth for repository command behavior.
 - `make dev`: native local development workflow with preflight checks, database bootstrap, and concurrent app/queue/logs/vite processes
 - `make run-project-locally`: alias for `make dev`
 - `make docs-check`: documentation + agent workflow contract integrity checks
+- `make prod-readiness`: validate production deployment guardrails (dev/prod compose split + env policy)
 - `make check`: full quality gate (validation, lint, static analysis, tests, type checks, frontend build)
 - `make analyse`: static analysis with Larastan/PHPStan
 - `make check-docker`: full parity checks inside running Docker services
@@ -34,8 +35,9 @@ This sequence is the canonical non-browser CI quality path.
 
 `make docs-check` includes:
 1. `./scripts/check-docs.sh`
-2. `node scripts/check-agent-contract.mjs`
-3. `node scripts/check-memory-registry.mjs`
+2. `./scripts/check-prod-readiness.sh`
+3. `node scripts/check-agent-contract.mjs`
+4. `node scripts/check-memory-registry.mjs`
 
 ## Browser Smoke Path
 - Browser smoke tests run through Playwright with:

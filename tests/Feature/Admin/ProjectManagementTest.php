@@ -229,7 +229,7 @@ class ProjectManagementTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->get(route('dashboard.projects.index', [
-            'q' => 'project',
+            'q' => 'PrOjEcT',
             'status' => 'published',
             'featured' => 'all',
             'sort' => 'title_desc',
@@ -239,7 +239,7 @@ class ProjectManagementTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard/Projects/Index')
-                ->where('filters.q', 'project')
+                ->where('filters.q', 'PrOjEcT')
                 ->where('filters.status', 'published')
                 ->where('filters.featured', 'all')
                 ->where('filters.sort', 'title_desc')

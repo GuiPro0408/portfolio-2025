@@ -3,7 +3,7 @@
 `docs/` is the canonical system of record for this repository.
 
 ## Core Documents
-- [Architecture](ARCHITECTURE.md): Laravel/Inertia boundaries, dashboard component patterns, and code placement rules.
+- [Architecture](ARCHITECTURE.md): Laravel/Inertia boundaries, dashboard component patterns, action placement rules, and public cache invalidation flow.
 - [Harness](HARNESS.md): command contract, CI parity mapping, and browser smoke path.
 - [System of record](SYSTEM-OF-RECORD.md): canonical-vs-mirror policy and doc update triggers.
 - [Quality](QUALITY.md): quality expectations and links to harness commands.

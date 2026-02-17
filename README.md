@@ -51,7 +51,7 @@ A modern portfolio application built with Laravel 12 + Breeze (React + Inertia.j
 3. Build the images and start the stack:
    ```bash
    docker compose build
-   docker compose up
+   docker compose up -d
    ```
    The first startup installs Composer and npm dependencies into named volumes.
 4. Once the containers are up, run the database migrations:
@@ -71,7 +71,7 @@ A modern portfolio application built with Laravel 12 + Breeze (React + Inertia.j
    ```bash
    make check-docker
    ```
-7. Stop everything with `Ctrl+C` (foreground) or `docker compose down` when you are done. The `vendor`, `node_modules`, and PostgreSQL data persist in named volumes.
+7. Stop everything with `docker compose down` when you are done. The `vendor`, `node_modules`, and PostgreSQL data persist in named volumes.
 
 ### Option B – Native toolchain
 

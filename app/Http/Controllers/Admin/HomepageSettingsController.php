@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Cache\InvalidatePublicCaches;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateHomepageSettingsRequest;
 use App\Models\HomepageSettings;
-use App\Support\PublicCacheKeys;
-use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class HomepageSettingsController extends Controller
 {
+    public function __construct(
+        private readonly InvalidatePublicCaches $invalidatePublicCaches,
+    ) {}
+
     public function edit(): Response
     {
         $settings = HomepageSettings::current();
@@ -47,9 +50,7 @@ class HomepageSettingsController extends Controller
     {
         $settings = HomepageSettings::current();
         $settings->update($request->validated());
-        foreach (PublicCacheKeys::homePayloadVariants() as $homePayloadKey) {
-            Cache::forget($homePayloadKey);
-        }
+        $this->invalidatePublicCaches->handle();
 
         return redirect()
             ->route('dashboard.homepage.edit')

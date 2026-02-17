@@ -38,8 +38,8 @@ class ResolveAdminProjectsIndex
             ->when($filters['q'] !== '', function ($query) use ($filters) {
                 $query->where(function ($searchQuery) use ($filters) {
                     $searchQuery
-                        ->where('title', 'like', '%'.$filters['q'].'%')
-                        ->orWhere('slug', 'like', '%'.$filters['q'].'%');
+                        ->whereLike('title', '%'.$filters['q'].'%', caseSensitive: false)
+                        ->orWhereLike('slug', '%'.$filters['q'].'%', caseSensitive: false);
                 });
             })
             ->when($filters['status'] !== 'all', function ($query) use ($filters) {

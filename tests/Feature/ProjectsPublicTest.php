@@ -197,8 +197,8 @@ class ProjectsPublicTest extends TestCase
         ]);
 
         $response = $this->get(route('projects.index', [
-            'q' => 'crm',
-            'stack' => 'React',
+            'q' => 'CrM',
+            'stack' => 'rEaCt',
             'sort' => 'newest',
         ]));
 
@@ -206,8 +206,8 @@ class ProjectsPublicTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Projects/Index')
-                ->where('filters.q', 'crm')
-                ->where('filters.stack', 'React')
+                ->where('filters.q', 'CrM')
+                ->where('filters.stack', 'rEaCt')
                 ->where('filters.sort', 'newest')
                 ->where('projects.data', fn ($projects) => collect($projects)
                     ->pluck('title')

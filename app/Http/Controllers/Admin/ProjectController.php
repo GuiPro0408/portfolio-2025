@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Cache\InvalidatePublicCaches;
+use App\Actions\Projects\DuplicateProject;
 use App\Actions\Projects\ResolveAdminProjectsIndex;
 use App\Actions\Projects\SyncProjectTechnologies;
 use App\Http\Controllers\Controller;
@@ -10,17 +12,16 @@ use App\Http\Requests\UpdateProjectFlagsRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Requests\UpdateProjectSortRequest;
 use App\Models\Project;
-use App\Support\PublicCacheKeys;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProjectController extends Controller
 {
     public function __construct(
+        private readonly DuplicateProject $duplicateProject,
+        private readonly InvalidatePublicCaches $invalidatePublicCaches,
         private readonly ResolveAdminProjectsIndex $resolveAdminProjectsIndex,
         private readonly SyncProjectTechnologies $syncProjectTechnologies,
     ) {}
@@ -50,7 +51,7 @@ class ProjectController extends Controller
             $this->syncProjectTechnologies->sync($project, $project->stack);
         }
 
-        $this->clearPublicCaches();
+        $this->invalidatePublicCaches->handle();
 
         return redirect()
             ->route('dashboard.projects.index')
@@ -94,7 +95,7 @@ class ProjectController extends Controller
             $this->syncProjectTechnologies->sync($project, $project->stack);
         }
 
-        $this->clearPublicCaches();
+        $this->invalidatePublicCaches->handle();
 
         return redirect()
             ->route('dashboard.projects.index')
@@ -117,7 +118,7 @@ class ProjectController extends Controller
         }
 
         $project->save();
-        $this->clearPublicCaches();
+        $this->invalidatePublicCaches->handle();
 
         return back()->with('success', 'Project status updated.');
     }
@@ -125,7 +126,7 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         $project->delete();
-        $this->clearPublicCaches();
+        $this->invalidatePublicCaches->handle();
 
         return redirect()
             ->route('dashboard.projects.index')
@@ -134,38 +135,8 @@ class ProjectController extends Controller
 
     public function duplicate(Project $project)
     {
-        $technologyTablesReady = $this->technologyTablesReady();
-
-        if ($technologyTablesReady) {
-            $project->loadMissing('technologies');
-        }
-
-        $originalTechnologyIds = $technologyTablesReady
-            ? $project->technologies->pluck('id')->all()
-            : [];
-
-        $stackMirror = $technologyTablesReady && $project->technologies->isNotEmpty()
-            ? $project->technologies->pluck('name')->implode(', ')
-            : $project->stack;
-
-        $copy = $project->replicate();
-        $copy->title = $project->title.' (Copy)';
-        $copy->slug = $this->generateUniqueCopySlug($project->slug);
-        $copy->is_featured = false;
-        $copy->is_published = false;
-        $copy->published_at = null;
-        $copy->stack = $stackMirror;
-        $copy->save();
-
-        if ($technologyTablesReady) {
-            if ($originalTechnologyIds !== []) {
-                $copy->technologies()->sync($originalTechnologyIds);
-            } else {
-                $this->syncProjectTechnologies->sync($copy, $copy->stack);
-            }
-        }
-
-        $this->clearPublicCaches();
+        $copy = $this->duplicateProject->duplicate($project);
+        $this->invalidatePublicCaches->handle();
 
         return redirect()
             ->route('dashboard.projects.edit', $copy)
@@ -177,7 +148,7 @@ class ProjectController extends Controller
         $project->update([
             'sort_order' => $request->validated('sort_order'),
         ]);
-        $this->clearPublicCaches();
+        $this->invalidatePublicCaches->handle();
 
         return back()->with('success', 'Project sort order updated.');
     }
@@ -201,28 +172,5 @@ class ProjectController extends Controller
             'published_at' => '',
             'sort_order' => 0,
         ];
-    }
-
-    private function generateUniqueCopySlug(string $originalSlug): string
-    {
-        $baseSlug = Str::slug($originalSlug).'-copy';
-        $slug = $baseSlug;
-        $counter = 2;
-
-        while (Project::query()->where('slug', $slug)->exists()) {
-            $slug = "{$baseSlug}-{$counter}";
-            $counter++;
-        }
-
-        return $slug;
-    }
-
-    private function clearPublicCaches(): void
-    {
-        foreach (PublicCacheKeys::homePayloadVariants() as $homePayloadKey) {
-            Cache::forget($homePayloadKey);
-        }
-
-        Cache::forget(PublicCacheKeys::SITEMAP_XML);
     }
 }

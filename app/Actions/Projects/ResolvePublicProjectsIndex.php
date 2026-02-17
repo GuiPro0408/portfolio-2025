@@ -160,18 +160,18 @@ class ResolvePublicProjectsIndex
 
         $query->where(function (EloquentBuilder $searchQuery) use ($search, $normalizedSearch, $technologyTablesReady): void {
             $searchQuery
-                ->where('title', 'like', '%'.$search.'%')
-                ->orWhere('summary', 'like', '%'.$search.'%');
+                ->whereLike('title', '%'.$search.'%', caseSensitive: false)
+                ->orWhereLike('summary', '%'.$search.'%', caseSensitive: false);
 
             if ($technologyTablesReady) {
                 $searchQuery->orWhereHas('technologies', function (EloquentBuilder $technologyQuery) use ($normalizedSearch): void {
-                    $technologyQuery->where('name_normalized', 'like', '%'.$normalizedSearch.'%');
+                    $technologyQuery->whereLike('name_normalized', '%'.$normalizedSearch.'%', caseSensitive: false);
                 });
 
                 return;
             }
 
-            $searchQuery->orWhere('stack', 'like', '%'.$search.'%');
+            $searchQuery->orWhereLike('stack', '%'.$search.'%', caseSensitive: false);
         });
     }
 
@@ -194,7 +194,7 @@ class ResolvePublicProjectsIndex
 
         $query->where(function (EloquentBuilder $stackQuery) use ($selectedStacks): void {
             foreach ($selectedStacks as $token) {
-                $stackQuery->orWhere('stack', 'like', '%'.$token.'%');
+                $stackQuery->orWhereLike('stack', '%'.$token.'%', caseSensitive: false);
             }
         });
     }

@@ -17,6 +17,8 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - Keep controllers thin: parsing input, auth checks, orchestration only.
 - Put reusable domain/business logic in dedicated classes under `app/` (for example `app/Actions` or `app/Services`).
 - List query/filter/sort orchestration lives in action classes under `app/Actions/Projects` (public and admin index resolvers).
+- Project duplication behavior lives in `app/Actions/Projects/DuplicateProject`.
+- Public cache invalidation behavior lives in `app/Actions/Cache/InvalidatePublicCaches` and is reused by admin write flows.
 - Keep persistence concerns in Eloquent models (`app/Models`) and migrations (`database/migrations`).
 
 ## Frontend Boundaries (Inertia/React)

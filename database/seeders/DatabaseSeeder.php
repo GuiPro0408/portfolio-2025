@@ -16,7 +16,11 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
         $ownerEmail = (string) config('portfolio.owner_email', 'owner@example.com');
-        $ownerPassword = (string) config('portfolio.owner_password', 'password');
+        $ownerPassword = trim((string) config('portfolio.owner_password', ''));
+
+        if ($ownerPassword === '') {
+            throw new \RuntimeException('Missing required PORTFOLIO_OWNER_PASSWORD for owner seeding.');
+        }
 
         User::query()->updateOrCreate(
             ['email' => $ownerEmail],

@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Models\HomepageSettings;
 use App\Models\User;
+use App\Support\HomepageSettingsContract;
 use App\Support\PublicCacheKeys;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -26,7 +27,13 @@ class HomepageSettingsTest extends TestCase
         $response = $this->actingAs($user)->get(route('dashboard.homepage.edit'));
 
         $response->assertOk();
-        $response->assertInertia(fn ($page) => $page->component('Dashboard/Homepage/Edit'));
+        $response->assertInertia(fn ($page) => $page
+            ->component('Dashboard/Homepage/Edit')
+            ->where('settings', function ($settings): bool {
+                $settingsArray = is_array($settings) ? $settings : $settings->toArray();
+
+                return array_keys($settingsArray) === HomepageSettingsContract::PUBLIC_FIELDS;
+            }));
     }
 
     public function test_authenticated_users_can_update_homepage_settings(): void

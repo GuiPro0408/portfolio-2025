@@ -2,6 +2,7 @@ import '../../css/styles/contact-page.css';
 import InputError from '@/Components/InputError';
 import PublicLayout from '@/Layouts/PublicLayout';
 import type { ContactPayload, SharedPageProps } from '@/types/contracts';
+import { resolveSocialImage } from '@/utils/seo';
 import { Link } from '@inertiajs/react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import type { FormEvent } from 'react';
@@ -20,7 +21,7 @@ interface ContactPageProps {
 }
 
 export default function Contact({ contact, formStartedAt }: ContactPageProps) {
-    const { flash = {} } = usePage<SharedPageProps>().props;
+    const { flash = {}, seo = {} } = usePage<SharedPageProps>().props;
 
     const { data, setData, post, processing, errors, reset } = useForm<ContactFormData>({
         name: '',
@@ -45,6 +46,11 @@ export default function Contact({ contact, formStartedAt }: ContactPageProps) {
     const metaDescription =
         'Send a project or collaboration inquiry through the portfolio contact form.';
     const canonicalUrl = route('contact.index');
+    const socialImage = resolveSocialImage(
+        [],
+        seo.social_default_image,
+        canonicalUrl,
+    );
 
     const contactSchema = {
         '@context': 'https://schema.org',
@@ -57,9 +63,31 @@ export default function Contact({ contact, formStartedAt }: ContactPageProps) {
         <>
             <Head title="Contact">
                 <meta name="description" content={metaDescription} />
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content={canonicalUrl} />
+                {seo.site_name ? (
+                    <meta property="og:site_name" content={seo.site_name} />
+                ) : null}
                 <meta property="og:title" content="Contact | Guillaume Juste" />
                 <meta property="og:description" content={metaDescription} />
-                <meta name="twitter:card" content="summary" />
+                {socialImage ? (
+                    <>
+                        <meta property="og:image" content={socialImage} />
+                        <meta
+                            property="og:image:alt"
+                            content="Guillaume Juste portfolio contact page image"
+                        />
+                    </>
+                ) : null}
+                <meta
+                    name="twitter:card"
+                    content={socialImage ? 'summary_large_image' : 'summary'}
+                />
+                <meta name="twitter:title" content="Contact | Guillaume Juste" />
+                <meta name="twitter:description" content={metaDescription} />
+                {socialImage ? (
+                    <meta name="twitter:image" content={socialImage} />
+                ) : null}
                 <link rel="canonical" href={canonicalUrl} />
                 <script type="application/ld+json">
                     {JSON.stringify(contactSchema)}
@@ -129,6 +157,9 @@ export default function Contact({ contact, formStartedAt }: ContactPageProps) {
                                 <p className="contact-success-note">
                                     {flash.success}
                                 </p>
+                            ) : null}
+                            {flash?.error ? (
+                                <p className="contact-error">{flash.error}</p>
                             ) : null}
 
                             <form onSubmit={submit} className="contact-form">

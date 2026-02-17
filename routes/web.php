@@ -25,19 +25,21 @@ Route::middleware(['auth', 'verified', 'owner'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/projects', [AdminProjectController::class, 'index'])->name('dashboard.projects.index');
     Route::get('/dashboard/projects/create', [AdminProjectController::class, 'create'])->name('dashboard.projects.create');
-    Route::post('/dashboard/projects', [AdminProjectController::class, 'store'])->name('dashboard.projects.store');
     Route::get('/dashboard/projects/{project}/edit', [AdminProjectController::class, 'edit'])->name('dashboard.projects.edit');
-    Route::put('/dashboard/projects/{project}', [AdminProjectController::class, 'update'])->name('dashboard.projects.update');
-    Route::patch('/dashboard/projects/{project}/flags', [AdminProjectController::class, 'updateFlags'])->name('dashboard.projects.flags.update');
-    Route::post('/dashboard/projects/{project}/duplicate', [AdminProjectController::class, 'duplicate'])->name('dashboard.projects.duplicate');
-    Route::patch('/dashboard/projects/{project}/sort', [AdminProjectController::class, 'updateSort'])->name('dashboard.projects.sort.update');
-    Route::delete('/dashboard/projects/{project}', [AdminProjectController::class, 'destroy'])->name('dashboard.projects.destroy');
     Route::get('/dashboard/homepage', [HomepageSettingsController::class, 'edit'])->name('dashboard.homepage.edit');
-    Route::put('/dashboard/homepage', [HomepageSettingsController::class, 'update'])->name('dashboard.homepage.update');
-
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::middleware('prevent.duplicate')->group(function () {
+        Route::post('/dashboard/projects', [AdminProjectController::class, 'store'])->name('dashboard.projects.store');
+        Route::put('/dashboard/projects/{project}', [AdminProjectController::class, 'update'])->name('dashboard.projects.update');
+        Route::patch('/dashboard/projects/{project}/flags', [AdminProjectController::class, 'updateFlags'])->name('dashboard.projects.flags.update');
+        Route::post('/dashboard/projects/{project}/duplicate', [AdminProjectController::class, 'duplicate'])->name('dashboard.projects.duplicate');
+        Route::patch('/dashboard/projects/{project}/sort', [AdminProjectController::class, 'updateSort'])->name('dashboard.projects.sort.update');
+        Route::delete('/dashboard/projects/{project}', [AdminProjectController::class, 'destroy'])->name('dashboard.projects.destroy');
+        Route::put('/dashboard/homepage', [HomepageSettingsController::class, 'update'])->name('dashboard.homepage.update');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    });
 });
 
 require __DIR__.'/auth.php';

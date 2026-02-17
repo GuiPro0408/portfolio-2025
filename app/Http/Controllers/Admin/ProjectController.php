@@ -14,6 +14,7 @@ use App\Http\Requests\UpdateProjectSortRequest;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -45,13 +46,12 @@ class ProjectController extends Controller
 
     public function store(StoreProjectRequest $request)
     {
-        $project = Project::create($request->validated());
-
-        if ($this->technologyTablesReady()) {
+        DB::transaction(function () use ($request): void {
+            $project = Project::create($request->validated());
             $this->syncProjectTechnologies->sync($project, $project->stack);
-        }
 
-        $this->invalidatePublicCaches->handle();
+            DB::afterCommit(fn () => $this->invalidatePublicCaches->handle());
+        });
 
         return redirect()
             ->route('dashboard.projects.index')
@@ -60,11 +60,7 @@ class ProjectController extends Controller
 
     public function edit(Project $project): Response
     {
-        $technologyTablesReady = $this->technologyTablesReady();
-
-        if ($technologyTablesReady) {
-            $project->loadMissing('technologies');
-        }
+        $project->loadMissing('technologies');
 
         return Inertia::render('Dashboard/Projects/Edit', [
             'project' => [
@@ -73,7 +69,7 @@ class ProjectController extends Controller
                 'slug' => $project->slug,
                 'summary' => $project->summary,
                 'body' => $project->body,
-                'stack' => $technologyTablesReady && $project->technologies->isNotEmpty()
+                'stack' => $project->technologies->isNotEmpty()
                     ? $project->technologies->pluck('name')->implode(', ')
                     : $project->stack,
                 'cover_image_url' => $project->cover_image_url,
@@ -89,13 +85,12 @@ class ProjectController extends Controller
 
     public function update(UpdateProjectRequest $request, Project $project)
     {
-        $project->update($request->validated());
-
-        if ($this->technologyTablesReady()) {
+        DB::transaction(function () use ($project, $request): void {
+            $project->update($request->validated());
             $this->syncProjectTechnologies->sync($project, $project->stack);
-        }
 
-        $this->invalidatePublicCaches->handle();
+            DB::afterCommit(fn () => $this->invalidatePublicCaches->handle());
+        });
 
         return redirect()
             ->route('dashboard.projects.index')

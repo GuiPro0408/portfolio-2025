@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Actions\Projects\SyncProjectTechnologies;
 use App\Models\Project;
 use App\Models\Technology;
 use App\Models\User;
@@ -438,5 +439,202 @@ class ProjectManagementTest extends TestCase
 
         $this->assertFalse(Cache::has(PublicCacheKeys::HOME_PAYLOAD));
         $this->assertFalse(Cache::has(PublicCacheKeys::SITEMAP_XML));
+    }
+
+    public function test_duplicate_submission_guard_blocks_identical_project_create_requests(): void
+    {
+        $user = $this->ownerUser();
+
+        $payload = [
+            'title' => 'Replay Guard Project',
+            'summary' => 'Summary text',
+            'body' => 'Body text',
+            'stack' => 'Laravel, React',
+            'is_featured' => false,
+            'is_published' => false,
+            'sort_order' => 1,
+        ];
+
+        $this->actingAs($user)
+            ->post(route('dashboard.projects.store'), $payload)
+            ->assertRedirect(route('dashboard.projects.index'));
+
+        $this->actingAs($user)
+            ->post(route('dashboard.projects.store'), $payload)
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseCount('projects', 1);
+    }
+
+    public function test_duplicate_submission_guard_blocks_identical_duplicate_actions(): void
+    {
+        $user = $this->ownerUser();
+        $project = Project::factory()->create([
+            'slug' => 'replay-source-project',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('dashboard.projects.duplicate', $project))
+            ->assertRedirect();
+
+        $this->actingAs($user)
+            ->post(route('dashboard.projects.duplicate', $project))
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseCount('projects', 2);
+        $this->assertDatabaseHas('projects', [
+            'slug' => 'replay-source-project-copy',
+        ]);
+    }
+
+    public function test_duplicate_submission_guard_allows_different_project_create_payloads(): void
+    {
+        $user = $this->ownerUser();
+
+        $this->actingAs($user)
+            ->post(route('dashboard.projects.store'), [
+                'title' => 'Replay Allowed Project A',
+                'summary' => 'Summary A',
+                'body' => 'Body A',
+                'stack' => 'Laravel',
+                'is_featured' => false,
+                'is_published' => false,
+                'sort_order' => 1,
+            ])
+            ->assertRedirect(route('dashboard.projects.index'));
+
+        $this->actingAs($user)
+            ->post(route('dashboard.projects.store'), [
+                'title' => 'Replay Allowed Project B',
+                'summary' => 'Summary B',
+                'body' => 'Body B',
+                'stack' => 'React',
+                'is_featured' => false,
+                'is_published' => false,
+                'sort_order' => 2,
+            ])
+            ->assertRedirect(route('dashboard.projects.index'));
+
+        $this->assertDatabaseCount('projects', 2);
+    }
+
+    public function test_project_store_rolls_back_when_technology_sync_fails(): void
+    {
+        $user = $this->ownerUser();
+        Cache::put(PublicCacheKeys::HOME_PAYLOAD, ['cached' => true], 600);
+        Cache::put(PublicCacheKeys::SITEMAP_XML, '<xml/>', 600);
+
+        $mock = \Mockery::mock(SyncProjectTechnologies::class);
+        $mock->shouldReceive('sync')->once()->andThrow(new \RuntimeException('Sync failed'));
+        $this->app->instance(SyncProjectTechnologies::class, $mock);
+
+        $this->actingAs($user)->post(route('dashboard.projects.store'), [
+            'title' => 'Rollback Store Project',
+            'summary' => 'Summary',
+            'body' => 'Body',
+            'stack' => 'Laravel, React',
+            'is_featured' => false,
+            'is_published' => false,
+            'sort_order' => 1,
+        ])->assertStatus(500);
+
+        $this->assertDatabaseMissing('projects', [
+            'title' => 'Rollback Store Project',
+        ]);
+        $this->assertTrue(Cache::has(PublicCacheKeys::HOME_PAYLOAD));
+        $this->assertTrue(Cache::has(PublicCacheKeys::SITEMAP_XML));
+    }
+
+    public function test_project_update_rolls_back_when_technology_sync_fails(): void
+    {
+        $user = $this->ownerUser();
+        $project = Project::factory()->create([
+            'title' => 'Original Title',
+            'summary' => 'Original summary',
+            'body' => 'Original body',
+            'stack' => 'Laravel',
+            'is_featured' => false,
+            'is_published' => false,
+            'sort_order' => 3,
+        ]);
+
+        Cache::put(PublicCacheKeys::HOME_PAYLOAD, ['cached' => true], 600);
+        Cache::put(PublicCacheKeys::SITEMAP_XML, '<xml/>', 600);
+
+        $mock = \Mockery::mock(SyncProjectTechnologies::class);
+        $mock->shouldReceive('sync')->once()->andThrow(new \RuntimeException('Sync failed'));
+        $this->app->instance(SyncProjectTechnologies::class, $mock);
+
+        $this->actingAs($user)->put(route('dashboard.projects.update', $project), [
+            'title' => 'Updated Title',
+            'slug' => $project->slug,
+            'summary' => 'Updated summary',
+            'body' => 'Updated body',
+            'stack' => 'Vue',
+            'cover_image_url' => $project->cover_image_url,
+            'repo_url' => $project->repo_url,
+            'live_url' => $project->live_url,
+            'is_featured' => true,
+            'is_published' => true,
+            'sort_order' => 99,
+        ])->assertStatus(500);
+
+        $project->refresh();
+        $this->assertSame('Original Title', $project->title);
+        $this->assertSame('Original summary', $project->summary);
+        $this->assertSame('Original body', $project->body);
+        $this->assertFalse($project->is_published);
+        $this->assertFalse($project->is_featured);
+        $this->assertSame(3, $project->sort_order);
+        $this->assertTrue(Cache::has(PublicCacheKeys::HOME_PAYLOAD));
+        $this->assertTrue(Cache::has(PublicCacheKeys::SITEMAP_XML));
+    }
+
+    public function test_project_create_and_update_accept_long_urls(): void
+    {
+        $user = $this->ownerUser();
+        $longUrl = 'https://cdn.example.com/'.str_repeat('segment-', 60).'asset.png';
+
+        $this->actingAs($user)->post(route('dashboard.projects.store'), [
+            'title' => 'Long URL Project',
+            'summary' => 'Summary text',
+            'body' => 'Body text',
+            'stack' => 'Laravel, React',
+            'cover_image_url' => $longUrl,
+            'repo_url' => $longUrl,
+            'live_url' => $longUrl,
+            'is_featured' => false,
+            'is_published' => false,
+            'sort_order' => 1,
+        ])->assertRedirect(route('dashboard.projects.index'));
+
+        $project = Project::query()->where('title', 'Long URL Project')->firstOrFail();
+
+        $this->assertSame($longUrl, $project->cover_image_url);
+        $this->assertSame($longUrl, $project->repo_url);
+        $this->assertSame($longUrl, $project->live_url);
+
+        $updatedLongUrl = $longUrl.'?v=2';
+
+        $this->actingAs($user)->put(route('dashboard.projects.update', $project), [
+            'title' => $project->title,
+            'slug' => $project->slug,
+            'summary' => $project->summary,
+            'body' => $project->body,
+            'stack' => $project->stack,
+            'cover_image_url' => $updatedLongUrl,
+            'repo_url' => $updatedLongUrl,
+            'live_url' => $updatedLongUrl,
+            'is_featured' => $project->is_featured,
+            'is_published' => $project->is_published,
+            'sort_order' => $project->sort_order,
+        ])->assertRedirect(route('dashboard.projects.index'));
+
+        $project->refresh();
+        $this->assertSame($updatedLongUrl, $project->cover_image_url);
+        $this->assertSame($updatedLongUrl, $project->repo_url);
+        $this->assertSame($updatedLongUrl, $project->live_url);
     }
 }

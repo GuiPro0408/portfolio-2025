@@ -21,6 +21,10 @@ export interface SharedPageProps extends Record<string, unknown> {
         user: AuthUser | null;
     };
     flash?: FlashPayload;
+    seo?: {
+        social_default_image?: string | null;
+        site_name?: string | null;
+    };
 }
 
 export interface AuthenticatedPageProps extends Record<string, unknown> {

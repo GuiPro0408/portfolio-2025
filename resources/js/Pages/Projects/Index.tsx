@@ -6,14 +6,15 @@ import ListboxSelect, {
 } from '@/Components/Filters/ListboxSelect';
 import SectionHeading from '@/Components/SectionHeading';
 import PublicLayout from '@/Layouts/PublicLayout';
-import type { ContactPayload, PaginationShape } from '@/types/contracts';
+import type { ContactPayload, PaginationShape, SharedPageProps } from '@/types/contracts';
+import { resolveSocialImage } from '@/utils/seo';
 import {
     Listbox,
     ListboxButton,
     ListboxOption,
     ListboxOptions,
 } from '@headlessui/react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import type { ChangeEvent } from 'react';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -189,6 +190,7 @@ export default function Index({
     filters,
     availableStacks,
 }: ProjectsIndexProps) {
+    const { seo = {} } = usePage<SharedPageProps>().props;
     const initialFilters = { ...defaultFilters, ...(filters ?? {}) };
     const [query, setQuery] = useState(initialFilters.q);
     const [stack, setStack] = useState(parseFilterStack(initialFilters.stack));
@@ -369,14 +371,41 @@ export default function Index({
         }),
         [canonicalUrl, metaDescription, projectItems],
     );
+    const socialImage = resolveSocialImage(
+        [projectItems[0]?.cover_image_url],
+        seo.social_default_image,
+        canonicalUrl,
+    );
 
     return (
         <>
             <Head title="Projects">
                 <meta name="description" content={metaDescription} />
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content={canonicalUrl} />
+                {seo.site_name ? (
+                    <meta property="og:site_name" content={seo.site_name} />
+                ) : null}
                 <meta property="og:title" content="Projects | Guillaume Juste" />
                 <meta property="og:description" content={metaDescription} />
-                <meta name="twitter:card" content="summary" />
+                {socialImage ? (
+                    <>
+                        <meta property="og:image" content={socialImage} />
+                        <meta
+                            property="og:image:alt"
+                            content="Portfolio projects cover image"
+                        />
+                    </>
+                ) : null}
+                <meta
+                    name="twitter:card"
+                    content={socialImage ? 'summary_large_image' : 'summary'}
+                />
+                <meta name="twitter:title" content="Projects | Guillaume Juste" />
+                <meta name="twitter:description" content={metaDescription} />
+                {socialImage ? (
+                    <meta name="twitter:image" content={socialImage} />
+                ) : null}
                 <link rel="canonical" href={canonicalUrl} />
                 <script type="application/ld+json">
                     {JSON.stringify(structuredData)}

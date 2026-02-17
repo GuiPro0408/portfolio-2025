@@ -41,6 +41,23 @@ test('public navigation smoke', async ({ page }) => {
     ).toBeVisible();
 });
 
+test('home page exposes canonical and social image metadata', async ({ page }) => {
+    await page.goto('/');
+
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+        'href',
+        /^https?:\/\//,
+    );
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+        'content',
+        /^https?:\/\//,
+    );
+    await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute(
+        'content',
+        /^https?:\/\//,
+    );
+});
+
 test('public mobile navigation smoke', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
@@ -69,6 +86,24 @@ test('projects page opens project detail', async ({ page }) => {
     await expect(projectLink).toBeVisible();
     await projectLink.click();
     await expect(page).toHaveURL(/\/projects\/.+/);
+});
+
+test('project detail exposes canonical and social image metadata', async ({ page }) => {
+    await page.goto('/projects');
+    await page.getByRole('link', { name: 'View project' }).first().click();
+
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+        'href',
+        /\/projects\/.+/,
+    );
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+        'content',
+        /^https?:\/\//,
+    );
+    await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute(
+        'content',
+        /^https?:\/\//,
+    );
 });
 
 test('projects filters smoke', async ({ page }) => {

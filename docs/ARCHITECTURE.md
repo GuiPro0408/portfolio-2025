@@ -12,6 +12,7 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - Flash feedback for authenticated UI is shared via Inertia `flash.success` / `flash.error` props.
 - Public page controllers should pass a consistent `contact` prop contract when rendering pages using `PublicLayout`.
 - Dashboard/admin routes require `auth + verified + owner` middleware (owner from `PORTFOLIO_OWNER_EMAIL`).
+- Dashboard/admin write routes add duplicate-submission protection middleware (`prevent.duplicate`) to guard accidental replay/double-submit actions.
 
 ## Business Logic Placement
 - Keep controllers thin: parsing input, auth checks, orchestration only.
@@ -19,6 +20,7 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - List query/filter/sort orchestration lives in action classes under `app/Actions/Projects` (public and admin index resolvers).
 - Project duplication behavior lives in `app/Actions/Projects/DuplicateProject`.
 - Shared public contact payload resolution lives in `app/Actions/Public/ResolveContactPayload` and is reused by public controllers.
+- Contact form delivery is asynchronous via queued job dispatch (`SendContactSubmissionNotification`) with retries.
 - Home page payload assembly and caching live in `app/Actions/Home/ResolveHomePayload`.
 - Sitemap XML construction lives in `app/Actions/Seo/BuildSitemapXml`.
 - Public cache invalidation behavior lives in `app/Actions/Cache/InvalidatePublicCaches` and is reused by admin write flows.
@@ -48,6 +50,7 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - Seed data: `database/seeders`.
 - Test data factories: `database/factories`.
 - Project stack taxonomy is modeled relationally (`projects` <-> `technologies` via pivot) and should be the filtering source of truth.
+- `technologies` and `project_technology` are baseline schema requirements; runtime `Schema::hasTable(...)` fallbacks are intentionally removed from request paths.
 - Public payload caching (homepage/sitemap) must use explicit cache keys with clear invalidation on project/homepage-admin writes.
 - Backfill data migrations that cannot be safely reversed should use non-destructive `down()` no-op behavior and be documented as irreversible.
 

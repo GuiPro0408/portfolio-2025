@@ -20,12 +20,11 @@ class ProjectController extends Controller
     public function index(Request $request): Response
     {
         $filters = $this->resolvePublicProjectsIndex->normalizedFilters($request);
-        $technologyTablesReady = $this->technologyTablesReady();
 
         return Inertia::render('Projects/Index', [
-            'projects' => fn (): LengthAwarePaginator => $this->resolvePublicProjectsIndex->resolveProjectsPayload($filters, $technologyTablesReady),
+            'projects' => fn (): LengthAwarePaginator => $this->resolvePublicProjectsIndex->resolveProjectsPayload($filters),
             'filters' => $filters,
-            'availableStacks' => fn (): array => $this->resolvePublicProjectsIndex->resolveAvailableStacks($technologyTablesReady),
+            'availableStacks' => fn (): array => $this->resolvePublicProjectsIndex->resolveAvailableStacks(),
             'contact' => $this->resolveContactPayload->resolve(),
         ]);
     }
@@ -34,11 +33,7 @@ class ProjectController extends Controller
     {
         abort_unless($project->is_published, 404);
 
-        $technologyTablesReady = $this->technologyTablesReady();
-
-        if ($technologyTablesReady) {
-            $project->loadMissing('technologies');
-        }
+        $project->loadMissing('technologies');
 
         return Inertia::render('Projects/Show', [
             'project' => [
@@ -47,7 +42,7 @@ class ProjectController extends Controller
                 'slug' => $project->slug,
                 'summary' => $project->summary,
                 'body' => $project->body,
-                'stack' => $this->resolvePublicProjectsIndex->projectStack($project, $technologyTablesReady),
+                'stack' => $this->resolvePublicProjectsIndex->projectStack($project),
                 'cover_image_url' => $project->cover_image_url,
                 'repo_url' => $project->repo_url,
                 'live_url' => $project->live_url,

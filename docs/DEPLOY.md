@@ -32,6 +32,7 @@ Set these in Koyeb (names only, no secrets shown here):
 2. Create a Koyeb service from this GitHub repo using the repository `Dockerfile`.
 3. Configure the environment variables above.
 4. Deploy from `main`.
+5. Run at least one queue worker process in production (for example `php artisan queue:work --tries=3 --timeout=120`).
 
 ## Database Bootstrap And Migrations
 After the first deploy, bootstrap schema and owner account with:
@@ -52,6 +53,7 @@ koyeb services exec <service-name>/web -- php artisan migrate --force
 3. Confirm the configured owner can log in and must verify email before dashboard access.
 4. Confirm database-backed flows work (session/profile, projects, homepage settings).
 5. Check logs in Koyeb if any startup or DB errors occur.
+6. Confirm queue jobs are being processed (contact notifications are asynchronous).
 
 ## Operational Notes
 - Keep app and database in the same region.

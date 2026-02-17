@@ -4,7 +4,6 @@ namespace App\Actions\Projects;
 
 use App\Models\Project;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class DuplicateProject
@@ -15,17 +14,11 @@ class DuplicateProject
 
     public function duplicate(Project $project): Project
     {
-        $technologyTablesReady = $this->technologyTablesReady();
+        $project->loadMissing('technologies');
 
-        if ($technologyTablesReady) {
-            $project->loadMissing('technologies');
-        }
+        $originalTechnologyIds = $project->technologies->pluck('id')->all();
 
-        $originalTechnologyIds = $technologyTablesReady
-            ? $project->technologies->pluck('id')->all()
-            : [];
-
-        $stackMirror = $technologyTablesReady && $project->technologies->isNotEmpty()
+        $stackMirror = $project->technologies->isNotEmpty()
             ? $project->technologies->pluck('name')->implode(', ')
             : $project->stack;
 
@@ -33,7 +26,6 @@ class DuplicateProject
             $originalTechnologyIds,
             $project,
             $stackMirror,
-            $technologyTablesReady
         ): Project {
             $copy = $project->replicate();
             $copy->title = $project->title.' (Copy)';
@@ -44,12 +36,10 @@ class DuplicateProject
             $copy->stack = $stackMirror;
             $copy->save();
 
-            if ($technologyTablesReady) {
-                if ($originalTechnologyIds !== []) {
-                    $copy->technologies()->sync($originalTechnologyIds);
-                } else {
-                    $this->syncProjectTechnologies->sync($copy, $copy->stack);
-                }
+            if ($originalTechnologyIds !== []) {
+                $copy->technologies()->sync($originalTechnologyIds);
+            } else {
+                $this->syncProjectTechnologies->sync($copy, $copy->stack);
             }
 
             return $copy;
@@ -68,10 +58,5 @@ class DuplicateProject
         }
 
         return $slug;
-    }
-
-    private function technologyTablesReady(): bool
-    {
-        return Schema::hasTable('technologies') && Schema::hasTable('project_technology');
     }
 }

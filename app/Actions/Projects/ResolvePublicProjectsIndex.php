@@ -5,7 +5,6 @@ namespace App\Actions\Projects;
 use App\Models\Project;
 use App\Models\Technology;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -30,56 +29,36 @@ class ResolvePublicProjectsIndex
     /**
      * @return array<int, string>
      */
-    public function resolveAvailableStacks(bool $technologyTablesReady): array
+    public function resolveAvailableStacks(): array
     {
-        if ($technologyTablesReady) {
-            return Technology::query()
-                ->whereHas('projects', fn (EloquentBuilder $builder) => $builder->where('is_published', true))
-                ->orderBy('name')
-                ->pluck('name')
-                ->all();
-        }
-
-        return Project::query()
-            ->published()
-            ->whereNotNull('stack')
-            ->pluck('stack')
-            ->flatMap(fn (?string $stack) => $this->parseStack($stack))
-            ->unique()
-            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
-            ->values()
+        return Technology::query()
+            ->whereHas('projects', fn (EloquentBuilder $builder) => $builder->where('is_published', true))
+            ->orderBy('name')
+            ->pluck('name')
             ->all();
     }
 
     /**
      * @param  array{q: string, stack: string, sort: string}  $filters
      */
-    public function resolveProjectsPayload(array $filters, bool $technologyTablesReady): LengthAwarePaginator
+    public function resolveProjectsPayload(array $filters): LengthAwarePaginator
     {
         $selectedStacks = $this->normalizeSelectedStacks($filters['stack']);
-        $query = Project::query()->published();
+        $query = Project::query()->published()->with('technologies');
 
-        if ($technologyTablesReady) {
-            $query->with('technologies');
-        }
-
-        $this->applySearchFilter($query, $filters['q'], $technologyTablesReady);
-        $this->applyStackFilter($query, $selectedStacks, $technologyTablesReady);
+        $this->applySearchFilter($query, $filters['q']);
+        $this->applyStackFilter($query, $selectedStacks);
         $this->applySort($query, $filters['sort']);
 
         return $query
             ->paginate(9)
             ->withQueryString()
-            ->through(fn (Project $project) => $this->transformProjectCard($project, $technologyTablesReady));
+            ->through(fn (Project $project) => $this->transformProjectCard($project));
     }
 
-    public function projectStack(Project $project, bool $technologyTablesReady): ?string
+    public function projectStack(Project $project): ?string
     {
-        if (
-            $technologyTablesReady
-            && $project->relationLoaded('technologies')
-            && $project->technologies->isNotEmpty()
-        ) {
+        if ($project->relationLoaded('technologies') && $project->technologies->isNotEmpty()) {
             return $project->technologies->pluck('name')->implode(', ');
         }
 
@@ -89,14 +68,14 @@ class ResolvePublicProjectsIndex
     /**
      * @return array<string, mixed>
      */
-    private function transformProjectCard(Project $project, bool $technologyTablesReady): array
+    private function transformProjectCard(Project $project): array
     {
         return [
             'id' => $project->id,
             'title' => $project->title,
             'slug' => $project->slug,
             'summary' => $project->summary,
-            'stack' => $this->projectStack($project, $technologyTablesReady),
+            'stack' => $this->projectStack($project),
             'cover_image_url' => $project->cover_image_url,
             'published_at' => $project->published_at?->toDateString(),
         ];
@@ -118,10 +97,7 @@ class ResolvePublicProjectsIndex
             ->all();
     }
 
-    /**
-     * @param  EloquentBuilder<Project>|BaseBuilder  $query
-     */
-    private function applySort(EloquentBuilder|BaseBuilder $query, string $sort): void
+    private function applySort(EloquentBuilder $query, string $sort): void
     {
         if ($sort === 'newest') {
             $query->orderByDesc('published_at')->orderByDesc('id');
@@ -150,7 +126,7 @@ class ResolvePublicProjectsIndex
             ->all();
     }
 
-    private function applySearchFilter(EloquentBuilder $query, string $search, bool $technologyTablesReady): void
+    private function applySearchFilter(EloquentBuilder $query, string $search): void
     {
         if ($search === '') {
             return;
@@ -158,44 +134,27 @@ class ResolvePublicProjectsIndex
 
         $normalizedSearch = SyncProjectTechnologies::normalizeToken($search);
 
-        $query->where(function (EloquentBuilder $searchQuery) use ($search, $normalizedSearch, $technologyTablesReady): void {
+        $query->where(function (EloquentBuilder $searchQuery) use ($search, $normalizedSearch): void {
             $searchQuery
                 ->whereLike('title', '%'.$search.'%', caseSensitive: false)
-                ->orWhereLike('summary', '%'.$search.'%', caseSensitive: false);
-
-            if ($technologyTablesReady) {
-                $searchQuery->orWhereHas('technologies', function (EloquentBuilder $technologyQuery) use ($normalizedSearch): void {
+                ->orWhereLike('summary', '%'.$search.'%', caseSensitive: false)
+                ->orWhereHas('technologies', function (EloquentBuilder $technologyQuery) use ($normalizedSearch): void {
                     $technologyQuery->whereLike('name_normalized', '%'.$normalizedSearch.'%', caseSensitive: false);
                 });
-
-                return;
-            }
-
-            $searchQuery->orWhereLike('stack', '%'.$search.'%', caseSensitive: false);
         });
     }
 
     /**
      * @param  array<int, string>  $selectedStacks
      */
-    private function applyStackFilter(EloquentBuilder $query, array $selectedStacks, bool $technologyTablesReady): void
+    private function applyStackFilter(EloquentBuilder $query, array $selectedStacks): void
     {
         if ($selectedStacks === []) {
             return;
         }
 
-        if ($technologyTablesReady) {
-            $query->whereHas('technologies', function (EloquentBuilder $technologyQuery) use ($selectedStacks): void {
-                $technologyQuery->whereIn('name_normalized', $selectedStacks);
-            });
-
-            return;
-        }
-
-        $query->where(function (EloquentBuilder $stackQuery) use ($selectedStacks): void {
-            foreach ($selectedStacks as $token) {
-                $stackQuery->orWhereLike('stack', '%'.$token.'%', caseSensitive: false);
-            }
+        $query->whereHas('technologies', function (EloquentBuilder $technologyQuery) use ($selectedStacks): void {
+            $technologyQuery->whereIn('name_normalized', $selectedStacks);
         });
     }
 }

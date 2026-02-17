@@ -1,6 +1,7 @@
 import PublicLayout from '@/Layouts/PublicLayout';
-import type { ContactPayload } from '@/types/contracts';
-import { Head, Link } from '@inertiajs/react';
+import type { ContactPayload, SharedPageProps } from '@/types/contracts';
+import { resolveSocialImage } from '@/utils/seo';
+import { Head, Link, usePage } from '@inertiajs/react';
 
 interface ProjectShowData {
     id: number;
@@ -32,11 +33,17 @@ function formatStack(stack: string | null): string[] {
 }
 
 export default function Show({ project, contact }: ProjectShowPageProps) {
+    const { seo = {} } = usePage<SharedPageProps>().props;
     const tags = formatStack(project.stack);
     const metaDescription =
         project.summary ??
         'Detailed case study of a delivered software project.';
     const canonicalUrl = route('projects.show', project.slug);
+    const socialImage = resolveSocialImage(
+        [project.cover_image_url],
+        seo.social_default_image,
+        canonicalUrl,
+    );
 
     const structuredData = {
         '@context': 'https://schema.org',
@@ -52,12 +59,37 @@ export default function Show({ project, contact }: ProjectShowPageProps) {
         <>
             <Head title={project.title}>
                 <meta name="description" content={metaDescription} />
+                <meta property="og:type" content="article" />
+                <meta property="og:url" content={canonicalUrl} />
+                {seo.site_name ? (
+                    <meta property="og:site_name" content={seo.site_name} />
+                ) : null}
                 <meta
                     property="og:title"
                     content={`${project.title} | Guillaume Juste`}
                 />
                 <meta property="og:description" content={metaDescription} />
-                <meta name="twitter:card" content="summary" />
+                {socialImage ? (
+                    <>
+                        <meta property="og:image" content={socialImage} />
+                        <meta
+                            property="og:image:alt"
+                            content={`${project.title} cover image`}
+                        />
+                    </>
+                ) : null}
+                <meta
+                    name="twitter:card"
+                    content={socialImage ? 'summary_large_image' : 'summary'}
+                />
+                <meta
+                    name="twitter:title"
+                    content={`${project.title} | Guillaume Juste`}
+                />
+                <meta name="twitter:description" content={metaDescription} />
+                {socialImage ? (
+                    <meta name="twitter:image" content={socialImage} />
+                ) : null}
                 <link rel="canonical" href={canonicalUrl} />
                 <script type="application/ld+json">
                     {JSON.stringify(structuredData)}

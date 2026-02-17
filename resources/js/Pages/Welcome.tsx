@@ -6,12 +6,13 @@ import ProcessSection from '@/Components/Home/ProcessSection';
 import SkillsServicesSection from '@/Components/Home/SkillsServicesSection';
 import PublicLayout from '@/Layouts/PublicLayout';
 import { homeContent } from '@/data/homeContent';
-import type { ContactPayload } from '@/types/contracts';
+import type { ContactPayload, SharedPageProps } from '@/types/contracts';
 import type {
     FeaturedProjectSummary,
     HomepageSettingsPayload,
 } from '@/types/home';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
+import { resolveSocialImage } from '@/utils/seo';
 
 interface WelcomePageProps {
     featuredProjects: FeaturedProjectSummary[];
@@ -24,10 +25,19 @@ export default function Welcome({
     contact,
     homepageSettings,
 }: WelcomePageProps) {
+    const { seo = {} } = usePage<SharedPageProps>().props;
     const metaDescription =
         homepageSettings?.hero_subheadline ??
         'Full-stack portfolio focused on clean architecture and practical product delivery.';
     const canonicalUrl = route('home');
+    const socialImage = resolveSocialImage(
+        [
+            homepageSettings?.hero_image_url,
+            featuredProjects[0]?.cover_image_url,
+        ],
+        seo.social_default_image,
+        canonicalUrl,
+    );
 
     const structuredData = {
         '@context': 'https://schema.org',
@@ -43,9 +53,31 @@ export default function Welcome({
         <>
             <Head title="Portfolio">
                 <meta name="description" content={metaDescription} />
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content={canonicalUrl} />
+                {seo.site_name ? (
+                    <meta property="og:site_name" content={seo.site_name} />
+                ) : null}
                 <meta property="og:title" content="Portfolio | Guillaume Juste" />
                 <meta property="og:description" content={metaDescription} />
-                <meta name="twitter:card" content="summary_large_image" />
+                {socialImage ? (
+                    <>
+                        <meta property="og:image" content={socialImage} />
+                        <meta
+                            property="og:image:alt"
+                            content="Guillaume Juste portfolio cover image"
+                        />
+                    </>
+                ) : null}
+                <meta
+                    name="twitter:card"
+                    content={socialImage ? 'summary_large_image' : 'summary'}
+                />
+                <meta name="twitter:title" content="Portfolio | Guillaume Juste" />
+                <meta name="twitter:description" content={metaDescription} />
+                {socialImage ? (
+                    <meta name="twitter:image" content={socialImage} />
+                ) : null}
                 <link rel="canonical" href={canonicalUrl} />
                 <script type="application/ld+json">
                     {JSON.stringify(structuredData)}

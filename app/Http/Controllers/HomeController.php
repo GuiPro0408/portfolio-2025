@@ -16,9 +16,7 @@ class HomeController extends Controller
 
     public function index(): Response
     {
-        $technologyTablesReady = $this->technologyTablesReady();
-
-        $payload = $this->resolveHomePayload->resolve($technologyTablesReady);
+        $payload = $this->resolveHomePayload->resolve();
 
         return Inertia::render('Welcome', [
             ...$payload,

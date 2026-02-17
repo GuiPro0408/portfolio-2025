@@ -1,7 +1,10 @@
 import DashboardPageHeader from '@/Components/Dashboard/DashboardPageHeader';
+import DashboardSurfaceCard from '@/Components/Dashboard/DashboardSurfaceCard';
 import EmptyState from '@/Components/Dashboard/EmptyState';
-import StatCard from '@/Components/Dashboard/StatCard';
+import InlineMeta from '@/Components/Dashboard/InlineMeta';
+import PageSectionHeader from '@/Components/Dashboard/PageSectionHeader';
 import StatusBadge from '@/Components/Dashboard/StatusBadge';
+import StatTile from '@/Components/Dashboard/StatTile';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { FileText, LayoutDashboard, PenSquare, Sparkles } from 'lucide-react';
@@ -58,35 +61,41 @@ export default function Dashboard({ metrics, recentProjects }: DashboardPageProp
             <div className="py-10">
                 <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
                     <section className="dashboard-stats-grid">
-                        <StatCard
+                        <StatTile
                             label="Total projects"
                             value={metrics.total}
                             icon={LayoutDashboard}
+                            hint="All drafts and published"
                         />
-                        <StatCard
+                        <StatTile
                             label="Published"
                             value={metrics.published}
                             icon={FileText}
+                            hint="Visible on public portfolio"
                         />
-                        <StatCard
+                        <StatTile
                             label="Featured"
                             value={metrics.featured}
                             icon={Sparkles}
+                            hint="Pinned on homepage"
                         />
                     </section>
 
-                    <section className="dashboard-panel dashboard-panel-inset">
-                        <div className="dashboard-panel-header">
-                            <h3 className="dashboard-panel-title">Recent updates</h3>
-                            <div className="dashboard-panel-actions">
-                                <Link href={route('dashboard.projects.index')} className="dashboard-link">
-                                    Manage projects
-                                </Link>
-                                <Link href={route('dashboard.homepage.edit')} className="dashboard-link">
-                                    Edit homepage
-                                </Link>
-                            </div>
-                        </div>
+                    <DashboardSurfaceCard inset>
+                        <PageSectionHeader
+                            title="Recent updates"
+                            description="Latest project changes and quick edit access."
+                            actions={
+                                <>
+                                    <Link href={route('dashboard.projects.index')} className="dashboard-link">
+                                        Manage projects
+                                    </Link>
+                                    <Link href={route('dashboard.homepage.edit')} className="dashboard-link">
+                                        Edit homepage
+                                    </Link>
+                                </>
+                            }
+                        />
 
                         {recentProjects.length === 0 ? (
                             <EmptyState
@@ -112,9 +121,9 @@ export default function Dashboard({ metrics, recentProjects }: DashboardPageProp
                                                     <StatusBadge tone="featured">Featured</StatusBadge>
                                                 ) : null}
                                             </div>
-                                            <p className="dashboard-meta-text">
+                                            <InlineMeta>
                                                 Updated {formatUpdatedAt(project.updated_at)}
-                                            </p>
+                                            </InlineMeta>
                                         </div>
 
                                         <Link
@@ -128,7 +137,7 @@ export default function Dashboard({ metrics, recentProjects }: DashboardPageProp
                                 ))}
                             </ul>
                         )}
-                    </section>
+                    </DashboardSurfaceCard>
                 </div>
             </div>
         </AuthenticatedLayout>

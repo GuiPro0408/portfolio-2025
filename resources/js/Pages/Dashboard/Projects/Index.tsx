@@ -3,8 +3,11 @@ import ActiveFilterChips, {
 } from '@/Components/Filters/ActiveFilterChips';
 import type { ListboxOptionItem } from '@/Components/Filters/ListboxSelect';
 import DashboardPageHeader from '@/Components/Dashboard/DashboardPageHeader';
+import DashboardSurfaceCard from '@/Components/Dashboard/DashboardSurfaceCard';
 import EmptyState from '@/Components/Dashboard/EmptyState';
 import FilterToolbar from '@/Components/Dashboard/FilterToolbar';
+import InlineMeta from '@/Components/Dashboard/InlineMeta';
+import PageSectionHeader from '@/Components/Dashboard/PageSectionHeader';
 import StatusBadge from '@/Components/Dashboard/StatusBadge';
 import DangerButton from '@/Components/DangerButton';
 import Modal from '@/Components/Modal';
@@ -12,7 +15,7 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Copy, LoaderCircle, PenSquare, Trash2 } from 'lucide-react';
+import { Copy, LoaderCircle, MoreVertical, PenSquare, Trash2 } from 'lucide-react';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface AdminProject {
@@ -91,6 +94,14 @@ interface ProjectRowProps {
     onSaveSort: (project: AdminProject) => void;
     onDuplicate: (project: AdminProject) => void;
     onDelete: (project: AdminProject) => void;
+}
+
+interface MobileProjectCardProps {
+    project: AdminProject;
+    isPending: boolean;
+    isSortPending: boolean;
+    isDuplicatePending: boolean;
+    onOpenActions: (project: AdminProject) => void;
 }
 
 const ProjectRow = memo(function ProjectRow({
@@ -221,6 +232,49 @@ const ProjectRow = memo(function ProjectRow({
     );
 });
 
+const MobileProjectCard = memo(function MobileProjectCard({
+    project,
+    isPending,
+    isSortPending,
+    isDuplicatePending,
+    onOpenActions,
+}: MobileProjectCardProps) {
+    return (
+        <article className="dashboard-project-card">
+            <div className="dashboard-project-card-head">
+                <div>
+                    <p className="dashboard-row-title">{project.title}</p>
+                    <InlineMeta>/{project.slug}</InlineMeta>
+                </div>
+                <button
+                    type="button"
+                    className="dashboard-inline-action"
+                    onClick={() => onOpenActions(project)}
+                    disabled={isPending || isSortPending}
+                    aria-label={`Open actions for ${project.title}`}
+                >
+                    <MoreVertical size={16} aria-hidden="true" />
+                    Actions
+                </button>
+            </div>
+
+            <div className="dashboard-badge-row">
+                <StatusBadge tone={project.is_published ? 'success' : 'warning'}>
+                    {project.is_published ? 'Published' : 'Draft'}
+                </StatusBadge>
+                <StatusBadge tone={project.is_featured ? 'featured' : 'default'}>
+                    {project.is_featured ? 'Featured' : 'Standard'}
+                </StatusBadge>
+                {isDuplicatePending ? (
+                    <StatusBadge tone="default">Duplicating...</StatusBadge>
+                ) : null}
+            </div>
+
+            <InlineMeta>Updated {formatUpdatedAt(project.updated_at)}</InlineMeta>
+        </article>
+    );
+});
+
 export default function Index({ projects, filters }: DashboardProjectsIndexProps) {
     const initialFilters = { ...defaultFilters, ...(filters ?? {}) };
     const [query, setQuery] = useState(initialFilters.q);
@@ -229,6 +283,7 @@ export default function Index({ projects, filters }: DashboardProjectsIndexProps
     const [sort, setSort] = useState(initialFilters.sort);
     const [isListLoading, setIsListLoading] = useState(false);
     const [showListSkeleton, setShowListSkeleton] = useState(false);
+    const [isMobileView, setIsMobileView] = useState(false);
 
     const [pendingRows, setPendingRows] = useState<PendingMap>({});
     const [pendingSortRows, setPendingSortRows] = useState<PendingMap>({});
@@ -239,6 +294,7 @@ export default function Index({ projects, filters }: DashboardProjectsIndexProps
     const [pendingDuplicateId, setPendingDuplicateId] = useState<number | null>(
         null,
     );
+    const [actionProject, setActionProject] = useState<AdminProject | null>(null);
     const [isFilterAccordionOpen, setIsFilterAccordionOpen] = useState(true);
 
     const projectsData = projects.data;
@@ -250,6 +306,15 @@ export default function Index({ projects, filters }: DashboardProjectsIndexProps
         estimateSize: () => 144,
         overscan: 5,
     });
+
+    useEffect(() => {
+        const query = window.matchMedia('(max-width: 640px)');
+        const apply = () => setIsMobileView(query.matches);
+
+        apply();
+        query.addEventListener('change', apply);
+        return () => query.removeEventListener('change', apply);
+    }, []);
 
     useEffect(() => {
         setQuery(initialFilters.q);
@@ -610,6 +675,10 @@ export default function Index({ projects, filters }: DashboardProjectsIndexProps
         );
     }, []);
 
+    const closeActionSheet = useCallback(() => {
+        setActionProject(null);
+    }, []);
+
     const virtualRows = rowVirtualizer.getVirtualItems();
 
     return (
@@ -633,7 +702,7 @@ export default function Index({ projects, filters }: DashboardProjectsIndexProps
 
             <div className="py-10">
                 <div className="mx-auto max-w-7xl space-y-5 px-4 sm:px-6 lg:px-8">
-                    <section className="dashboard-filter-accordion dashboard-panel">
+                    <DashboardSurfaceCard className="dashboard-filter-accordion">
                         <button
                             type="button"
                             className="dashboard-filter-accordion-trigger"
@@ -682,9 +751,13 @@ export default function Index({ projects, filters }: DashboardProjectsIndexProps
                                 />
                             </div>
                         ) : null}
-                    </section>
+                    </DashboardSurfaceCard>
 
-                    <section className="dashboard-panel overflow-hidden">
+                    <DashboardSurfaceCard className="overflow-hidden">
+                        <PageSectionHeader
+                            title="Projects"
+                            description="Review status, manage sort order, and open quick actions."
+                        />
                         {showListSkeleton ? (
                             <div className="p-4">
                                 <DashboardSkeletonRows />
@@ -699,6 +772,19 @@ export default function Index({ projects, filters }: DashboardProjectsIndexProps
                                     </Link>
                                 }
                             />
+                        ) : isMobileView ? (
+                            <div className="dashboard-project-cards">
+                                {projectsData.map((project) => (
+                                    <MobileProjectCard
+                                        key={project.id}
+                                        project={project}
+                                        isPending={pendingRows[project.id] === true}
+                                        isSortPending={pendingSortRows[project.id] === true}
+                                        isDuplicatePending={pendingDuplicateId === project.id}
+                                        onOpenActions={setActionProject}
+                                    />
+                                ))}
+                            </div>
                         ) : (
                             <div className="dashboard-virtual-table" role="table" aria-label="Projects">
                                 <div className="dashboard-virtual-row dashboard-virtual-row-head" role="row">
@@ -763,7 +849,7 @@ export default function Index({ projects, filters }: DashboardProjectsIndexProps
                                 </div>
                             </div>
                         )}
-                    </section>
+                    </DashboardSurfaceCard>
 
                     <nav className="dashboard-pagination" aria-label="Projects pagination">
                         <p className="dashboard-meta-text">
@@ -818,6 +904,77 @@ export default function Index({ projects, filters }: DashboardProjectsIndexProps
                         </DangerButton>
                     </div>
                 </div>
+            </Modal>
+
+            <Modal
+                show={actionProject !== null}
+                onClose={closeActionSheet}
+                maxWidth="md"
+            >
+                {actionProject ? (
+                    <div className="space-y-4 bg-slate-950 p-5 text-slate-100">
+                        <div className="space-y-1">
+                            <div>
+                                <h3 className="text-base font-semibold">{actionProject.title}</h3>
+                                <p className="text-sm text-slate-400">/{actionProject.slug}</p>
+                            </div>
+                        </div>
+                        <div className="grid gap-2">
+                            <Link
+                                href={route('dashboard.projects.edit', actionProject.id)}
+                                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-4 py-2 font-semibold text-slate-100"
+                                onClick={closeActionSheet}
+                            >
+                                <PenSquare size={15} aria-hidden="true" />
+                                Edit
+                            </Link>
+                            <button
+                                type="button"
+                                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-4 py-2 font-semibold text-slate-100"
+                                onClick={() => {
+                                    duplicateProject(actionProject);
+                                    closeActionSheet();
+                                }}
+                            >
+                                <Copy size={15} aria-hidden="true" />
+                                Duplicate
+                            </button>
+                            <button
+                                type="button"
+                                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-4 py-2 font-semibold text-slate-100"
+                                onClick={() => {
+                                    onTogglePublish(actionProject);
+                                    closeActionSheet();
+                                }}
+                            >
+                                <LoaderCircle size={15} aria-hidden="true" />
+                                Toggle publish
+                            </button>
+                            <button
+                                type="button"
+                                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-4 py-2 font-semibold text-slate-100"
+                                onClick={() => {
+                                    onToggleFeatured(actionProject);
+                                    closeActionSheet();
+                                }}
+                            >
+                                <LoaderCircle size={15} aria-hidden="true" />
+                                Toggle featured
+                            </button>
+                            <button
+                                type="button"
+                                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-rose-800 bg-rose-950/50 px-4 py-2 font-semibold text-rose-200"
+                                onClick={() => {
+                                    setProjectPendingDelete(actionProject);
+                                    closeActionSheet();
+                                }}
+                            >
+                                <Trash2 size={15} aria-hidden="true" />
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                ) : null}
             </Modal>
         </AuthenticatedLayout>
     );

@@ -6,7 +6,7 @@ import NavLink from '@/Components/NavLink';
 import type { AuthenticatedPageProps } from '@/types/contracts';
 import { Link, usePage } from '@inertiajs/react';
 import { Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 
 interface AuthenticatedLayoutProps {
@@ -24,6 +24,10 @@ export default function AuthenticatedLayout({
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
+
+    useEffect(() => {
+        setShowingNavigationDropdown(false);
+    }, [page.url]);
 
     return (
         <div className="authenticated-theme-dark min-h-screen bg-gray-100">
@@ -128,58 +132,66 @@ export default function AuthenticatedLayout({
                     </div>
 
                     {showingNavigationDropdown && (
-                        <nav
-                            className="dashboard-mobile-drawer sm:hidden"
-                            aria-label="Admin mobile navigation"
-                        >
-                            <Link
-                                href={route('dashboard')}
-                                className="dashboard-mobile-link"
+                        <>
+                            <button
+                                type="button"
+                                className="dashboard-mobile-drawer-backdrop sm:hidden"
                                 onClick={() => setShowingNavigationDropdown(false)}
+                                aria-label="Close admin menu"
+                            />
+                            <nav
+                                className="dashboard-mobile-drawer sm:hidden"
+                                aria-label="Admin mobile navigation"
                             >
-                                Dashboard
-                            </Link>
-                            <Link
-                                href={route('dashboard.projects.index')}
-                                className="dashboard-mobile-link"
-                                onClick={() => setShowingNavigationDropdown(false)}
-                            >
-                                Projects
-                            </Link>
-                            <Link
-                                href={route('dashboard.homepage.edit')}
-                                className="dashboard-mobile-link"
-                                onClick={() => setShowingNavigationDropdown(false)}
-                            >
-                                Homepage
-                            </Link>
+                                <Link
+                                    href={route('dashboard')}
+                                    className="dashboard-mobile-link"
+                                    onClick={() => setShowingNavigationDropdown(false)}
+                                >
+                                    Dashboard
+                                </Link>
+                                <Link
+                                    href={route('dashboard.projects.index')}
+                                    className="dashboard-mobile-link"
+                                    onClick={() => setShowingNavigationDropdown(false)}
+                                >
+                                    Projects
+                                </Link>
+                                <Link
+                                    href={route('dashboard.homepage.edit')}
+                                    className="dashboard-mobile-link"
+                                    onClick={() => setShowingNavigationDropdown(false)}
+                                >
+                                    Homepage
+                                </Link>
 
-                            <div className="dashboard-mobile-user">
-                                <p className="dashboard-mobile-user-name">
-                                    {user.name}
-                                </p>
-                                <p className="dashboard-mobile-user-email">
-                                    {user.email}
-                                </p>
-                            </div>
+                                <div className="dashboard-mobile-user">
+                                    <p className="dashboard-mobile-user-name">
+                                        {user.name}
+                                    </p>
+                                    <p className="dashboard-mobile-user-email">
+                                        {user.email}
+                                    </p>
+                                </div>
 
-                            <Link
-                                href={route('profile.edit')}
-                                className="dashboard-mobile-link"
-                                onClick={() => setShowingNavigationDropdown(false)}
-                            >
-                                Profile
-                            </Link>
-                            <Link
-                                href={route('logout')}
-                                method="post"
-                                as="button"
-                                className="dashboard-mobile-link"
-                                onClick={() => setShowingNavigationDropdown(false)}
-                            >
-                                Log Out
-                            </Link>
-                        </nav>
+                                <Link
+                                    href={route('profile.edit')}
+                                    className="dashboard-mobile-link"
+                                    onClick={() => setShowingNavigationDropdown(false)}
+                                >
+                                    Profile
+                                </Link>
+                                <Link
+                                    href={route('logout')}
+                                    method="post"
+                                    as="button"
+                                    className="dashboard-mobile-link"
+                                    onClick={() => setShowingNavigationDropdown(false)}
+                                >
+                                    Log Out
+                                </Link>
+                            </nav>
+                        </>
                     )}
                 </div>
             </nav>

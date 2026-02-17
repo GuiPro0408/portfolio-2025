@@ -17,6 +17,16 @@ function e2eCredentials() {
     };
 }
 
+async function loginAsOwner(page) {
+    const { email, password } = e2eCredentials();
+
+    await page.goto('/login');
+    await page.getByLabel('Email').fill(email);
+    await page.getByLabel('Password').fill(password);
+    await page.getByRole('button', { name: 'Log in' }).click();
+    await expect(page).toHaveURL(/\/dashboard$/);
+}
+
 test('public navigation smoke', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('link', { name: 'Home' })).toBeVisible();
@@ -120,13 +130,34 @@ test('contact form submit smoke', async ({ page }) => {
 });
 
 test('dashboard auth smoke', async ({ page }) => {
-    const { email, password } = e2eCredentials();
+    await loginAsOwner(page);
 
-    await page.goto('/login');
-    await page.getByLabel('Email').fill(email);
-    await page.getByLabel('Password').fill(password);
-    await page.getByRole('button', { name: 'Log in' }).click();
-
-    await expect(page).toHaveURL(/\/dashboard$/);
     await expect(page.getByRole('heading', { name: 'Content Admin' })).toBeVisible();
+});
+
+test('dashboard mobile nav and projects action sheet smoke', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await loginAsOwner(page);
+
+    await page.getByRole('button', { name: /open admin menu/i }).click();
+    const adminNav = page.getByRole('navigation', { name: 'Admin mobile navigation' });
+    await adminNav.getByRole('link', { name: 'Projects' }).click();
+    await expect(page).toHaveURL(/\/dashboard\/projects/);
+
+    const actionsButton = page.getByRole('button', { name: /open actions for/i }).first();
+    await expect(actionsButton).toBeVisible();
+    await actionsButton.click();
+
+    await page.getByRole('link', { name: 'Edit' }).click();
+    await expect(page).toHaveURL(/\/dashboard\/projects\/\d+\/edit$/);
+});
+
+test('homepage settings mobile sticky save state smoke', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await loginAsOwner(page);
+    await page.goto('/dashboard/homepage');
+
+    await expect(page.getByText('No pending changes.')).toBeVisible();
+    await page.getByLabel('Hero Headline').fill('Updated headline from e2e');
+    await expect(page.getByText('You have unsaved changes.')).toBeVisible();
 });

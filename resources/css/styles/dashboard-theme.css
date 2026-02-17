@@ -25,6 +25,75 @@
         backdrop-filter: blur(10px);
     }
 
+    & .auth-nav-inner {
+        position: relative;
+    }
+
+    & .dashboard-mobile-menu-toggle {
+        width: 2.2rem;
+        height: 2.2rem;
+        border-radius: 0.65rem;
+        border: 1px solid color-mix(in srgb, var(--dash-link) 30%, var(--dash-border));
+        background: linear-gradient(180deg, rgba(24, 37, 67, 0.9), rgba(16, 25, 44, 0.9));
+        color: #dce7ff;
+
+        &:hover {
+            border-color: color-mix(in srgb, var(--dash-link) 65%, #d6e5ff);
+            background: linear-gradient(180deg, rgba(33, 49, 84, 0.94), rgba(21, 32, 56, 0.94));
+        }
+    }
+
+    & .dashboard-mobile-drawer {
+        position: absolute;
+        top: calc(100% - 0.2rem);
+        right: 0;
+        z-index: 70;
+        width: min(19rem, calc(100vw - 2rem));
+        display: grid;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border-radius: 0.95rem;
+        border: 1px solid var(--dash-border-strong);
+        background: linear-gradient(180deg, rgba(15, 24, 43, 0.98), rgba(12, 18, 34, 0.98));
+        box-shadow: 0 20px 38px rgba(3, 8, 19, 0.6);
+        animation: dashboard-mobile-drawer-enter 0.2s ease-out;
+    }
+
+    & .dashboard-mobile-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 2.65rem;
+        padding: 0 0.85rem;
+        border-radius: 0.7rem;
+        border: 1px solid var(--dash-border);
+        background: rgba(19, 29, 50, 0.86);
+        color: var(--dash-text);
+        font-size: 0.86rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    & .dashboard-mobile-user {
+        margin: 0.1rem 0;
+        padding: 0.65rem 0.85rem;
+        border-top: 1px solid var(--dash-border);
+        border-bottom: 1px solid var(--dash-border);
+    }
+
+    & .dashboard-mobile-user-name {
+        margin: 0;
+        color: var(--dash-text);
+        font-weight: 700;
+        font-size: 0.92rem;
+    }
+
+    & .dashboard-mobile-user-email {
+        margin: 0.25rem 0 0;
+        color: var(--dash-muted);
+        font-size: 0.8rem;
+    }
+
     & a,
     & button,
     & input,
@@ -1439,6 +1508,18 @@
 
     & a {
         color: inherit;
+    }
+}
+
+@keyframes dashboard-mobile-drawer-enter {
+    from {
+        opacity: 0;
+        transform: translateX(0.55rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
     }
 }
 

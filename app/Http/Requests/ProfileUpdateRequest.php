@@ -3,11 +3,17 @@
 namespace App\Http\Requests;
 
 use App\Models\User;
+use App\Support\OwnerAuthorization;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class ProfileUpdateRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return OwnerAuthorization::isOwner($this->user());
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *

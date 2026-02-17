@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Project;
-use App\Models\User;
 use App\Support\PublicCacheKeys;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -49,7 +48,7 @@ class SeoEndpointsTest extends TestCase
 
     public function test_sitemap_cache_is_invalidated_when_project_publication_changes(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create([
             'slug' => 'newly-published-project',
             'is_published' => false,

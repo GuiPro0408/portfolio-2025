@@ -5,6 +5,27 @@ import {
     ListboxOptions,
 } from '@headlessui/react';
 
+export type SelectValue = string | number;
+
+export interface ListboxOptionItem {
+    value: SelectValue;
+    label: string;
+}
+
+interface ListboxSelectProps {
+    label: string;
+    value: SelectValue;
+    onChange: (value: SelectValue) => void;
+    options: ListboxOptionItem[];
+    labelClassName?: string;
+    containerClassName?: string;
+    buttonClassName?: string;
+    iconClassName?: string;
+    optionsClassName?: string;
+    optionClassName?: string;
+    ariaLabel?: string;
+}
+
 export default function ListboxSelect({
     label,
     value,
@@ -17,7 +38,11 @@ export default function ListboxSelect({
     optionsClassName,
     optionClassName,
     ariaLabel,
-}) {
+}: ListboxSelectProps) {
+    if (options.length === 0) {
+        return null;
+    }
+
     const selectedOption =
         options.find((option) => option.value === value) ?? options[0];
 

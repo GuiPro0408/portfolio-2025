@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Projects\ResolveAdminProjectsIndex;
 use App\Actions\Projects\SyncProjectTechnologies;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProjectRequest;
@@ -10,8 +11,6 @@ use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Requests\UpdateProjectSortRequest;
 use App\Models\Project;
 use App\Support\PublicCacheKeys;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
@@ -22,15 +21,16 @@ use Inertia\Response;
 class ProjectController extends Controller
 {
     public function __construct(
+        private readonly ResolveAdminProjectsIndex $resolveAdminProjectsIndex,
         private readonly SyncProjectTechnologies $syncProjectTechnologies,
     ) {}
 
     public function index(Request $request): Response
     {
-        $filters = $this->normalizedFilters($request);
+        $filters = $this->resolveAdminProjectsIndex->normalizedFilters($request);
 
         return Inertia::render('Dashboard/Projects/Index', [
-            'projects' => fn (): LengthAwarePaginator => $this->resolveProjectsPayload($filters),
+            'projects' => fn (): LengthAwarePaginator => $this->resolveAdminProjectsIndex->resolveProjectsPayload($filters),
             'filters' => $filters,
         ]);
     }
@@ -45,9 +45,11 @@ class ProjectController extends Controller
     public function store(StoreProjectRequest $request)
     {
         $project = Project::create($request->validated());
+
         if ($this->technologyTablesReady()) {
             $this->syncProjectTechnologies->sync($project, $project->stack);
         }
+
         $this->clearPublicCaches();
 
         return redirect()
@@ -87,9 +89,11 @@ class ProjectController extends Controller
     public function update(UpdateProjectRequest $request, Project $project)
     {
         $project->update($request->validated());
+
         if ($this->technologyTablesReady()) {
             $this->syncProjectTechnologies->sync($project, $project->stack);
         }
+
         $this->clearPublicCaches();
 
         return redirect()
@@ -160,6 +164,7 @@ class ProjectController extends Controller
                 $this->syncProjectTechnologies->sync($copy, $copy->stack);
             }
         }
+
         $this->clearPublicCaches();
 
         return redirect()
@@ -198,39 +203,6 @@ class ProjectController extends Controller
         ];
     }
 
-    /**
-     * @return array{q: string, status: string, featured: string, sort: string}
-     */
-    private function normalizedFilters(Request $request): array
-    {
-        $status = (string) $request->query('status', 'all');
-        $featured = (string) $request->query('featured', 'all');
-        $sort = (string) $request->query('sort', 'sort_order_asc');
-
-        return [
-            'q' => trim((string) $request->query('q', '')),
-            'status' => in_array($status, ['all', 'published', 'draft'], true) ? $status : 'all',
-            'featured' => in_array($featured, ['all', 'featured', 'not_featured'], true) ? $featured : 'all',
-            'sort' => in_array($sort, ['updated_desc', 'updated_asc', 'title_asc', 'title_desc', 'sort_order_asc'], true)
-                ? $sort
-                : 'sort_order_asc',
-        ];
-    }
-
-    /**
-     * @param  EloquentBuilder<Project>|BaseBuilder  $query
-     */
-    private function applySort(EloquentBuilder|BaseBuilder $query, string $sort): void
-    {
-        match ($sort) {
-            'updated_desc' => $query->orderByDesc('updated_at'),
-            'updated_asc' => $query->orderBy('updated_at'),
-            'title_asc' => $query->orderBy('title'),
-            'title_desc' => $query->orderByDesc('title'),
-            default => $query->orderBy('sort_order')->orderByDesc('updated_at'),
-        };
-    }
-
     private function generateUniqueCopySlug(string $originalSlug): string
     {
         $baseSlug = Str::slug($originalSlug).'-copy';
@@ -252,38 +224,5 @@ class ProjectController extends Controller
         }
 
         Cache::forget(PublicCacheKeys::SITEMAP_XML);
-    }
-
-    /**
-     * @param  array{q: string, status: string, featured: string, sort: string}  $filters
-     */
-    private function resolveProjectsPayload(array $filters): LengthAwarePaginator
-    {
-        return Project::query()
-            ->when($filters['q'] !== '', function ($query) use ($filters) {
-                $query->where(function ($searchQuery) use ($filters) {
-                    $searchQuery
-                        ->where('title', 'like', '%'.$filters['q'].'%')
-                        ->orWhere('slug', 'like', '%'.$filters['q'].'%');
-                });
-            })
-            ->when($filters['status'] !== 'all', function ($query) use ($filters) {
-                $query->where('is_published', $filters['status'] === 'published');
-            })
-            ->when($filters['featured'] !== 'all', function ($query) use ($filters) {
-                $query->where('is_featured', $filters['featured'] === 'featured');
-            })
-            ->tap(fn ($query) => $this->applySort($query, $filters['sort']))
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Project $project) => [
-                'id' => $project->id,
-                'title' => $project->title,
-                'slug' => $project->slug,
-                'is_published' => $project->is_published,
-                'is_featured' => $project->is_featured,
-                'sort_order' => $project->sort_order,
-                'updated_at' => $project->updated_at->toDateTimeString(),
-            ]);
     }
 }

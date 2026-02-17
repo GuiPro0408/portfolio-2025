@@ -79,3 +79,12 @@ Actions:
    ```
 2. Verify tests do not depend on machine-specific state.
 3. Keep assertions deterministic and isolated.
+
+## 7) Rolling back backfill migrations unexpectedly leaves data in place
+Symptom:
+- `php artisan migrate:rollback` does not remove rows from historical backfill migrations.
+
+Actions:
+1. Confirm whether the migration is intentionally irreversible (non-destructive `down()`).
+2. Treat rollback as schema-only for those migrations and use explicit cleanup migrations for data changes.
+3. Document any manual remediation plan before running rollback in shared environments.

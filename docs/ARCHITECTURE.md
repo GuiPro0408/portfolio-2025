@@ -5,15 +5,18 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 
 ## Request/Response Boundaries
 - Routing lives in `routes/web.php` and `routes/auth.php`.
+- Public registration is disabled for the single-owner deployment model.
 - Controllers in `app/Http/Controllers` orchestrate requests and return Inertia responses or redirects.
 - Validation belongs in Form Requests (`app/Http/Requests`) when reusable or non-trivial.
 - Shared Inertia props are defined in `app/Http/Middleware/HandleInertiaRequests.php`.
 - Flash feedback for authenticated UI is shared via Inertia `flash.success` / `flash.error` props.
 - Public page controllers should pass a consistent `contact` prop contract when rendering pages using `PublicLayout`.
+- Dashboard/admin routes require `auth + verified + owner` middleware (owner from `PORTFOLIO_OWNER_EMAIL`).
 
 ## Business Logic Placement
 - Keep controllers thin: parsing input, auth checks, orchestration only.
 - Put reusable domain/business logic in dedicated classes under `app/` (for example `app/Actions` or `app/Services`).
+- List query/filter/sort orchestration lives in action classes under `app/Actions/Projects` (public and admin index resolvers).
 - Keep persistence concerns in Eloquent models (`app/Models`) and migrations (`database/migrations`).
 
 ## Frontend Boundaries (Inertia/React)
@@ -35,6 +38,7 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - Test data factories: `database/factories`.
 - Project stack taxonomy is modeled relationally (`projects` <-> `technologies` via pivot) and should be the filtering source of truth.
 - Public payload caching (homepage/sitemap) must use explicit cache keys with clear invalidation on project/homepage-admin writes.
+- Backfill data migrations that cannot be safely reversed should use non-destructive `down()` no-op behavior and be documented as irreversible.
 
 ## Content Configuration Pattern
 - Structured content entities (for example homepage copy/images) are modeled in Eloquent (`app/Models`) and edited through authenticated dashboard routes.

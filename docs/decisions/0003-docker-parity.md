@@ -12,10 +12,13 @@ Container users previously needed multiple manual `docker compose exec` commands
 Adopt `make check-docker` as the Docker parity command.
 
 `make check-docker` runs:
-1. `composer validate --strict` in `app`
-2. `composer run lint:php` in `app`
-3. `composer test` in `app`
-4. `npm run build` in `vite`
+1. `./scripts/check-docs.sh`
+2. `composer validate --strict` in `app`
+3. `composer run lint:php` in `app`
+4. `composer run lint:static` in `app`
+5. `composer test` in `app`
+6. `npm run typecheck` in `vite`
+7. `npm run build` in `vite`
 
 ## Consequences
 - Pros:

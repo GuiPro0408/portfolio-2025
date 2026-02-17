@@ -1,5 +1,9 @@
-import ActiveFilterChips from '@/Components/Filters/ActiveFilterChips';
-import ListboxSelect from '@/Components/Filters/ListboxSelect';
+import ActiveFilterChips, {
+    type ActiveFilterChip,
+} from '@/Components/Filters/ActiveFilterChips';
+import ListboxSelect, {
+    type ListboxOptionItem,
+} from '@/Components/Filters/ListboxSelect';
 import SectionHeading from '@/Components/SectionHeading';
 import PublicLayout from '@/Layouts/PublicLayout';
 import {
@@ -9,15 +13,53 @@ import {
     ListboxOptions,
 } from '@headlessui/react';
 import { Head, Link, router } from '@inertiajs/react';
+import type { ChangeEvent } from 'react';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-const defaultFilters = {
+interface ProjectCardData {
+    id: number;
+    title: string;
+    slug: string;
+    summary: string;
+    stack: string | null;
+    cover_image_url: string | null;
+    published_at: string | null;
+}
+
+interface ContactPayload {
+    email?: string | null;
+    linkedin?: string | null;
+    github?: string | null;
+}
+
+interface ProjectsFilters {
+    q: string;
+    stack: string;
+    sort: string;
+}
+
+interface PaginatedProjects {
+    data: ProjectCardData[];
+    current_page: number;
+    last_page: number;
+    prev_page_url: string | null;
+    next_page_url: string | null;
+}
+
+interface ProjectsIndexProps {
+    projects: PaginatedProjects;
+    contact: ContactPayload;
+    filters?: Partial<ProjectsFilters>;
+    availableStacks?: string[];
+}
+
+const defaultFilters: ProjectsFilters = {
     q: '',
     stack: '',
     sort: 'editorial',
 };
 
-function toTags(stack) {
+function toTags(stack: string | null): string[] {
     if (!stack) {
         return [];
     }
@@ -29,7 +71,7 @@ function toTags(stack) {
         .slice(0, 3);
 }
 
-function parseFilterStack(stack) {
+function parseFilterStack(stack: string): string[] {
     if (!stack) {
         return [];
     }
@@ -40,7 +82,17 @@ function parseFilterStack(stack) {
         .filter(Boolean);
 }
 
-function StackMultiSelect({ selectedValues, onChange, options }) {
+interface StackMultiSelectProps {
+    selectedValues: string[];
+    onChange: (nextValues: string[]) => void;
+    options: Array<{ value: string; label: string }>;
+}
+
+function StackMultiSelect({
+    selectedValues,
+    onChange,
+    options,
+}: StackMultiSelectProps) {
     const selectedLabels = options
         .filter((option) => selectedValues.includes(option.value))
         .map((option) => option.label);
@@ -68,7 +120,7 @@ function StackMultiSelect({ selectedValues, onChange, options }) {
                     <ListboxOptions className="projects-filter-options">
                         {options.map((option) => (
                             <ListboxOption
-                                key={option.value}
+                                key={String(option.value)}
                                 value={option.value}
                                 className="projects-filter-option projects-filter-option-multi"
                             >
@@ -101,7 +153,11 @@ function ProjectSkeletonGrid() {
     );
 }
 
-const ProjectCard = memo(function ProjectCard({ project }) {
+const ProjectCard = memo(function ProjectCard({
+    project,
+}: {
+    project: ProjectCardData;
+}) {
     const tags = useMemo(() => toTags(project.stack), [project.stack]);
     const detailHref = route('projects.show', project.slug);
 
@@ -138,7 +194,12 @@ const ProjectCard = memo(function ProjectCard({ project }) {
     );
 });
 
-export default function Index({ projects, contact, filters, availableStacks }) {
+export default function Index({
+    projects,
+    contact,
+    filters,
+    availableStacks,
+}: ProjectsIndexProps) {
     const initialFilters = { ...defaultFilters, ...(filters ?? {}) };
     const [query, setQuery] = useState(initialFilters.q);
     const [stack, setStack] = useState(parseFilterStack(initialFilters.stack));
@@ -152,7 +213,7 @@ export default function Index({ projects, contact, filters, availableStacks }) {
         setIsListLoading(false);
     }, [initialFilters.q, initialFilters.stack, initialFilters.sort]);
 
-    const stackFilterOptions = useMemo(
+    const stackFilterOptions = useMemo<Array<{ value: string; label: string }>>(
         () =>
             (availableStacks ?? []).map((stackItem) => ({
                 value: stackItem,
@@ -161,7 +222,7 @@ export default function Index({ projects, contact, filters, availableStacks }) {
         [availableStacks],
     );
 
-    const sortFilterOptions = useMemo(
+    const sortFilterOptions = useMemo<ListboxOptionItem[]>(
         () => [
             { value: 'editorial', label: 'Editorial' },
             { value: 'newest', label: 'Newest' },
@@ -178,7 +239,10 @@ export default function Index({ projects, contact, filters, availableStacks }) {
         [sortFilterOptions],
     );
 
-    const visitWithFilters = useCallback((nextFilters, options = {}) => {
+    const visitWithFilters = useCallback((
+        nextFilters: ProjectsFilters,
+        options: { replace?: boolean } = {},
+    ) => {
         const queryParams = Object.fromEntries(
             Object.entries(nextFilters).filter(
                 ([, value]) => value !== '' && value !== null && value !== undefined,
@@ -196,7 +260,7 @@ export default function Index({ projects, contact, filters, availableStacks }) {
         });
     }, []);
 
-    const visitWithUrl = useCallback((url) => {
+    const visitWithUrl = useCallback((url: string | null) => {
         if (!url) {
             return;
         }
@@ -275,7 +339,7 @@ export default function Index({ projects, contact, filters, availableStacks }) {
         return chips;
     }, [query, stack, sort, sortLabelByValue]);
 
-    const removeChip = useCallback((chip) => {
+    const removeChip = useCallback((chip: ActiveFilterChip) => {
         if (chip.key === 'q') {
             setQuery('');
             return;
@@ -296,7 +360,10 @@ export default function Index({ projects, contact, filters, availableStacks }) {
     const metaDescription =
         'Published software projects showcasing delivery quality, architecture, and measurable outcomes.';
     const canonicalUrl = route('projects.index');
-    const projectItems = useMemo(() => projects.data ?? [], [projects.data]);
+    const projectItems = useMemo<ProjectCardData[]>(
+        () => projects.data ?? [],
+        [projects.data],
+    );
 
     const structuredData = useMemo(
         () => ({
@@ -341,7 +408,9 @@ export default function Index({ projects, contact, filters, availableStacks }) {
                             <input
                                 type="search"
                                 value={query}
-                                onChange={(event) => setQuery(event.target.value)}
+                                onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                                    setQuery(event.target.value)
+                                }
                                 placeholder="Title, summary, stack..."
                                 className="projects-filter-input"
                             />
@@ -356,7 +425,7 @@ export default function Index({ projects, contact, filters, availableStacks }) {
                         <ListboxSelect
                             label="Sort"
                             value={sort}
-                            onChange={setSort}
+                            onChange={(value) => setSort(String(value))}
                             options={sortFilterOptions}
                             labelClassName="projects-filter-label"
                             containerClassName="projects-filter-select"

@@ -26,9 +26,23 @@ class ProjectManagementTest extends TestCase
         $this->patch(route('dashboard.projects.sort.update', $project), ['sort_order' => 1])->assertRedirect(route('login'));
     }
 
+    public function test_non_owner_users_are_forbidden_from_project_management_pages(): void
+    {
+        $owner = $this->ownerUser();
+        $project = Project::factory()->create();
+        $user = User::factory()->create();
+        config()->set('portfolio.owner_email', $owner->email);
+
+        $this->actingAs($user)->get(route('dashboard.projects.index'))->assertForbidden();
+        $this->actingAs($user)->get(route('dashboard.projects.create'))->assertForbidden();
+        $this->actingAs($user)->get(route('dashboard.projects.edit', $project))->assertForbidden();
+        $this->actingAs($user)->post(route('dashboard.projects.duplicate', $project))->assertForbidden();
+        $this->actingAs($user)->patch(route('dashboard.projects.sort.update', $project), ['sort_order' => 1])->assertForbidden();
+    }
+
     public function test_authenticated_users_can_open_management_pages(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create();
 
         $this->actingAs($user)->get(route('dashboard.projects.index'))->assertOk();
@@ -38,7 +52,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_authenticated_user_can_create_a_project(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
 
         $response = $this->actingAs($user)->post(route('dashboard.projects.store'), [
             'title' => 'My Portfolio App',
@@ -79,7 +93,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_validation_errors_are_returned_for_invalid_payload(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
 
         $response = $this->actingAs($user)->post(route('dashboard.projects.store'), [
             'title' => '',
@@ -102,7 +116,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_authenticated_user_can_update_a_project(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create([
             'title' => 'Old Title',
             'slug' => 'old-title',
@@ -137,7 +151,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_authenticated_user_can_delete_a_project(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create();
 
         $response = $this->actingAs($user)->delete(route('dashboard.projects.destroy', $project));
@@ -148,7 +162,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_slug_must_be_unique(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         Project::factory()->create(['slug' => 'existing-slug']);
 
         $response = $this->actingAs($user)->post(route('dashboard.projects.store'), [
@@ -163,7 +177,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_unpublishing_clears_published_at_timestamp(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->published()->create([
             'slug' => 'published-project',
         ]);
@@ -191,7 +205,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_projects_index_supports_search_filter_and_sort(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
 
         Project::factory()->create([
             'title' => 'Alpha Project',
@@ -236,7 +250,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_projects_index_preserves_query_through_pagination_links(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
 
         Project::factory()->count(20)->create([
             'title' => 'Query Match',
@@ -272,7 +286,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_authenticated_user_can_update_project_flags_and_publish_timestamp(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create([
             'is_published' => false,
             'is_featured' => false,
@@ -308,7 +322,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_project_flags_validation_rejects_invalid_values(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create();
 
         $response = $this
@@ -325,7 +339,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_authenticated_user_can_duplicate_a_project_as_draft_copy(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->published()->featured()->create([
             'slug' => 'core-platform',
             'title' => 'Core Platform',
@@ -356,7 +370,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_duplicate_project_slug_suffix_is_incremented_when_needed(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create(['slug' => 'alpha']);
         Project::factory()->create(['slug' => 'alpha-copy']);
 
@@ -373,7 +387,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_authenticated_user_can_update_project_sort_order_inline(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create(['sort_order' => 2]);
 
         $this
@@ -391,7 +405,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_project_sort_update_validation_rejects_invalid_values(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create();
 
         $response = $this
@@ -407,7 +421,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_project_mutations_clear_public_cache_entries(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
 
         Cache::put(PublicCacheKeys::HOME_PAYLOAD, ['cached' => true], 600);
         Cache::put(PublicCacheKeys::SITEMAP_XML, '<xml/>', 600);

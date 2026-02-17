@@ -1,4 +1,22 @@
-function Chip({ chip, onRemove }) {
+export interface ActiveFilterChip {
+    key: string;
+    label: string;
+    value: string;
+    token?: string;
+}
+
+interface ActiveFilterChipsProps {
+    chips: ActiveFilterChip[];
+    onRemove: (chip: ActiveFilterChip) => void;
+    onClearAll: () => void;
+}
+
+interface ChipProps {
+    chip: ActiveFilterChip;
+    onRemove: (chip: ActiveFilterChip) => void;
+}
+
+function Chip({ chip, onRemove }: ChipProps) {
     return (
         <li className="active-filter-chip">
             <span className="active-filter-chip-label">{chip.label}: </span>
@@ -15,7 +33,11 @@ function Chip({ chip, onRemove }) {
     );
 }
 
-export default function ActiveFilterChips({ chips, onRemove, onClearAll }) {
+export default function ActiveFilterChips({
+    chips,
+    onRemove,
+    onClearAll,
+}: ActiveFilterChipsProps) {
     if (!chips.length) {
         return null;
     }

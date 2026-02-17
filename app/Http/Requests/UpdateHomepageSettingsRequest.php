@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\OwnerAuthorization;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 
@@ -24,7 +25,7 @@ class UpdateHomepageSettingsRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return OwnerAuthorization::isOwner($this->user());
     }
 
     protected function prepareForValidation(): void

@@ -21,11 +21,8 @@ Route::get('/projects/{project:slug}', [ProjectController::class, 'show'])->name
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
-
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified', 'owner'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/projects', [AdminProjectController::class, 'index'])->name('dashboard.projects.index');
     Route::get('/dashboard/projects/create', [AdminProjectController::class, 'create'])->name('dashboard.projects.create');
     Route::post('/dashboard/projects', [AdminProjectController::class, 'store'])->name('dashboard.projects.store');

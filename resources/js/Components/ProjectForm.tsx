@@ -8,9 +8,40 @@ import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { CalendarDays } from 'lucide-react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
+import type { FormEvent, ReactNode } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 
-function parseDateValue(value) {
+export interface ProjectFormData {
+    title: string;
+    slug: string;
+    summary: string;
+    body: string;
+    stack: string;
+    cover_image_url: string;
+    repo_url: string;
+    live_url: string;
+    is_featured: boolean;
+    is_published: boolean;
+    published_at: string;
+    sort_order: string | number;
+}
+
+type ProjectFormErrors = Record<string, string | undefined>;
+type SetProjectFormData = <K extends keyof ProjectFormData>(
+    key: K,
+    value: ProjectFormData[K],
+) => void;
+
+interface ProjectFormProps {
+    data: ProjectFormData;
+    setData: SetProjectFormData;
+    errors: ProjectFormErrors;
+    processing: boolean;
+    onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+    submitLabel: string;
+}
+
+function parseDateValue(value: unknown): Date | null {
     if (!value || typeof value !== 'string') {
         return null;
     }
@@ -26,7 +57,7 @@ function parseDateValue(value) {
     return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-function formatDateValue(value) {
+function formatDateValue(value: unknown): string {
     if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
         return '';
     }
@@ -38,7 +69,7 @@ function formatDateValue(value) {
     return `${year}-${month}-${day}`;
 }
 
-function formatHumanDate(value) {
+function formatHumanDate(value: unknown): string {
     if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
         return 'Select publication date';
     }
@@ -50,7 +81,7 @@ function formatHumanDate(value) {
     }).format(value);
 }
 
-function ValidationSummary({ errors }) {
+function ValidationSummary({ errors }: { errors: ProjectFormErrors }) {
     const keys = Object.keys(errors);
 
     if (keys.length === 0) {
@@ -71,11 +102,18 @@ function ValidationSummary({ errors }) {
     );
 }
 
-function FieldHelp({ children }) {
+function FieldHelp({ children }: { children: ReactNode }) {
     return <p className="dashboard-field-help">{children}</p>;
 }
 
-function ToggleField({ id, label, checked, onChange }) {
+interface ToggleFieldProps {
+    id: string;
+    label: string;
+    checked: boolean;
+    onChange: (value: boolean) => void;
+}
+
+function ToggleField({ id, label, checked, onChange }: ToggleFieldProps) {
     return (
         <button
             id={id}
@@ -100,13 +138,13 @@ export default function ProjectForm({
     processing,
     onSubmit,
     submitLabel,
-}) {
+}: ProjectFormProps) {
     const today = useMemo(() => new Date(), []);
     const selectedPublishedAt = useMemo(
         () => parseDateValue(data.published_at),
         [data.published_at],
     );
-    const [displayMonth, setDisplayMonth] = useState(
+    const [displayMonth, setDisplayMonth] = useState<Date>(
         () => selectedPublishedAt ?? today,
     );
 
@@ -150,7 +188,7 @@ export default function ProjectForm({
         );
     }, [data.published_at]);
 
-    const updateDisplayMonth = (nextMonth, nextYear) => {
+    const updateDisplayMonth = (nextMonth: number, nextYear: number) => {
         setDisplayMonth(new Date(nextYear, nextMonth, 1));
     };
 

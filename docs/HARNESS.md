@@ -7,9 +7,9 @@ This document is the single source of truth for repository command behavior.
 - `make setup-ci`: deterministic CI install (`composer install --no-progress`, `npm ci`)
 - `make dev`: local development workflow (`composer run dev`)
 - `make docs-check`: documentation system-of-record integrity checks
-- `make check`: full quality gate (validation, lint, tests, frontend build)
+- `make check`: full quality gate (validation, lint, static analysis, tests, type checks, frontend build)
 - `make analyse`: static analysis with Larastan/PHPStan
-- `make check-docker`: parity checks inside running Docker services
+- `make check-docker`: full parity checks inside running Docker services
 - `make format`: PHP auto-format (`./vendor/bin/pint`)
 - `make test`: backend test suite (`php artisan test`)
 - `make build`: frontend production build (`vite build`)
@@ -20,6 +20,15 @@ This document is the single source of truth for repository command behavior.
 3. `make check`
 
 This sequence is the canonical non-browser CI quality path.
+
+`make check` and `make check-docker` both include:
+1. docs integrity (`./scripts/check-docs.sh`)
+2. `composer validate --strict`
+3. `composer run lint:php`
+4. `composer run lint:static`
+5. `composer test`
+6. `npm run typecheck`
+7. `npm run build`
 
 ## Browser Smoke Path
 - Browser smoke tests run through Playwright with:

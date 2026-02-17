@@ -22,6 +22,7 @@ Set these in Koyeb (names only, no secrets shown here):
 - `SESSION_DRIVER`
 - `CACHE_STORE`
 - `PORTFOLIO_EMAIL`
+- `PORTFOLIO_OWNER_EMAIL`
 - `PORTFOLIO_LINKEDIN`
 - `PORTFOLIO_GITHUB`
 
@@ -40,9 +41,10 @@ koyeb services exec <service-name>/web -- php artisan migrate --force
 
 ## Post-Deploy Checks
 1. Open the public app URL.
-2. Confirm auth routes (`/login`, `/register`) render.
-3. Confirm database-backed flows work (login/session/profile, projects, homepage settings).
-4. Check logs in Koyeb if any startup or DB errors occur.
+2. Confirm `/login` renders and `/register` is not exposed.
+3. Confirm the configured owner can log in and must verify email before dashboard access.
+4. Confirm database-backed flows work (session/profile, projects, homepage settings).
+5. Check logs in Koyeb if any startup or DB errors occur.
 
 ## Operational Notes
 - Keep app and database in the same region.

@@ -1,4 +1,7 @@
-import ActiveFilterChips from '@/Components/Filters/ActiveFilterChips';
+import ActiveFilterChips, {
+    type ActiveFilterChip,
+} from '@/Components/Filters/ActiveFilterChips';
+import type { ListboxOptionItem } from '@/Components/Filters/ListboxSelect';
 import DashboardPageHeader from '@/Components/Dashboard/DashboardPageHeader';
 import EmptyState from '@/Components/Dashboard/EmptyState';
 import FilterToolbar from '@/Components/Dashboard/FilterToolbar';
@@ -12,14 +15,47 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { Copy, LoaderCircle, PenSquare, Trash2 } from 'lucide-react';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-const defaultFilters = {
+interface AdminProject {
+    id: number;
+    title: string;
+    slug: string;
+    is_published: boolean;
+    is_featured: boolean;
+    sort_order: number;
+    updated_at: string;
+}
+
+interface AdminProjectsFilters {
+    q: string;
+    status: string;
+    featured: string;
+    sort: string;
+}
+
+interface PaginatedProjects {
+    data: AdminProject[];
+    current_page: number;
+    last_page: number;
+    prev_page_url: string | null;
+    next_page_url: string | null;
+}
+
+interface DashboardProjectsIndexProps {
+    projects: PaginatedProjects;
+    filters?: Partial<AdminProjectsFilters>;
+}
+
+const defaultFilters: AdminProjectsFilters = {
     q: '',
     status: 'all',
     featured: 'all',
     sort: 'sort_order_asc',
 };
 
-function formatUpdatedAt(dateString) {
+type PendingMap = Record<number, boolean>;
+type SortValueMap = Record<number, string>;
+
+function formatUpdatedAt(dateString: string): string {
     return new Intl.DateTimeFormat('en', {
         dateStyle: 'medium',
         timeStyle: 'short',
@@ -43,6 +79,20 @@ function DashboardSkeletonRows() {
     );
 }
 
+interface ProjectRowProps {
+    project: AdminProject;
+    sortValue: string;
+    isPending: boolean;
+    isSortPending: boolean;
+    isDuplicatePending: boolean;
+    onTogglePublish: (project: AdminProject) => void;
+    onToggleFeatured: (project: AdminProject) => void;
+    onSortChange: (projectId: number, value: string) => void;
+    onSaveSort: (project: AdminProject) => void;
+    onDuplicate: (project: AdminProject) => void;
+    onDelete: (project: AdminProject) => void;
+}
+
 const ProjectRow = memo(function ProjectRow({
     project,
     sortValue,
@@ -55,7 +105,7 @@ const ProjectRow = memo(function ProjectRow({
     onSaveSort,
     onDuplicate,
     onDelete,
-}) {
+}: ProjectRowProps) {
     return (
         <div className="dashboard-virtual-row" role="row">
             <div className="dashboard-cell" role="cell">
@@ -111,9 +161,9 @@ const ProjectRow = memo(function ProjectRow({
                         type="number"
                         min={0}
                         value={sortValue}
-                        onChange={(event) =>
-                            onSortChange(project.id, event.target.value)
-                        }
+                            onChange={(event) =>
+                                onSortChange(project.id, event.target.value)
+                            }
                         className="dashboard-sort-input"
                         disabled={isSortPending}
                     />
@@ -171,7 +221,7 @@ const ProjectRow = memo(function ProjectRow({
     );
 });
 
-export default function Index({ projects, filters }) {
+export default function Index({ projects, filters }: DashboardProjectsIndexProps) {
     const initialFilters = { ...defaultFilters, ...(filters ?? {}) };
     const [query, setQuery] = useState(initialFilters.q);
     const [status, setStatus] = useState(initialFilters.status);
@@ -180,16 +230,19 @@ export default function Index({ projects, filters }) {
     const [isListLoading, setIsListLoading] = useState(false);
     const [showListSkeleton, setShowListSkeleton] = useState(false);
 
-    const [pendingRows, setPendingRows] = useState({});
-    const [pendingSortRows, setPendingSortRows] = useState({});
-    const [sortValues, setSortValues] = useState({});
-    const [projectPendingDelete, setProjectPendingDelete] = useState(null);
+    const [pendingRows, setPendingRows] = useState<PendingMap>({});
+    const [pendingSortRows, setPendingSortRows] = useState<PendingMap>({});
+    const [sortValues, setSortValues] = useState<SortValueMap>({});
+    const [projectPendingDelete, setProjectPendingDelete] =
+        useState<AdminProject | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [pendingDuplicateId, setPendingDuplicateId] = useState(null);
+    const [pendingDuplicateId, setPendingDuplicateId] = useState<number | null>(
+        null,
+    );
     const [isFilterAccordionOpen, setIsFilterAccordionOpen] = useState(true);
 
     const projectsData = projects.data;
-    const scrollParentRef = useRef(null);
+    const scrollParentRef = useRef<HTMLDivElement | null>(null);
 
     const rowVirtualizer = useVirtualizer({
         count: projectsData.length,
@@ -229,7 +282,7 @@ export default function Index({ projects, filters }) {
         rowVirtualizer.measure();
     }, [rowVirtualizer, projectsData]);
 
-    const statusOptions = useMemo(
+    const statusOptions = useMemo<ListboxOptionItem[]>(
         () => [
             { value: 'all', label: 'All statuses' },
             { value: 'published', label: 'Published' },
@@ -238,7 +291,7 @@ export default function Index({ projects, filters }) {
         [],
     );
 
-    const featuredOptions = useMemo(
+    const featuredOptions = useMemo<ListboxOptionItem[]>(
         () => [
             { value: 'all', label: 'All featured states' },
             { value: 'featured', label: 'Featured only' },
@@ -247,7 +300,7 @@ export default function Index({ projects, filters }) {
         [],
     );
 
-    const sortOptions = useMemo(
+    const sortOptions = useMemo<ListboxOptionItem[]>(
         () => [
             { value: 'sort_order_asc', label: 'Sort order' },
             { value: 'updated_desc', label: 'Updated (newest)' },
@@ -277,10 +330,10 @@ export default function Index({ projects, filters }) {
         [featuredOptions],
     );
 
-    const visitWithFilters = useCallback((nextFilters) => {
+    const visitWithFilters = useCallback((nextFilters: AdminProjectsFilters) => {
         setIsListLoading(true);
 
-        router.get(route('dashboard.projects.index'), nextFilters, {
+        router.get(route('dashboard.projects.index'), { ...nextFilters }, {
             only: ['projects', 'filters', 'flash'],
             preserveState: true,
             preserveScroll: true,
@@ -289,7 +342,7 @@ export default function Index({ projects, filters }) {
         });
     }, []);
 
-    const visitWithUrl = useCallback((url) => {
+    const visitWithUrl = useCallback((url: string | null) => {
         if (!url) {
             return;
         }
@@ -343,16 +396,16 @@ export default function Index({ projects, filters }) {
     ]);
 
     useEffect(() => {
-        const nextSortValues = {};
+        const nextSortValues: SortValueMap = {};
 
-        projectsData.forEach((project) => {
+        projectsData.forEach((project: AdminProject) => {
             nextSortValues[project.id] = String(project.sort_order);
         });
 
         setSortValues(nextSortValues);
     }, [projectsData]);
 
-    const updateFilter = useCallback((key, value) => {
+    const updateFilter = useCallback((key: string, value: string) => {
         if (key === 'status') {
             setStatus(value);
             return;
@@ -376,8 +429,8 @@ export default function Index({ projects, filters }) {
         visitWithFilters(defaultFilters);
     }, [visitWithFilters]);
 
-    const activeFilterChips = useMemo(() => {
-        const chips = [];
+    const activeFilterChips = useMemo<ActiveFilterChip[]>(() => {
+        const chips: ActiveFilterChip[] = [];
 
         if (query.trim() !== '') {
             chips.push({ key: 'q', label: 'Search', value: query.trim() });
@@ -418,7 +471,7 @@ export default function Index({ projects, filters }) {
         sortLabelByValue,
     ]);
 
-    const removeChip = useCallback((chip) => {
+    const removeChip = useCallback((chip: ActiveFilterChip) => {
         if (chip.key === 'q') {
             setQuery('');
             return;
@@ -456,7 +509,10 @@ export default function Index({ projects, filters }) {
         });
     }, [projectPendingDelete]);
 
-    const toggleFlags = useCallback((project, updates) => {
+    const toggleFlags = useCallback((
+        project: AdminProject,
+        updates: Partial<Pick<AdminProject, 'is_published' | 'is_featured'>>,
+    ) => {
         setPendingRows((currentRows) => ({ ...currentRows, [project.id]: true }));
 
         router.patch(
@@ -479,7 +535,7 @@ export default function Index({ projects, filters }) {
     }, []);
 
     const onTogglePublish = useCallback(
-        (project) => {
+        (project: AdminProject) => {
             toggleFlags(project, {
                 is_published: !project.is_published,
             });
@@ -488,7 +544,7 @@ export default function Index({ projects, filters }) {
     );
 
     const onToggleFeatured = useCallback(
-        (project) => {
+        (project: AdminProject) => {
             toggleFlags(project, {
                 is_featured: !project.is_featured,
             });
@@ -496,7 +552,7 @@ export default function Index({ projects, filters }) {
         [toggleFlags],
     );
 
-    const updateSortValue = useCallback((projectId, value) => {
+    const updateSortValue = useCallback((projectId: number, value: string) => {
         setSortValues((currentValues) => ({
             ...currentValues,
             [projectId]: value,
@@ -504,7 +560,7 @@ export default function Index({ projects, filters }) {
     }, []);
 
     const saveSortOrder = useCallback(
-        (project) => {
+        (project: AdminProject) => {
             const nextSortOrder = Number.parseInt(
                 sortValues[project.id] ?? String(project.sort_order),
                 10,
@@ -539,7 +595,7 @@ export default function Index({ projects, filters }) {
         [sortValues],
     );
 
-    const duplicateProject = useCallback((project) => {
+    const duplicateProject = useCallback((project: AdminProject) => {
         setPendingDuplicateId(project.id);
 
         router.post(
@@ -667,6 +723,10 @@ export default function Index({ projects, filters }) {
                                     >
                                         {virtualRows.map((virtualRow) => {
                                             const project = projectsData[virtualRow.index];
+
+                                            if (!project) {
+                                                return null;
+                                            }
 
                                             return (
                                                 <div

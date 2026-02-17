@@ -18,8 +18,8 @@ Deliver a complete first vertical slice with public portfolio discovery and auth
 - Public homepage at `/` with intro, featured projects, and contact CTA.
 - Public project listing at `/projects`.
 - Public project detail at `/projects/{slug}` for published projects only.
-- Authenticated project management under `/dashboard/projects/*`.
-- Authenticated homepage settings management under `/dashboard/homepage`.
+- Owner-only authenticated project management under `/dashboard/projects/*`.
+- Owner-only authenticated homepage settings management under `/dashboard/homepage`.
 - Authenticated dashboard UX with workflow-first project operations (filters and inline flags).
 - One content model: `Project`.
 - One singleton settings model: `HomepageSettings`.
@@ -73,6 +73,7 @@ MVP contact CTA uses backend-provided config values exposed to frontend props:
 ## Public Navigation Consistency
 - Public header/footer use shared `PublicLayout` contract across:
   - `/`
+  - `/contact`
   - `/projects`
   - `/projects/{slug}`
 - Contact CTA visibility depends on `contact` prop from backend on all public pages.
@@ -80,6 +81,6 @@ MVP contact CTA uses backend-provided config values exposed to frontend props:
 ## Definition Of Done
 - Public pages and admin CRUD routes implemented.
 - Only published projects visible publicly.
-- Authenticated users can create/update/delete projects.
+- The configured owner can create/update/delete projects.
 - Test coverage added for public visibility and admin behavior.
 - `make check` passes.

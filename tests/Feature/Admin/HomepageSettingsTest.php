@@ -21,7 +21,7 @@ class HomepageSettingsTest extends TestCase
 
     public function test_authenticated_users_can_open_homepage_settings_page(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
 
         $response = $this->actingAs($user)->get(route('dashboard.homepage.edit'));
 
@@ -31,7 +31,7 @@ class HomepageSettingsTest extends TestCase
 
     public function test_authenticated_users_can_update_homepage_settings(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         HomepageSettings::query()->create(HomepageSettings::defaults());
 
         $payload = HomepageSettings::defaults();
@@ -50,7 +50,7 @@ class HomepageSettingsTest extends TestCase
 
     public function test_homepage_settings_update_validates_image_urls(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
 
         $payload = HomepageSettings::defaults();
         $payload['hero_image_url'] = 'not-a-url';
@@ -62,7 +62,7 @@ class HomepageSettingsTest extends TestCase
 
     public function test_homepage_settings_accepts_filename_only_image_inputs(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         HomepageSettings::query()->create(HomepageSettings::defaults());
 
         $payload = HomepageSettings::defaults();
@@ -83,7 +83,7 @@ class HomepageSettingsTest extends TestCase
 
     public function test_homepage_settings_update_clears_public_home_cache(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         HomepageSettings::query()->create(HomepageSettings::defaults());
         Cache::put(PublicCacheKeys::HOME_PAYLOAD, ['cached' => true], 600);
 
@@ -93,5 +93,13 @@ class HomepageSettingsTest extends TestCase
             ->assertRedirect(route('dashboard.homepage.edit'));
 
         $this->assertFalse(Cache::has(PublicCacheKeys::HOME_PAYLOAD));
+    }
+
+    public function test_non_owner_cannot_access_homepage_settings(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get(route('dashboard.homepage.edit'))->assertForbidden();
+        $this->actingAs($user)->put(route('dashboard.homepage.update'), HomepageSettings::defaults())->assertForbidden();
     }
 }

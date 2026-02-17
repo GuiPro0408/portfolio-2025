@@ -108,3 +108,22 @@ Actions:
 1. Confirm whether the migration is intentionally irreversible (non-destructive `down()`).
 2. Treat rollback as schema-only for those migrations and use explicit cleanup migrations for data changes.
 3. Document any manual remediation plan before running rollback in shared environments.
+
+## 9) Investigating Docker runtime errors quickly
+Symptom:
+- App errors are hard to trace from Docker output alone.
+
+Actions:
+1. Stream structured app logs from Docker:
+   ```bash
+   docker compose logs -f app
+   ```
+2. Inspect rotated Laravel file logs from the app container:
+   ```bash
+   docker compose exec app ls -lah storage/logs
+   docker compose exec app tail -n 200 storage/logs/laravel.log
+   ```
+3. Filter only error-level messages from Docker logs:
+   ```bash
+   docker compose logs app | grep -iE '\"level\":\"(error|critical|alert|emergency)\"|\\berror\\b'
+   ```

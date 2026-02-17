@@ -35,6 +35,12 @@ if [[ ! -f .env && -f .env.docker ]]; then
     cp .env.docker .env
 fi
 
+# Avoid stale cached config from host/local runs pinning Docker to wrong DB settings.
+if [[ -f bootstrap/cache/config.php ]]; then
+    echo "[php-dev-entrypoint] Removing stale Laravel config cache"
+    rm -f bootstrap/cache/config.php
+fi
+
 if [[ ! -f vendor/autoload.php ]]; then
     echo "[php-dev-entrypoint] Installing Composer dependencies"
     composer install --no-interaction

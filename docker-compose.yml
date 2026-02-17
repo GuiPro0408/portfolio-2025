@@ -7,6 +7,8 @@ services:
         UID: ${UID:-1000}
         GID: ${GID:-1000}
     image: portfolio-2025-app
+    env_file:
+      - .env.docker
     volumes:
       - ./:/var/www/html
       - vendor:/var/www/html/vendor
@@ -26,6 +28,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+        mode: non-blocking
+        max-buffer-size: "4m"
     networks:
       - app-network
 

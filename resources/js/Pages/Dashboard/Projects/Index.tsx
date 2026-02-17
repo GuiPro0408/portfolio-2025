@@ -14,6 +14,7 @@ import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Copy, LoaderCircle, MoreVertical, PenSquare, Trash2 } from 'lucide-react';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -101,7 +102,10 @@ interface MobileProjectCardProps {
     isPending: boolean;
     isSortPending: boolean;
     isDuplicatePending: boolean;
-    onOpenActions: (project: AdminProject) => void;
+    onTogglePublish: (project: AdminProject) => void;
+    onToggleFeatured: (project: AdminProject) => void;
+    onDuplicate: (project: AdminProject) => void;
+    onDelete: (project: AdminProject) => void;
 }
 
 const ProjectRow = memo(function ProjectRow({
@@ -237,7 +241,10 @@ const MobileProjectCard = memo(function MobileProjectCard({
     isPending,
     isSortPending,
     isDuplicatePending,
-    onOpenActions,
+    onTogglePublish,
+    onToggleFeatured,
+    onDuplicate,
+    onDelete,
 }: MobileProjectCardProps) {
     return (
         <article className="dashboard-project-card">
@@ -246,16 +253,81 @@ const MobileProjectCard = memo(function MobileProjectCard({
                     <p className="dashboard-row-title">{project.title}</p>
                     <InlineMeta>/{project.slug}</InlineMeta>
                 </div>
-                <button
-                    type="button"
-                    className="dashboard-inline-action"
-                    onClick={() => onOpenActions(project)}
-                    disabled={isPending || isSortPending}
-                    aria-label={`Open actions for ${project.title}`}
-                >
-                    <MoreVertical size={16} aria-hidden="true" />
-                    Actions
-                </button>
+                <Menu as="div" className="relative">
+                    <MenuButton
+                        className="dashboard-inline-action"
+                        disabled={isPending || isSortPending}
+                        aria-label={`Open actions for ${project.title}`}
+                    >
+                        <MoreVertical size={16} aria-hidden="true" />
+                        Actions
+                    </MenuButton>
+                    <MenuItems
+                        anchor="bottom end"
+                        className="z-[130] mt-2 w-64 rounded-lg border border-slate-700 bg-slate-950 p-2 shadow-2xl focus:outline-none"
+                    >
+                        <div className="mb-2 border-b border-slate-800 px-2 pb-2">
+                            <p className="line-clamp-2 text-sm font-semibold text-slate-100">
+                                {project.title}
+                            </p>
+                            <p className="line-clamp-1 text-xs text-slate-400">
+                                /{project.slug}
+                            </p>
+                        </div>
+
+                        <div className="grid gap-1.5">
+                            <MenuItem>
+                                <Link
+                                    href={route('dashboard.projects.edit', project.id)}
+                                    className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 font-semibold text-slate-100"
+                                >
+                                    <PenSquare size={15} aria-hidden="true" />
+                                    Edit
+                                </Link>
+                            </MenuItem>
+                            <MenuItem>
+                                <button
+                                    type="button"
+                                    className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-left font-semibold text-slate-100"
+                                    onClick={() => onDuplicate(project)}
+                                >
+                                    <Copy size={15} aria-hidden="true" />
+                                    {isDuplicatePending ? 'Duplicating...' : 'Duplicate'}
+                                </button>
+                            </MenuItem>
+                            <MenuItem>
+                                <button
+                                    type="button"
+                                    className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-left font-semibold text-slate-100"
+                                    onClick={() => onTogglePublish(project)}
+                                >
+                                    <LoaderCircle size={15} aria-hidden="true" />
+                                    Toggle publish
+                                </button>
+                            </MenuItem>
+                            <MenuItem>
+                                <button
+                                    type="button"
+                                    className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-left font-semibold text-slate-100"
+                                    onClick={() => onToggleFeatured(project)}
+                                >
+                                    <LoaderCircle size={15} aria-hidden="true" />
+                                    Toggle featured
+                                </button>
+                            </MenuItem>
+                            <MenuItem>
+                                <button
+                                    type="button"
+                                    className="inline-flex min-h-11 items-center gap-2 rounded-md border border-rose-800 bg-rose-950/50 px-3 py-2 text-left font-semibold text-rose-200"
+                                    onClick={() => onDelete(project)}
+                                >
+                                    <Trash2 size={15} aria-hidden="true" />
+                                    Delete
+                                </button>
+                            </MenuItem>
+                        </div>
+                    </MenuItems>
+                </Menu>
             </div>
 
             <div className="dashboard-badge-row">
@@ -294,7 +366,6 @@ export default function Index({ projects, filters }: DashboardProjectsIndexProps
     const [pendingDuplicateId, setPendingDuplicateId] = useState<number | null>(
         null,
     );
-    const [actionProject, setActionProject] = useState<AdminProject | null>(null);
     const [isFilterAccordionOpen, setIsFilterAccordionOpen] = useState(true);
 
     const projectsData = projects.data;
@@ -675,10 +746,6 @@ export default function Index({ projects, filters }: DashboardProjectsIndexProps
         );
     }, []);
 
-    const closeActionSheet = useCallback(() => {
-        setActionProject(null);
-    }, []);
-
     const virtualRows = rowVirtualizer.getVirtualItems();
 
     return (
@@ -781,7 +848,10 @@ export default function Index({ projects, filters }: DashboardProjectsIndexProps
                                         isPending={pendingRows[project.id] === true}
                                         isSortPending={pendingSortRows[project.id] === true}
                                         isDuplicatePending={pendingDuplicateId === project.id}
-                                        onOpenActions={setActionProject}
+                                        onTogglePublish={onTogglePublish}
+                                        onToggleFeatured={onToggleFeatured}
+                                        onDuplicate={duplicateProject}
+                                        onDelete={setProjectPendingDelete}
                                     />
                                 ))}
                             </div>
@@ -904,77 +974,6 @@ export default function Index({ projects, filters }: DashboardProjectsIndexProps
                         </DangerButton>
                     </div>
                 </div>
-            </Modal>
-
-            <Modal
-                show={actionProject !== null}
-                onClose={closeActionSheet}
-                maxWidth="md"
-            >
-                {actionProject ? (
-                    <div className="space-y-4 bg-slate-950 p-5 text-slate-100">
-                        <div className="space-y-1">
-                            <div>
-                                <h3 className="text-base font-semibold">{actionProject.title}</h3>
-                                <p className="text-sm text-slate-400">/{actionProject.slug}</p>
-                            </div>
-                        </div>
-                        <div className="grid gap-2">
-                            <Link
-                                href={route('dashboard.projects.edit', actionProject.id)}
-                                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-4 py-2 font-semibold text-slate-100"
-                                onClick={closeActionSheet}
-                            >
-                                <PenSquare size={15} aria-hidden="true" />
-                                Edit
-                            </Link>
-                            <button
-                                type="button"
-                                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-4 py-2 font-semibold text-slate-100"
-                                onClick={() => {
-                                    duplicateProject(actionProject);
-                                    closeActionSheet();
-                                }}
-                            >
-                                <Copy size={15} aria-hidden="true" />
-                                Duplicate
-                            </button>
-                            <button
-                                type="button"
-                                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-4 py-2 font-semibold text-slate-100"
-                                onClick={() => {
-                                    onTogglePublish(actionProject);
-                                    closeActionSheet();
-                                }}
-                            >
-                                <LoaderCircle size={15} aria-hidden="true" />
-                                Toggle publish
-                            </button>
-                            <button
-                                type="button"
-                                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-4 py-2 font-semibold text-slate-100"
-                                onClick={() => {
-                                    onToggleFeatured(actionProject);
-                                    closeActionSheet();
-                                }}
-                            >
-                                <LoaderCircle size={15} aria-hidden="true" />
-                                Toggle featured
-                            </button>
-                            <button
-                                type="button"
-                                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-rose-800 bg-rose-950/50 px-4 py-2 font-semibold text-rose-200"
-                                onClick={() => {
-                                    setProjectPendingDelete(actionProject);
-                                    closeActionSheet();
-                                }}
-                            >
-                                <Trash2 size={15} aria-hidden="true" />
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                ) : null}
             </Modal>
         </AuthenticatedLayout>
     );

@@ -48,4 +48,19 @@ class DatabaseSeederSecurityTest extends TestCase
         $this->assertDatabaseCount('homepage_settings', 1);
         $this->assertDatabaseCount('users', 1);
     }
+
+    public function test_database_seeder_skips_project_seed_when_project_seeding_is_disabled(): void
+    {
+        config()->set('portfolio.owner_password', 'StrongPass!123');
+        config()->set('portfolio.seed_projects', false);
+
+        $this->artisan('db:seed', [
+            '--class' => DatabaseSeeder::class,
+            '--force' => true,
+        ])->assertExitCode(0);
+
+        $this->assertDatabaseCount('projects', 0);
+        $this->assertDatabaseCount('homepage_settings', 1);
+        $this->assertDatabaseCount('users', 1);
+    }
 }

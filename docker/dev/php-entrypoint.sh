@@ -56,6 +56,11 @@ if [[ -f .env ]] && grep -qE '^APP_KEY=$' .env; then
     php artisan key:generate --ansi
 fi
 
+if [[ "${AUTO_MIGRATE_AND_SEED:-false}" =~ ^(1|true|TRUE|yes|YES|on|ON)$ ]]; then
+    echo "[php-dev-entrypoint] Running migrations and seeders"
+    php artisan migrate --seed --force --no-interaction
+fi
+
 mkdir -p storage/logs bootstrap/cache vendor
 chmod -R ug+rwX storage bootstrap/cache vendor
 

@@ -144,3 +144,19 @@ Actions:
    rg -n "<Head|<>|</>" resources/js/Pages -S
    ```
 4. If fragments are found inside `<Head>`, replace grouped fragments with separate conditional nodes.
+
+## 11) Docker app fails at startup with seeder/owner errors
+Symptom:
+- `app` container exits or logs a seeding error about owner credentials.
+
+Actions:
+1. Verify owner seed env vars are set in Docker env:
+   ```bash
+   docker compose exec app sh -lc 'printenv | grep -E "PORTFOLIO_OWNER_EMAIL|PORTFOLIO_OWNER_PASSWORD|AUTO_MIGRATE_AND_SEED|PORTFOLIO_SEED_PROJECTS"'
+   ```
+2. Ensure `PORTFOLIO_OWNER_PASSWORD` is non-empty.
+3. Re-run bootstrap after updating env:
+   ```bash
+   docker compose up -d --build app
+   docker compose logs --tail=200 app
+   ```

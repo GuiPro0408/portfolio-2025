@@ -31,7 +31,17 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
-        if (! app()->environment('production')) {
+        $seedProjectsConfig = config('portfolio.seed_projects');
+        $shouldSeedProjects = match (true) {
+            is_bool($seedProjectsConfig) => $seedProjectsConfig,
+            is_string($seedProjectsConfig) && trim($seedProjectsConfig) !== '' => (bool) filter_var(
+                $seedProjectsConfig,
+                FILTER_VALIDATE_BOOL,
+            ),
+            default => ! app()->environment('production'),
+        };
+
+        if ($shouldSeedProjects) {
             $this->call(ProjectSeeder::class);
         }
 

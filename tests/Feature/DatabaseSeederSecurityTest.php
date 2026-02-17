@@ -33,4 +33,19 @@ class DatabaseSeederSecurityTest extends TestCase
         $this->assertNotNull($owner);
         $this->assertTrue(Hash::check('StrongPass!123', $owner->password));
     }
+
+    public function test_database_seeder_skips_project_seed_when_environment_is_production(): void
+    {
+        config()->set('portfolio.owner_password', 'StrongPass!123');
+        $this->app->instance('env', 'production');
+
+        $this->artisan('db:seed', [
+            '--class' => DatabaseSeeder::class,
+            '--force' => true,
+        ])->assertExitCode(0);
+
+        $this->assertDatabaseCount('projects', 0);
+        $this->assertDatabaseCount('homepage_settings', 1);
+        $this->assertDatabaseCount('users', 1);
+    }
 }

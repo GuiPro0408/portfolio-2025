@@ -1,4 +1,4 @@
-.PHONY: setup setup-ci ensure-deps local-preflight dev run-project-locally check docs-check check-docker format test build analyse typecheck
+.PHONY: setup setup-ci ensure-deps local-preflight dev run-project-locally run-project-docker check docs-check check-docker format test build analyse typecheck
 
 setup:
 	composer install --prefer-dist --no-interaction
@@ -66,6 +66,11 @@ dev: local-preflight
 	APP_URL="http://127.0.0.1:$$app_port" npx concurrently -c "#93c5fd,#c4b5fd,#fb7185,#fdba74" "php artisan serve --host=127.0.0.1 --port=$$app_port --no-reload" "php artisan queue:listen --tries=1" "php artisan pail --timeout=0" "npm run dev -- --port $$vite_port" --names=server,queue,logs,vite --kill-others
 
 run-project-locally: dev
+
+run-project-docker:
+	docker compose up -d
+	@echo "Docker stack started."
+	@docker compose ps
 
 check:
 	$(MAKE) docs-check

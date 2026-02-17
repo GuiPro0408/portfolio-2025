@@ -31,7 +31,10 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
-        $this->call(ProjectSeeder::class);
+        if (! app()->environment('production')) {
+            $this->call(ProjectSeeder::class);
+        }
+
         $this->call(HomepageSettingsSeeder::class);
     }
 }

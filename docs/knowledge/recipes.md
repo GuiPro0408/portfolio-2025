@@ -28,7 +28,11 @@ Step-by-step patterns for common engineering tasks in this repository.
 2. Keep secret values out of repository docs.
 3. Verify migration/runtime implications.
 4. If process changed, update `docs/QUALITY.md` or `docs/knowledge/*`.
-5. Run `make check`.
+5. Run:
+   ```bash
+   make prod-readiness
+   make check
+   ```
 
 ## 5) Add a new ADR
 1. Copy ADR structure from existing entries in `docs/decisions/`.

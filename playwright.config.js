@@ -18,7 +18,7 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: 'php artisan serve --host=127.0.0.1 --port=8000',
+        command: 'rm -f public/hot && php artisan serve --host=127.0.0.1 --port=8000',
         url: process.env.APP_URL || 'http://127.0.0.1:8000',
         reuseExistingServer: !process.env.CI,
     },

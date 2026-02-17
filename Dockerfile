@@ -25,8 +25,9 @@ WORKDIR /app
 # Copy composer files
 COPY composer.json composer.lock ./
 
-# Install dependencies (no dev)
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+# Install dependencies (no dev) without Laravel scripts.
+# Scripts are executed in the runtime stage after the full app is copied.
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 
 # Stage 3: Runtime image
 FROM webdevops/php-nginx:8.3-alpine
@@ -46,6 +47,12 @@ COPY --from=composer --chown=application:application /app/vendor /app/vendor
 
 # Copy built assets from frontend stage
 COPY --from=frontend --chown=application:application /app/public/build /app/public/build
+
+# Remove any local cache artifacts copied from the build context.
+RUN rm -f /app/bootstrap/cache/*.php
+
+# Run package discovery once all source files and vendors are available.
+RUN php artisan package:discover --ansi
 
 # Set correct permissions
 RUN chown -R application:application /app/storage /app/bootstrap/cache \

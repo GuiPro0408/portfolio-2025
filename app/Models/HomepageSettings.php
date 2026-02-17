@@ -15,6 +15,7 @@ class HomepageSettings extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'singleton_key',
         'hero_eyebrow',
         'hero_headline',
         'hero_subheadline',
@@ -40,7 +41,10 @@ class HomepageSettings extends Model
 
     public static function current(): self
     {
-        return static::query()->firstOrCreate([], static::defaults());
+        return static::query()->firstOrCreate(
+            ['singleton_key' => 1],
+            ['singleton_key' => 1, ...static::defaults()],
+        );
     }
 
     /**

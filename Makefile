@@ -1,4 +1,4 @@
-.PHONY: setup setup-ci ensure-deps dev check docs-check check-docker format test build analyse
+.PHONY: setup setup-ci ensure-deps ensure-docker-env local-preflight dev run-project-locally run-project-docker run-project-docker-prod prod-readiness check docs-check check-docker format test build analyse typecheck
 
 setup:
 	composer install --prefer-dist --no-interaction
@@ -14,14 +14,87 @@ ensure-deps:
 		$(MAKE) setup; \
 	fi
 
-dev: ensure-deps
-	composer run dev
+local-preflight: ensure-deps
+	@set -eu; \
+	if command -v docker >/dev/null 2>&1; then \
+		running_services=$$(docker compose -f docker-compose.yml ps --status running --services 2>/dev/null || true); \
+		if [ -n "$$running_services" ]; then \
+			echo "Docker services are currently running:"; \
+			echo "$$running_services"; \
+			echo "Stop Docker services before native local run:"; \
+			echo "  docker compose -f docker-compose.yml down"; \
+			exit 1; \
+		fi; \
+	fi
+	@set -eu; \
+	if [ ! -f .env ]; then \
+		echo "No .env found. Copying from .env.example..."; \
+		cp .env.example .env; \
+	fi; \
+	if ! grep -Eq '^APP_KEY=base64:' .env; then \
+		echo "APP_KEY missing. Generating application key..."; \
+		php artisan key:generate --force --no-interaction; \
+	fi; \
+	if grep -Eq '^DB_CONNECTION=sqlite' .env; then \
+		db_path=$$(grep -E '^DB_DATABASE=' .env | tail -n 1 | cut -d= -f2-); \
+		if [ -z "$$db_path" ]; then db_path=database/database.sqlite; fi; \
+		case "$$db_path" in /*) : ;; *) db_path="$$PWD/$$db_path" ;; esac; \
+		mkdir -p "$$(dirname "$$db_path")"; \
+		if [ ! -f "$$db_path" ]; then \
+			echo "Creating SQLite database at $$db_path"; \
+			touch "$$db_path"; \
+		fi; \
+	fi; \
+	if ! php artisan migrate:status --no-interaction >/dev/null 2>&1; then \
+		echo "Database not ready. Running migrations and seeders..."; \
+		php artisan migrate --seed --force --no-interaction; \
+	fi
+
+dev: local-preflight
+	@set -eu; \
+	app_port=8000; \
+	while ! php -r '$$p=(int)$$argv[1]; $$s=@stream_socket_server("tcp://127.0.0.1:$$p", $$errno, $$errstr); if ($$s) { fclose($$s); exit(0); } exit(1);' "$$app_port"; do \
+		app_port=$$((app_port + 1)); \
+	done; \
+	vite_port=5173; \
+	while ! php -r '$$p=(int)$$argv[1]; $$s=@stream_socket_server("tcp://127.0.0.1:$$p", $$errno, $$errstr); if ($$s) { fclose($$s); exit(0); } exit(1);' "$$vite_port"; do \
+		vite_port=$$((vite_port + 1)); \
+	done; \
+	echo "Starting local stack on:"; \
+	echo "  - App:  http://127.0.0.1:$$app_port"; \
+	echo "  - Vite: http://localhost:$$vite_port"; \
+	APP_URL="http://127.0.0.1:$$app_port" npx concurrently -c "#93c5fd,#c4b5fd,#fb7185,#fdba74" "php artisan serve --host=127.0.0.1 --port=$$app_port --no-reload" "php artisan queue:listen --tries=1" "php artisan pail --timeout=0" "npm run dev -- --port $$vite_port" --names=server,queue,logs,vite --kill-others
+
+run-project-locally: dev
+
+ensure-docker-env:
+	@set -eu; \
+	if [ ! -f .env.docker.local ]; then \
+		echo "No .env.docker.local found. Copying from .env.docker.example..."; \
+		cp .env.docker.example .env.docker.local; \
+	fi
+
+run-project-docker: ensure-docker-env
+	docker compose -f docker-compose.yml up -d
+	@echo "Docker stack started."
+	@docker compose -f docker-compose.yml ps
+
+run-project-docker-prod:
+	docker compose -f docker-compose.prod.yml up -d
+	@echo "Production compose stack started."
+	@docker compose -f docker-compose.prod.yml ps
+
+prod-readiness:
+	./scripts/check-prod-readiness.sh
 
 check:
+	$(MAKE) docs-check
 	composer validate --strict
 	composer run lint:php
 	composer run lint:static
 	composer test
+	npm run lint
+	npm run typecheck
 	npm run build
 
 analyse:
@@ -29,12 +102,20 @@ analyse:
 
 docs-check:
 	./scripts/check-docs.sh
+	./scripts/check-prod-readiness.sh
+	node scripts/check-agent-contract.mjs
+	node scripts/check-memory-registry.mjs
 
 check-docker:
-	docker compose exec -T app composer validate --strict
-	docker compose exec -T app composer run lint:php
-	docker compose exec -T app composer test
-	docker compose exec -T vite npm run build
+	$(MAKE) docs-check
+	docker compose -f docker-compose.yml exec -T app sh -lc 'while [ ! -f vendor/autoload.php ]; do echo "Waiting for Composer dependencies..."; sleep 1; done'
+	docker compose -f docker-compose.yml exec -T app composer validate --strict
+	docker compose -f docker-compose.yml exec -T app composer run lint:php
+	docker compose -f docker-compose.yml exec -T app composer run lint:static
+	docker compose -f docker-compose.yml exec -T -e APP_ENV=testing app composer test
+	docker compose -f docker-compose.yml exec -T -u node vite npm run lint
+	docker compose -f docker-compose.yml exec -T -u node vite npm run typecheck
+	docker compose -f docker-compose.yml exec -T -u node vite npm run build
 
 format:
 	composer run format:php
@@ -44,3 +125,6 @@ test:
 
 build:
 	npm run build
+
+typecheck:
+	npm run typecheck

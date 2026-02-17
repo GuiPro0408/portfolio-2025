@@ -1,0 +1,20 @@
+- id: canonical-docs-system-of-record
+  statement: "Docs under docs/ are canonical except docs/archive, and mirrors must defer to canonical docs."
+  source_path: "docs/SYSTEM-OF-RECORD.md"
+  verified_at: "2026-02-17"
+  owner: "engineering"
+  expiry_days: 180
+
+- id: golden-quality-gate
+  statement: "The golden quality gate is make check, and docs integrity must be validated through make docs-check."
+  source_path: "docs/HARNESS.md"
+  verified_at: "2026-02-17"
+  owner: "engineering"
+  expiry_days: 180
+
+- id: feature-boundary-policy
+  statement: "Feature implementations must respect Laravel/Inertia boundaries defined in docs/ARCHITECTURE.md."
+  source_path: "docs/ARCHITECTURE.md"
+  verified_at: "2026-02-17"
+  owner: "engineering"
+  expiry_days: 180

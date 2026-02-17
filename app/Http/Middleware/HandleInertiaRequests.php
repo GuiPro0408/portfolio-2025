@@ -38,6 +38,10 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
+            'seo' => [
+                'social_default_image' => config('portfolio.social_default_image'),
+                'site_name' => config('portfolio.social_site_name', config('app.name')),
+            ],
         ];
     }
 }

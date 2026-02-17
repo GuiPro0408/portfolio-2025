@@ -60,8 +60,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::table('project_technology')->truncate();
-        DB::table('technologies')->truncate();
+        // This data backfill is intentionally non-reversible to avoid destructive rollbacks.
+        // Existing technology and pivot rows may include records created after the migration ran.
     }
 
     /**

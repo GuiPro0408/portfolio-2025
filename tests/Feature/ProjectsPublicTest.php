@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\HomepageSettings;
 use App\Models\Project;
+use App\Support\HomepageSettingsContract;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -49,6 +50,11 @@ class ProjectsPublicTest extends TestCase
             ->where('contact.linkedin', 'https://linkedin.com/in/example')
             ->where('contact.github', 'https://github.com/example')
             ->has('homepageSettings')
+            ->where('homepageSettings', function ($settings): bool {
+                $settingsArray = is_array($settings) ? $settings : $settings->toArray();
+
+                return array_keys($settingsArray) === HomepageSettingsContract::PUBLIC_FIELDS;
+            })
             ->where('homepageSettings.hero_headline', HomepageSettings::defaults()['hero_headline']));
     }
 
@@ -197,8 +203,8 @@ class ProjectsPublicTest extends TestCase
         ]);
 
         $response = $this->get(route('projects.index', [
-            'q' => 'crm',
-            'stack' => 'React',
+            'q' => 'CrM',
+            'stack' => 'rEaCt',
             'sort' => 'newest',
         ]));
 
@@ -206,8 +212,8 @@ class ProjectsPublicTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Projects/Index')
-                ->where('filters.q', 'crm')
-                ->where('filters.stack', 'React')
+                ->where('filters.q', 'CrM')
+                ->where('filters.stack', 'rEaCt')
                 ->where('filters.sort', 'newest')
                 ->where('projects.data', fn ($projects) => collect($projects)
                     ->pluck('title')

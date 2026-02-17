@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\OwnerAuthorization;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateProjectFlagsRequest extends FormRequest
@@ -11,7 +12,7 @@ class UpdateProjectFlagsRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return OwnerAuthorization::isOwner($this->user());
     }
 
     /**

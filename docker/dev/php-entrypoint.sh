@@ -46,6 +46,11 @@ if [[ ! -f vendor/autoload.php ]]; then
     composer install --no-interaction
 fi
 
+if [[ -z "${APP_KEY:-}" ]]; then
+    echo "[php-dev-entrypoint] APP_KEY is empty in environment, generating ephemeral key"
+    export APP_KEY="base64:$(php -r 'echo base64_encode(random_bytes(32));')"
+fi
+
 if [[ -f .env ]] && grep -qE '^APP_KEY=$' .env; then
     echo "[php-dev-entrypoint] Generating APP_KEY"
     php artisan key:generate --ansi

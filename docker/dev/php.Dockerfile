@@ -39,4 +39,4 @@ ENV PATH="/var/www/html/vendor/bin:${PATH}" \
     COMPOSER_HOME="/home/laravel/.composer"
 
 ENTRYPOINT ["php-dev-entrypoint"]
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["sh", "-lc", "cd public && exec php -S 0.0.0.0:8000 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php"]

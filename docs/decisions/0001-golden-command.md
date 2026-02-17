@@ -12,15 +12,7 @@ Before harness standardization, validation, linting, testing, and build could be
 Adopt `make check` as the single golden quality command.
 
 `make check` must run the full harness-integrated quality sequence.
-The exact ordered step list is canonical in `docs/HARNESS.md`, and currently includes:
-1. `./scripts/check-docs.sh`
-2. `composer validate --strict`
-3. `composer run lint:php`
-4. `composer run lint:static`
-5. `composer test`
-6. `npm run lint`
-7. `npm run typecheck`
-8. `npm run build`
+The exact ordered step list is canonical only in `docs/HARNESS.md`.
 
 ## Consequences
 - Pros:

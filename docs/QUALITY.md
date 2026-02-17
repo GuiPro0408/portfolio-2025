@@ -7,6 +7,7 @@ Command-level definitions are canonical in [`docs/HARNESS.md`](HARNESS.md).
 - Run `make docs-check` and `make check` before opening a PR.
 - Keep CI green on the same command path as local (`setup-ci -> docs-check -> check`).
 - Treat Docker checks as parity checks when container workflow is used.
+- Treat `make docs-check` as a contract gate for docs integrity, agent artifact structure, and memory freshness.
 
 ## Test Expectations
 - Backend behavior changes require tests in `tests/Feature` and/or `tests/Unit`.

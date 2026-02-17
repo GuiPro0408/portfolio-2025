@@ -38,6 +38,11 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - Large dashboard collections should use virtualized rendering windows (`@tanstack/react-virtual`) to cap DOM node count while preserving row semantics.
 - Route-level CSS loading is enforced via layout/page imports (`PublicLayout`, `AuthenticatedLayout`, and page-specific imports like `Contact`) instead of app-wide style imports.
 
+## UI Performance Baseline
+- `/projects` and `/dashboard/projects` remain server-driven filter UIs with partial reload discipline and active criteria chips.
+- Dashboard project rows remain virtualized; preserve table semantics, accessibility roles, and inline row actions when changing rendering behavior.
+- Route-specific CSS loading remains separated by surface (`PublicLayout`, `AuthenticatedLayout`, and page-specific imports) rather than app-wide imports.
+
 ## Data/Schema Boundaries
 - Schema changes: `database/migrations`.
 - Seed data: `database/seeders`.

@@ -6,6 +6,8 @@ Use this file as the working contract for agents in this repository.
 - `docs/` is the system of record.
 - Keep changes small and reviewable.
 - Do not print secret values from `.env` files.
+- Quality command contract is canonical in `docs/HARNESS.md`.
+- Specialized role contracts and handoff templates are defined in `docs/agents/WORKFLOW.md`.
 
 ## Repo Map
 - `app/`: Laravel controllers, requests, models, providers.
@@ -19,6 +21,8 @@ Use this file as the working contract for agents in this repository.
 - `make setup`: install PHP and Node dependencies.
 - `make setup-ci`: deterministic CI install (`composer install` + `npm ci`).
 - `make dev`: run local dev stack (`composer run dev`).
+- `make run-project-locally`: alias for `make dev`.
+- `make docs-check`: validate docs contract, agent templates, and memory registry.
 - `make check`: validate + lint + test + frontend build (CI parity).
 - `make check-docker`: run the same check set through Docker services.
 - `make format`: auto-format PHP with Pint.
@@ -34,7 +38,7 @@ Docker parity:
 2. Add backend behavior in `app/` (request validation, controller orchestration, domain logic).
 3. Add UI behavior in `resources/js/Pages` and reusable pieces in `resources/js/Components`.
 4. Add/update tests in `tests/Feature` or `tests/Unit`.
-5. Run `make check` before opening a PR.
+5. Run `make docs-check` and `make check` before opening a PR.
 6. Update docs in `docs/` when behavior or workflow changes.
 7. Keep root `README.md` and `docs/README.md` links/summaries aligned with current implemented routes and contracts.
 8. Ask for explicit user permission before creating any commit.
@@ -42,6 +46,9 @@ Docker parity:
 ## Definition Of Done
 - Behavior implemented with correct Laravel/Inertia boundary.
 - Tests added/updated for changed behavior.
+- For behavior/workflow changes, evidence is captured for:
+  - `make docs-check`
+  - `make check`
 - `make check` passes locally.
 - `make check-docker` passes when Docker workflow is used.
 - CI uses the same check path (`make check`) and passes.

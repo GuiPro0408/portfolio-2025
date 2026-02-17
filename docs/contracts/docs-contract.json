@@ -1,0 +1,108 @@
+{
+  "requiredFiles": [
+    "docs/README.md",
+    "docs/ARCHITECTURE.md",
+    "docs/HARNESS.md",
+    "docs/SYSTEM-OF-RECORD.md",
+    "docs/QUALITY.md",
+    "docs/DEPLOY.md",
+    "docs/MVP.md",
+    "docs/ROADMAP.md",
+    "docs/agents/WORKFLOW.md",
+    "docs/agents/CONTEXT-MAP.md",
+    "docs/agents/MEMORY-LIFECYCLE.md",
+    "docs/agents/memory-registry.yaml",
+    "docs/contracts/docs-contract.json",
+    ".github/pull_request_template.md",
+    "README.md",
+    "LOCAL_SETUP.md",
+    "DEPLOYMENT.md",
+    "AGENTS.md"
+  ],
+  "requiredLinks": [
+    {
+      "file": "README.md",
+      "mustInclude": [
+        "docs/README.md",
+        "docs/HARNESS.md",
+        "docs/SYSTEM-OF-RECORD.md"
+      ]
+    },
+    {
+      "file": "docs/README.md",
+      "mustInclude": [
+        "HARNESS.md",
+        "SYSTEM-OF-RECORD.md",
+        "agents/WORKFLOW.md"
+      ]
+    },
+    {
+      "file": "docs/QUALITY.md",
+      "mustInclude": [
+        "HARNESS.md"
+      ]
+    },
+    {
+      "file": "AGENTS.md",
+      "mustInclude": [
+        "docs/ARCHITECTURE.md",
+        "docs/HARNESS.md",
+        "docs/agents/WORKFLOW.md"
+      ]
+    }
+  ],
+  "docsReadmeCoverage": {
+    "coreDocs": [
+      "docs/ARCHITECTURE.md",
+      "docs/HARNESS.md",
+      "docs/SYSTEM-OF-RECORD.md",
+      "docs/QUALITY.md",
+      "docs/DEPLOY.md",
+      "docs/MVP.md",
+      "docs/ROADMAP.md",
+      "docs/agents/WORKFLOW.md",
+      "docs/agents/CONTEXT-MAP.md",
+      "docs/agents/MEMORY-LIFECYCLE.md"
+    ],
+    "knowledgeDir": "docs/knowledge",
+    "decisionsDir": "docs/decisions"
+  },
+  "mirrorDocs": {
+    "bannerPhrase": "Canonical source:",
+    "maxScanLines": 25,
+    "files": [
+      "README.md",
+      "LOCAL_SETUP.md",
+      "DEPLOYMENT.md"
+    ]
+  },
+  "qualityGate": {
+    "sharedSequence": [
+      "make docs-check",
+      "composer validate --strict",
+      "composer run lint:php",
+      "composer run lint:static",
+      "composer test",
+      "npm run lint",
+      "npm run typecheck",
+      "npm run build"
+    ],
+    "harnessPath": "docs/HARNESS.md",
+    "makefilePath": "Makefile"
+  },
+  "duplicateCommandGuard": {
+    "minimumTokenMatches": 5,
+    "commandTokens": [
+      "composer validate --strict",
+      "composer run lint:php",
+      "composer run lint:static",
+      "composer test",
+      "npm run lint",
+      "npm run typecheck",
+      "npm run build"
+    ],
+    "ignoreFiles": [
+      "docs/HARNESS.md"
+    ]
+  }
+}

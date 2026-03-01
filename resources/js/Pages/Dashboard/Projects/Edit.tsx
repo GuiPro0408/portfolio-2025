@@ -6,22 +6,25 @@ import { Head, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 
 type ProjectFormPageData = Omit<ProjectFormData, 'cover_image'>;
+type EditProjectFormData = ProjectFormData & { _method: 'put' };
 
 interface EditProjectPageProps {
     project: ProjectFormPageData & { id: number };
 }
 
 export default function Edit({ project }: EditProjectPageProps) {
-    const { data, setData, put, processing, errors } = useForm<ProjectFormData>(
+    const { data, setData, post, processing, errors } = useForm<EditProjectFormData>(
         {
             ...project,
             cover_image: null,
+            _method: 'put',
         },
     );
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        put(route('dashboard.projects.update', project.id), {
+
+        post(route('dashboard.projects.update', project.id), {
             forceFormData: true,
             preserveScroll: true,
         });

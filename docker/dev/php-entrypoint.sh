@@ -56,6 +56,22 @@ if [[ -f .env ]] && grep -qE '^APP_KEY=$' .env; then
     php artisan key:generate --ansi
 fi
 
+storage_link_path="${APP_DIR}/public/storage"
+storage_link_target="../storage/app/public"
+
+if [[ -L "${storage_link_path}" ]]; then
+    current_target="$(readlink "${storage_link_path}" || true)"
+
+    if [[ "${current_target}" != "${storage_link_target}" ]]; then
+        echo "[php-dev-entrypoint] Rebuilding storage symlink"
+        rm -f "${storage_link_path}"
+        ln -s "${storage_link_target}" "${storage_link_path}"
+    fi
+elif [[ ! -e "${storage_link_path}" ]]; then
+    echo "[php-dev-entrypoint] Creating storage symlink"
+    ln -s "${storage_link_target}" "${storage_link_path}"
+fi
+
 if [[ "${AUTO_MIGRATE_AND_SEED:-false}" =~ ^(1|true|TRUE|yes|YES|on|ON)$ ]]; then
     echo "[php-dev-entrypoint] Running migrations and seeders"
     php artisan migrate --seed --force --no-interaction

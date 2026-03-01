@@ -69,7 +69,7 @@ export default function FeaturedProjectsGrid({
                     {projects.map((project, index) => {
                         const tags = toTags(project.stack);
                         const imageUrl =
-                            imageOverrides[index] ?? project.cover_image_url;
+                            project.cover_image_url ?? imageOverrides[index];
                         const imageIsBroken = failedImages[project.id] === true;
                         const imageSrcSet = buildSrcset(imageUrl);
 

@@ -34,6 +34,7 @@ function formatStack(stack: string | null): string[] {
 
 export default function Show({ project, contact }: ProjectShowPageProps) {
     const { seo = {} } = usePage<SharedPageProps>().props;
+    const personName = seo.person_name ?? 'Guillaume Juste';
     const tags = formatStack(project.stack);
     const metaDescription =
         project.summary ??
@@ -44,8 +45,9 @@ export default function Show({ project, contact }: ProjectShowPageProps) {
         seo.social_default_image,
         canonicalUrl,
     );
+    const ogTitle = `${project.title} | ${personName}`;
 
-    const structuredData = {
+    const projectStructuredData = {
         '@context': 'https://schema.org',
         '@type': 'CreativeWork',
         name: project.title,
@@ -53,23 +55,39 @@ export default function Show({ project, contact }: ProjectShowPageProps) {
         url: canonicalUrl,
         image: project.cover_image_url ?? undefined,
         keywords: tags.length > 0 ? tags.join(', ') : undefined,
+        datePublished: project.published_at ?? undefined,
+        author: {
+            '@type': 'Person',
+            name: personName,
+            url: route('home'),
+        },
+    };
+
+    const breadcrumbStructuredData = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: route('home') },
+            { '@type': 'ListItem', position: 2, name: 'Projects', item: route('projects.index') },
+            { '@type': 'ListItem', position: 3, name: project.title, item: canonicalUrl },
+        ],
     };
 
     return (
         <>
             <Head title={project.title}>
                 <meta name="description" content={metaDescription} />
+                <meta name="author" content={personName} />
                 <meta property="og:type" content="article" />
                 <meta property="og:url" content={canonicalUrl} />
                 {seo.site_name ? (
                     <meta property="og:site_name" content={seo.site_name} />
                 ) : null}
-                <meta
-                    property="og:title"
-                    content={`${project.title} | Guillaume Juste`}
-                />
+                <meta property="og:title" content={ogTitle} />
                 <meta property="og:description" content={metaDescription} />
                 {socialImage ? <meta property="og:image" content={socialImage} /> : null}
+                {socialImage ? <meta property="og:image:width" content="1200" /> : null}
+                {socialImage ? <meta property="og:image:height" content="630" /> : null}
                 {socialImage ? (
                     <meta
                         property="og:image:alt"
@@ -80,17 +98,17 @@ export default function Show({ project, contact }: ProjectShowPageProps) {
                     name="twitter:card"
                     content={socialImage ? 'summary_large_image' : 'summary'}
                 />
-                <meta
-                    name="twitter:title"
-                    content={`${project.title} | Guillaume Juste`}
-                />
+                <meta name="twitter:title" content={ogTitle} />
                 <meta name="twitter:description" content={metaDescription} />
                 {socialImage ? (
                     <meta name="twitter:image" content={socialImage} />
                 ) : null}
                 <link rel="canonical" href={canonicalUrl} />
                 <script type="application/ld+json">
-                    {JSON.stringify(structuredData)}
+                    {JSON.stringify(projectStructuredData)}
+                </script>
+                <script type="application/ld+json">
+                    {JSON.stringify(breadcrumbStructuredData)}
                 </script>
             </Head>
 

@@ -53,7 +53,7 @@ class HomepageSettings extends Model
     public static function defaults(): array
     {
         return [
-            'hero_eyebrow' => 'Full-Stack Web Developer',
+            'hero_eyebrow' => 'Software Engineer',
             'hero_headline' => 'I design and build web products that move real business goals.',
             'hero_subheadline' => 'Mauritius-based engineer focused on clean architecture, practical delivery, and interfaces people actually enjoy using.',
             'hero_primary_cta_label' => 'Start a conversation',

@@ -26,6 +26,8 @@ export default function Welcome({
     homepageSettings,
 }: WelcomePageProps) {
     const { seo = {} } = usePage<SharedPageProps>().props;
+    const personName = seo.person_name ?? 'Guillaume Juste';
+    const jobTitle = seo.job_title ?? 'Software Engineer';
     const metaDescription =
         homepageSettings?.hero_subheadline ??
         'Full-stack portfolio focused on clean architecture and practical product delivery.';
@@ -39,46 +41,70 @@ export default function Welcome({
         canonicalUrl,
     );
 
-    const structuredData = {
+    const pageTitle = `${personName} — ${jobTitle}`;
+    const ogTitle = `${personName} — ${jobTitle}`;
+
+    const personStructuredData = {
         '@context': 'https://schema.org',
         '@type': 'Person',
-        name: 'Guillaume Juste',
+        name: personName,
         url: canonicalUrl,
-        jobTitle: homepageSettings?.hero_eyebrow,
+        jobTitle: jobTitle,
         description: metaDescription,
         sameAs: [contact?.linkedin, contact?.github].filter(Boolean),
     };
 
+    const websiteStructuredData = {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: seo.site_name ?? personName,
+        url: canonicalUrl,
+        potentialAction: {
+            '@type': 'SearchAction',
+            target: {
+                '@type': 'EntryPoint',
+                urlTemplate: route('projects.index') + '?q={search_term_string}',
+            },
+            'query-input': 'required name=search_term_string',
+        },
+    };
+
     return (
         <>
-            <Head title="Portfolio">
+            <Head title={pageTitle}>
                 <meta name="description" content={metaDescription} />
+                <meta name="author" content={personName} />
                 <meta property="og:type" content="website" />
                 <meta property="og:url" content={canonicalUrl} />
                 {seo.site_name ? (
                     <meta property="og:site_name" content={seo.site_name} />
                 ) : null}
-                <meta property="og:title" content="Portfolio | Guillaume Juste" />
+                <meta property="og:title" content={ogTitle} />
                 <meta property="og:description" content={metaDescription} />
                 {socialImage ? <meta property="og:image" content={socialImage} /> : null}
+                {socialImage ? <meta property="og:image:width" content="1200" /> : null}
+                {socialImage ? <meta property="og:image:height" content="630" /> : null}
                 {socialImage ? (
                     <meta
                         property="og:image:alt"
-                        content="Guillaume Juste portfolio cover image"
+                        content={`${personName} portfolio cover image`}
                     />
                 ) : null}
                 <meta
                     name="twitter:card"
                     content={socialImage ? 'summary_large_image' : 'summary'}
                 />
-                <meta name="twitter:title" content="Portfolio | Guillaume Juste" />
+                <meta name="twitter:title" content={ogTitle} />
                 <meta name="twitter:description" content={metaDescription} />
                 {socialImage ? (
                     <meta name="twitter:image" content={socialImage} />
                 ) : null}
                 <link rel="canonical" href={canonicalUrl} />
                 <script type="application/ld+json">
-                    {JSON.stringify(structuredData)}
+                    {JSON.stringify(personStructuredData)}
+                </script>
+                <script type="application/ld+json">
+                    {JSON.stringify(websiteStructuredData)}
                 </script>
             </Head>
 

@@ -24,6 +24,8 @@ export interface SharedPageProps extends Record<string, unknown> {
     seo?: {
         social_default_image?: string | null;
         site_name?: string | null;
+        person_name?: string | null;
+        job_title?: string | null;
     };
 }
 

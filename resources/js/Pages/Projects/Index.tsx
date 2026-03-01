@@ -351,6 +351,8 @@ export default function Index({
     const metaDescription =
         'Published software projects showcasing delivery quality, architecture, and measurable outcomes.';
     const canonicalUrl = route('projects.index');
+    const personName = seo.person_name ?? 'Guillaume Juste';
+    const ogTitle = `Projects | ${personName}`;
     const projectItems = useMemo<ProjectCardData[]>(
         () => projects.data ?? [],
         [projects.data],
@@ -381,12 +383,13 @@ export default function Index({
         <>
             <Head title="Projects">
                 <meta name="description" content={metaDescription} />
+                <meta name="author" content={personName} />
                 <meta property="og:type" content="website" />
                 <meta property="og:url" content={canonicalUrl} />
                 {seo.site_name ? (
                     <meta property="og:site_name" content={seo.site_name} />
                 ) : null}
-                <meta property="og:title" content="Projects | Guillaume Juste" />
+                <meta property="og:title" content={ogTitle} />
                 <meta property="og:description" content={metaDescription} />
                 {socialImage ? <meta property="og:image" content={socialImage} /> : null}
                 {socialImage ? (
@@ -399,7 +402,7 @@ export default function Index({
                     name="twitter:card"
                     content={socialImage ? 'summary_large_image' : 'summary'}
                 />
-                <meta name="twitter:title" content="Projects | Guillaume Juste" />
+                <meta name="twitter:title" content={ogTitle} />
                 <meta name="twitter:description" content={metaDescription} />
                 {socialImage ? (
                     <meta name="twitter:image" content={socialImage} />

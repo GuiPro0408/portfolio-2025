@@ -46,6 +46,8 @@ export default function Contact({ contact, formStartedAt }: ContactPageProps) {
     const metaDescription =
         'Send a project or collaboration inquiry through the portfolio contact form.';
     const canonicalUrl = route('contact.index');
+    const personName = seo.person_name ?? 'Guillaume Juste';
+    const ogTitle = `Contact | ${personName}`;
     const socialImage = resolveSocialImage(
         [],
         seo.social_default_image,
@@ -55,7 +57,7 @@ export default function Contact({ contact, formStartedAt }: ContactPageProps) {
     const contactSchema = {
         '@context': 'https://schema.org',
         '@type': 'ContactPage',
-        name: 'Contact Guillaume Juste',
+        name: `Contact ${personName}`,
         url: canonicalUrl,
     };
 
@@ -63,25 +65,26 @@ export default function Contact({ contact, formStartedAt }: ContactPageProps) {
         <>
             <Head title="Contact">
                 <meta name="description" content={metaDescription} />
+                <meta name="author" content={personName} />
                 <meta property="og:type" content="website" />
                 <meta property="og:url" content={canonicalUrl} />
                 {seo.site_name ? (
                     <meta property="og:site_name" content={seo.site_name} />
                 ) : null}
-                <meta property="og:title" content="Contact | Guillaume Juste" />
+                <meta property="og:title" content={ogTitle} />
                 <meta property="og:description" content={metaDescription} />
                 {socialImage ? <meta property="og:image" content={socialImage} /> : null}
                 {socialImage ? (
                     <meta
                         property="og:image:alt"
-                        content="Guillaume Juste portfolio contact page image"
+                        content={`${personName} portfolio contact page image`}
                     />
                 ) : null}
                 <meta
                     name="twitter:card"
                     content={socialImage ? 'summary_large_image' : 'summary'}
                 />
-                <meta name="twitter:title" content="Contact | Guillaume Juste" />
+                <meta name="twitter:title" content={ogTitle} />
                 <meta name="twitter:description" content={metaDescription} />
                 {socialImage ? (
                     <meta name="twitter:image" content={socialImage} />

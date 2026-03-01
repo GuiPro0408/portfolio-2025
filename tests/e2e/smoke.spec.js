@@ -22,7 +22,7 @@ async function loginAsOwner(page) {
 
     await page.goto('/login');
     await page.getByLabel('Email').fill(email);
-    await page.getByLabel('Password').fill(password);
+    await page.getByRole('textbox', { name: 'Password' }).fill(password);
     await page.getByRole('button', { name: 'Log in' }).click();
     await expect(page).toHaveURL(/\/dashboard$/);
 }
@@ -183,7 +183,9 @@ test('dashboard mobile nav and projects action sheet smoke', async ({ page }) =>
     await expect(actionsButton).toBeVisible();
     await actionsButton.click();
 
-    await page.getByRole('link', { name: 'Edit' }).click();
+    const editAction = page.locator('a:visible', { hasText: 'Edit' }).first();
+    await expect(editAction).toBeVisible();
+    await editAction.click();
     await expect(page).toHaveURL(/\/dashboard\/projects\/\d+\/edit$/);
 });
 

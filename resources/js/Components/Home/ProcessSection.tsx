@@ -1,7 +1,7 @@
 import ImagePlaceholder from '@/Components/Home/ImagePlaceholder';
 import SectionHeading from '@/Components/SectionHeading';
 import type { HomeProcessStep, HomepageSettingsPayload } from '@/types/home';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 interface ProcessSectionProps {
     steps: HomeProcessStep[];
@@ -21,11 +21,16 @@ export default function ProcessSection({ steps, settings }: ProcessSectionProps)
 
             <ol className="process-grid">
                 {steps.map((step, index) => (
-                    <li key={step.title} className="card-surface process-card">
-                        <p className="process-step">0{index + 1}</p>
-                        <h3 className="process-title">{step.title}</h3>
-                        <p className="process-description">{step.description}</p>
-                    </li>
+                    <React.Fragment key={step.title}>
+                        <li className="card-surface process-card">
+                            <p className="process-step">0{index + 1}</p>
+                            <h3 className="process-title">{step.title}</h3>
+                            <p className="process-description">{step.description}</p>
+                        </li>
+                        {index < steps.length - 1 && (
+                            <span className="process-connector" aria-hidden="true" />
+                        )}
+                    </React.Fragment>
                 ))}
             </ol>
 

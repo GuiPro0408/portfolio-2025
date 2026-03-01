@@ -9,9 +9,10 @@ interface EditProfilePageProps {
     mustVerifyEmail: boolean;
     status?: string;
     canDeleteAccount: boolean;
+    canChangeEmail: boolean;
 }
 
-export default function Edit({ mustVerifyEmail, status, canDeleteAccount }: EditProfilePageProps) {
+export default function Edit({ mustVerifyEmail, status, canDeleteAccount, canChangeEmail }: EditProfilePageProps) {
     return (
         <AuthenticatedLayout
             header={
@@ -29,6 +30,7 @@ export default function Edit({ mustVerifyEmail, status, canDeleteAccount }: Edit
                         <UpdateProfileInformationForm
                             mustVerifyEmail={mustVerifyEmail}
                             status={status}
+                            canChangeEmail={canChangeEmail}
                             className="max-w-xl"
                         />
                     </div>

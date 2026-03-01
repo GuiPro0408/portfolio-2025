@@ -32,12 +32,13 @@ class ProfileTest extends TestCase
     public function test_profile_information_can_be_updated(): void
     {
         $user = $this->ownerUser();
+        $originalEmail = $user->email;
 
         $response = $this
             ->actingAs($user)
             ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => 'test@example.com',
+                'name' => 'New Name',
+                'email' => $originalEmail,
             ]);
 
         $response
@@ -46,9 +47,29 @@ class ProfileTest extends TestCase
 
         $user->refresh();
 
-        $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+        $this->assertSame('New Name', $user->name);
+        $this->assertSame($originalEmail, $user->email);
+    }
+
+    public function test_owner_email_cannot_be_changed_via_profile_update(): void
+    {
+        $user = $this->ownerUser();
+        $originalEmail = $user->email;
+
+        $response = $this
+            ->actingAs($user)
+            ->patch('/profile', [
+                'name' => $user->name,
+                'email' => 'different@example.com',
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/profile');
+
+        // Email must stay locked to the owner's current address.
+        $user->refresh();
+        $this->assertSame($originalEmail, $user->email);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void

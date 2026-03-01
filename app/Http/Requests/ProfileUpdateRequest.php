@@ -15,6 +15,18 @@ class ProfileUpdateRequest extends FormRequest
     }
 
     /**
+     * Lock the owner email to the configured value to prevent accidental lockout.
+     * The owner's identity is tied to PORTFOLIO_OWNER_EMAIL; changing it would
+     * immediately revoke owner access.
+     */
+    protected function prepareForValidation(): void
+    {
+        if (OwnerAuthorization::isOwner($this->user())) {
+            $this->merge(['email' => $this->user()->email]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>

@@ -25,6 +25,7 @@ class ProfileController extends Controller
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
             'canDeleteAccount' => ! $isOwner,
+            'canChangeEmail' => ! $isOwner,
         ]);
     }
 

@@ -11,6 +11,7 @@ import type { FormEvent } from 'react';
 interface UpdateProfileInformationFormProps {
     mustVerifyEmail: boolean;
     status?: string;
+    canChangeEmail?: boolean;
     className?: string;
 }
 
@@ -22,6 +23,7 @@ interface UpdateProfileFormData {
 export default function UpdateProfileInformationForm({
     mustVerifyEmail,
     status,
+    canChangeEmail = true,
     className = '',
 }: UpdateProfileInformationFormProps) {
     const user = usePage<AuthenticatedPageProps>().props.auth.user;
@@ -75,10 +77,17 @@ export default function UpdateProfileInformationForm({
                         type="email"
                         className="mt-1 block w-full"
                         value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
+                        onChange={canChangeEmail ? (e) => setData('email', e.target.value) : undefined}
+                        readOnly={!canChangeEmail}
                         required
                         autoComplete="username"
                     />
+
+                    {!canChangeEmail && (
+                        <p className="mt-1 text-xs text-gray-500">
+                            Email is fixed to the configured owner address and cannot be changed here.
+                        </p>
+                    )}
 
                     <InputError className="mt-2" message={errors.email} />
                 </div>

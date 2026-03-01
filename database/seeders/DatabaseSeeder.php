@@ -15,8 +15,12 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // User::factory(10)->create();
-        $ownerEmail = (string) config('portfolio.owner_email', 'owner@example.com');
+        $ownerEmail = trim((string) config('portfolio.owner_email', ''));
         $ownerPassword = trim((string) config('portfolio.owner_password', ''));
+
+        if ($ownerEmail === '' || ! filter_var($ownerEmail, FILTER_VALIDATE_EMAIL)) {
+            throw new \RuntimeException('Missing or invalid PORTFOLIO_OWNER_EMAIL for owner seeding.');
+        }
 
         if ($ownerPassword === '') {
             throw new \RuntimeException('Missing required PORTFOLIO_OWNER_PASSWORD for owner seeding.');

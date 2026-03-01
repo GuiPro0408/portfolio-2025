@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\User;
 use App\Support\OwnerAuthorization;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
@@ -60,9 +61,13 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        if (! $user instanceof User) {
+            abort(403);
+        }
+
         Auth::logout();
 
-        $user->delete();
+        User::destroy($user->getKey());
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

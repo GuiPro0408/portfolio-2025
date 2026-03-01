@@ -66,7 +66,7 @@ export default function HeroSection({
                             alt="Homepage hero visual"
                             className="hero-media"
                             loading="eager"
-                            fetchPriority="high"
+                            fetchpriority="high"
                             decoding="async"
                             onError={() => setImageFailed(true)}
                         />

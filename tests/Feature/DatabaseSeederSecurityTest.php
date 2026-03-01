@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
+use Illuminate\Container\Container;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -52,16 +53,17 @@ class DatabaseSeederSecurityTest extends TestCase
 
         $this->seed(DatabaseSeeder::class);
 
-        $owner = User::query()->where('email', 'owner@example.com')->first();
+        $owner = User::query()->sole();
 
         $this->assertNotNull($owner);
+        $this->assertSame('owner@example.com', $owner->email);
         $this->assertTrue(Hash::check('StrongPass!123', $owner->password));
     }
 
     public function test_database_seeder_skips_project_seed_when_environment_is_production(): void
     {
         config()->set('portfolio.owner_password', 'StrongPass!123');
-        $this->app->instance('env', 'production');
+        Container::getInstance()->instance('env', 'production');
 
         $this->artisan('db:seed', [
             '--class' => DatabaseSeeder::class,

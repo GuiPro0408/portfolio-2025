@@ -24,6 +24,7 @@ class ProfileTest extends TestCase
     public function test_non_owner_cannot_access_profile_page(): void
     {
         $this->ownerUser();
+        /** @var User $user */
         $user = User::factory()->create();
 
         $this->actingAs($user)->get('/profile')->assertForbidden();

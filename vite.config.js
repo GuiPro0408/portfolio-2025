@@ -3,6 +3,13 @@ import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+    server: {
+        host: '0.0.0.0',
+        origin: 'http://localhost:5173',
+        cors: {
+            origin: /^https?:\/\/localhost(:\d+)?$/,
+        },
+    },
     build: {
         rollupOptions: {
             output: {

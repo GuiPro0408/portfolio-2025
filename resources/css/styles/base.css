@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap');
-
 :root {
     --bg: #0b1020;
     --surface: #121a2b;
@@ -8,6 +6,11 @@
     --border: #2a3552;
     --accent: #5b8cff;
     --accent-soft: #1a2a4e;
+    --text-light: #d9e6ff;
+    --text-soft: #b6c9ff;
+    --eyebrow: #afbddb;
+    --tag-border: #35539a;
+    --button-text: #081126;
     --fs-display: clamp(2.05rem, 4.4vw, 3.35rem);
     --fs-h2: clamp(1.72rem, 2.8vw, 2.55rem);
     --fs-h3: clamp(1.2rem, 1.7vw, 1.5rem);

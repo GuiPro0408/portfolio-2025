@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Cache\InvalidatePublicCaches;
+use App\Actions\Projects\DuplicateProject;
+use App\Actions\Projects\ResolveAdminProjectsIndex;
 use App\Actions\Projects\SyncProjectTechnologies;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProjectRequest;
@@ -9,28 +12,30 @@ use App\Http\Requests\UpdateProjectFlagsRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Requests\UpdateProjectSortRequest;
 use App\Models\Project;
-use App\Support\PublicCacheKeys;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class ProjectController extends Controller
 {
     public function __construct(
+        private readonly DuplicateProject $duplicateProject,
+        private readonly InvalidatePublicCaches $invalidatePublicCaches,
+        private readonly ResolveAdminProjectsIndex $resolveAdminProjectsIndex,
         private readonly SyncProjectTechnologies $syncProjectTechnologies,
     ) {}
 
     public function index(Request $request): Response
     {
-        $filters = $this->normalizedFilters($request);
+        $filters = $this->resolveAdminProjectsIndex->normalizedFilters($request);
 
         return Inertia::render('Dashboard/Projects/Index', [
-            'projects' => fn (): LengthAwarePaginator => $this->resolveProjectsPayload($filters),
+            'projects' => fn (): LengthAwarePaginator => $this->resolveAdminProjectsIndex->resolveProjectsPayload($filters),
             'filters' => $filters,
         ]);
     }
@@ -44,11 +49,31 @@ class ProjectController extends Controller
 
     public function store(StoreProjectRequest $request)
     {
-        $project = Project::create($request->validated());
-        if ($this->technologyTablesReady()) {
-            $this->syncProjectTechnologies->sync($project, $project->stack);
+        $validated = $request->validated();
+        $uploadedCoverImage = $request->file('cover_image');
+        if (! $uploadedCoverImage instanceof UploadedFile) {
+            $uploadedCoverImage = null;
         }
-        $this->clearPublicCaches();
+        unset($validated['cover_image']);
+
+        $storedCoverImageUrl = $this->storeCoverImage($uploadedCoverImage);
+
+        if ($storedCoverImageUrl !== null) {
+            $validated['cover_image_url'] = $storedCoverImageUrl;
+        }
+
+        try {
+            DB::transaction(function () use ($validated): void {
+                $project = Project::create($validated);
+                $this->syncProjectTechnologies->sync($project, $project->stack);
+
+                DB::afterCommit(fn () => $this->invalidatePublicCaches->handle());
+            });
+        } catch (Throwable $exception) {
+            $this->deleteCoverImage($storedCoverImageUrl);
+
+            throw $exception;
+        }
 
         return redirect()
             ->route('dashboard.projects.index')
@@ -57,11 +82,7 @@ class ProjectController extends Controller
 
     public function edit(Project $project): Response
     {
-        $technologyTablesReady = $this->technologyTablesReady();
-
-        if ($technologyTablesReady) {
-            $project->loadMissing('technologies');
-        }
+        $project->loadMissing('technologies');
 
         return Inertia::render('Dashboard/Projects/Edit', [
             'project' => [
@@ -70,7 +91,7 @@ class ProjectController extends Controller
                 'slug' => $project->slug,
                 'summary' => $project->summary,
                 'body' => $project->body,
-                'stack' => $technologyTablesReady && $project->technologies->isNotEmpty()
+                'stack' => $project->technologies->isNotEmpty()
                     ? $project->technologies->pluck('name')->implode(', ')
                     : $project->stack,
                 'cover_image_url' => $project->cover_image_url,
@@ -86,11 +107,38 @@ class ProjectController extends Controller
 
     public function update(UpdateProjectRequest $request, Project $project)
     {
-        $project->update($request->validated());
-        if ($this->technologyTablesReady()) {
-            $this->syncProjectTechnologies->sync($project, $project->stack);
+        $validated = $request->validated();
+        $uploadedCoverImage = $request->file('cover_image');
+        if (! $uploadedCoverImage instanceof UploadedFile) {
+            $uploadedCoverImage = null;
         }
-        $this->clearPublicCaches();
+        unset($validated['cover_image']);
+
+        $oldCoverImageUrl = $project->cover_image_url;
+        $storedCoverImageUrl = $this->storeCoverImage($uploadedCoverImage);
+
+        if ($storedCoverImageUrl !== null) {
+            $validated['cover_image_url'] = $storedCoverImageUrl;
+        }
+
+        try {
+            DB::transaction(function () use ($project, $validated): void {
+                $project->update($validated);
+                $this->syncProjectTechnologies->sync($project, $project->stack);
+
+                DB::afterCommit(fn () => $this->invalidatePublicCaches->handle());
+            });
+        } catch (Throwable $exception) {
+            $this->deleteCoverImage($storedCoverImageUrl);
+
+            throw $exception;
+        }
+
+        $project->refresh();
+
+        if ($oldCoverImageUrl !== $project->cover_image_url) {
+            $this->deleteCoverImage($oldCoverImageUrl);
+        }
 
         return redirect()
             ->route('dashboard.projects.index')
@@ -113,7 +161,7 @@ class ProjectController extends Controller
         }
 
         $project->save();
-        $this->clearPublicCaches();
+        $this->invalidatePublicCaches->handle();
 
         return back()->with('success', 'Project status updated.');
     }
@@ -121,7 +169,7 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         $project->delete();
-        $this->clearPublicCaches();
+        $this->invalidatePublicCaches->handle();
 
         return redirect()
             ->route('dashboard.projects.index')
@@ -130,37 +178,8 @@ class ProjectController extends Controller
 
     public function duplicate(Project $project)
     {
-        $technologyTablesReady = $this->technologyTablesReady();
-
-        if ($technologyTablesReady) {
-            $project->loadMissing('technologies');
-        }
-
-        $originalTechnologyIds = $technologyTablesReady
-            ? $project->technologies->pluck('id')->all()
-            : [];
-
-        $stackMirror = $technologyTablesReady && $project->technologies->isNotEmpty()
-            ? $project->technologies->pluck('name')->implode(', ')
-            : $project->stack;
-
-        $copy = $project->replicate();
-        $copy->title = $project->title.' (Copy)';
-        $copy->slug = $this->generateUniqueCopySlug($project->slug);
-        $copy->is_featured = false;
-        $copy->is_published = false;
-        $copy->published_at = null;
-        $copy->stack = $stackMirror;
-        $copy->save();
-
-        if ($technologyTablesReady) {
-            if ($originalTechnologyIds !== []) {
-                $copy->technologies()->sync($originalTechnologyIds);
-            } else {
-                $this->syncProjectTechnologies->sync($copy, $copy->stack);
-            }
-        }
-        $this->clearPublicCaches();
+        $copy = $this->duplicateProject->duplicate($project);
+        $this->invalidatePublicCaches->handle();
 
         return redirect()
             ->route('dashboard.projects.edit', $copy)
@@ -172,7 +191,7 @@ class ProjectController extends Controller
         $project->update([
             'sort_order' => $request->validated('sort_order'),
         ]);
-        $this->clearPublicCaches();
+        $this->invalidatePublicCaches->handle();
 
         return back()->with('success', 'Project sort order updated.');
     }
@@ -198,92 +217,29 @@ class ProjectController extends Controller
         ];
     }
 
-    /**
-     * @return array{q: string, status: string, featured: string, sort: string}
-     */
-    private function normalizedFilters(Request $request): array
+    private function storeCoverImage(?UploadedFile $coverImage): ?string
     {
-        $status = (string) $request->query('status', 'all');
-        $featured = (string) $request->query('featured', 'all');
-        $sort = (string) $request->query('sort', 'sort_order_asc');
-
-        return [
-            'q' => trim((string) $request->query('q', '')),
-            'status' => in_array($status, ['all', 'published', 'draft'], true) ? $status : 'all',
-            'featured' => in_array($featured, ['all', 'featured', 'not_featured'], true) ? $featured : 'all',
-            'sort' => in_array($sort, ['updated_desc', 'updated_asc', 'title_asc', 'title_desc', 'sort_order_asc'], true)
-                ? $sort
-                : 'sort_order_asc',
-        ];
-    }
-
-    /**
-     * @param  EloquentBuilder<Project>|BaseBuilder  $query
-     */
-    private function applySort(EloquentBuilder|BaseBuilder $query, string $sort): void
-    {
-        match ($sort) {
-            'updated_desc' => $query->orderByDesc('updated_at'),
-            'updated_asc' => $query->orderBy('updated_at'),
-            'title_asc' => $query->orderBy('title'),
-            'title_desc' => $query->orderByDesc('title'),
-            default => $query->orderBy('sort_order')->orderByDesc('updated_at'),
-        };
-    }
-
-    private function generateUniqueCopySlug(string $originalSlug): string
-    {
-        $baseSlug = Str::slug($originalSlug).'-copy';
-        $slug = $baseSlug;
-        $counter = 2;
-
-        while (Project::query()->where('slug', $slug)->exists()) {
-            $slug = "{$baseSlug}-{$counter}";
-            $counter++;
+        if (! $coverImage instanceof UploadedFile) {
+            return null;
         }
 
-        return $slug;
+        $storedPath = $coverImage->store('projects/covers', 'public');
+
+        return '/storage/'.$storedPath;
     }
 
-    private function clearPublicCaches(): void
+    private function deleteCoverImage(?string $coverImageUrl): void
     {
-        foreach (PublicCacheKeys::homePayloadVariants() as $homePayloadKey) {
-            Cache::forget($homePayloadKey);
+        if (! is_string($coverImageUrl) || ! str_starts_with($coverImageUrl, '/storage/')) {
+            return;
         }
 
-        Cache::forget(PublicCacheKeys::SITEMAP_XML);
-    }
+        $diskPath = ltrim(substr($coverImageUrl, strlen('/storage/')), '/');
 
-    /**
-     * @param  array{q: string, status: string, featured: string, sort: string}  $filters
-     */
-    private function resolveProjectsPayload(array $filters): LengthAwarePaginator
-    {
-        return Project::query()
-            ->when($filters['q'] !== '', function ($query) use ($filters) {
-                $query->where(function ($searchQuery) use ($filters) {
-                    $searchQuery
-                        ->where('title', 'like', '%'.$filters['q'].'%')
-                        ->orWhere('slug', 'like', '%'.$filters['q'].'%');
-                });
-            })
-            ->when($filters['status'] !== 'all', function ($query) use ($filters) {
-                $query->where('is_published', $filters['status'] === 'published');
-            })
-            ->when($filters['featured'] !== 'all', function ($query) use ($filters) {
-                $query->where('is_featured', $filters['featured'] === 'featured');
-            })
-            ->tap(fn ($query) => $this->applySort($query, $filters['sort']))
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Project $project) => [
-                'id' => $project->id,
-                'title' => $project->title,
-                'slug' => $project->slug,
-                'is_published' => $project->is_published,
-                'is_featured' => $project->is_featured,
-                'sort_order' => $project->sort_order,
-                'updated_at' => $project->updated_at->toDateTimeString(),
-            ]);
+        if ($diskPath === '') {
+            return;
+        }
+
+        Storage::disk('public')->delete($diskPath);
     }
 }

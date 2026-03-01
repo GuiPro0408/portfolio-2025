@@ -2,18 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Public\ResolveContactPayload;
 use App\Http\Requests\ContactRequest;
-use App\Notifications\ContactFormSubmissionNotification;
-use Illuminate\Support\Facades\Notification;
+use App\Jobs\SendContactSubmissionNotification;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class ContactController extends Controller
 {
+    public function __construct(
+        private readonly ResolveContactPayload $resolveContactPayload,
+    ) {}
+
     public function index(): Response
     {
         return Inertia::render('Contact', [
-            'contact' => $this->contactPayload(),
+            'contact' => $this->resolveContactPayload->resolve(),
             'formStartedAt' => now()->timestamp,
         ]);
     }
@@ -22,27 +27,20 @@ class ContactController extends Controller
     {
         $validated = $request->validated();
 
-        Notification::route('mail', (string) config('portfolio.email'))
-            ->notify(new ContactFormSubmissionNotification([
+        try {
+            SendContactSubmissionNotification::dispatch([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'message' => $validated['message'],
-            ]));
+            ]);
+        } catch (Throwable) {
+            return redirect()
+                ->route('contact.index')
+                ->with('error', 'Message could not be queued right now. Please try again in a moment.');
+        }
 
         return redirect()
             ->route('contact.index')
             ->with('success', 'Message sent successfully. I will get back to you soon.');
-    }
-
-    /**
-     * @return array{email: mixed, linkedin: mixed, github: mixed}
-     */
-    private function contactPayload(): array
-    {
-        return [
-            'email' => config('portfolio.email'),
-            'linkedin' => config('portfolio.linkedin'),
-            'github' => config('portfolio.github'),
-        ];
     }
 }

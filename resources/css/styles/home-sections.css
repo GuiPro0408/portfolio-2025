@@ -103,7 +103,7 @@
     border: 1px solid var(--border);
     display: grid;
     place-items: center;
-    color: #c8d5ff;
+    color: var(--text-light);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     font-family: 'Sora', sans-serif;
@@ -150,15 +150,26 @@
     color: var(--muted);
     font-size: var(--fs-body);
     font-weight: 600;
+    transition: color 0.2s ease;
+
+    &:hover {
+        color: var(--text);
+    }
+
+    &:hover .credibility-dot {
+        transform: scale(1.4);
+    }
 }
 
 .credibility-dot {
     margin-top: 0.52rem;
-    width: 0.4rem;
-    height: 0.4rem;
+    width: 0.45rem;
+    height: 0.45rem;
     border-radius: 999px;
     background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
     flex: 0 0 auto;
+    transition: transform 0.2s ease;
 }
 
 .project-grid {
@@ -275,7 +286,7 @@
     &[data-focus],
     &[data-selected] {
         background: color-mix(in srgb, var(--accent-soft) 64%, #1f355f);
-        color: #dce7ff;
+        color: var(--text-light);
     }
 
     &[data-selected] {
@@ -293,7 +304,7 @@
         right: 0.52rem;
         top: 50%;
         transform: translateY(-50%);
-        color: #dce7ff;
+        color: var(--text-light);
         font-size: 0.8rem;
         font-weight: 800;
     }
@@ -328,14 +339,14 @@
     border-radius: 999px;
     border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border));
     background: color-mix(in srgb, var(--accent-soft) 58%, transparent);
-    color: #d9e6ff;
+    color: var(--text-light);
     font-size: var(--fs-meta);
     font-weight: 700;
     padding: 0.22rem 0.58rem;
 }
 
 .active-filter-chip-label {
-    color: color-mix(in srgb, #d9e6ff 82%, var(--muted));
+    color: color-mix(in srgb, var(--text-light) 82%, var(--muted));
 }
 
 .active-filter-chip-remove {
@@ -356,7 +367,7 @@
     border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
     border-radius: 0.6rem;
     background: rgba(17, 27, 47, 0.8);
-    color: #cadcff;
+    color: var(--text-soft);
     padding: 0.4rem 0.72rem;
     font-size: var(--fs-body-sm);
     font-weight: 700;
@@ -364,11 +375,12 @@
 
 .project-card {
     overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 
     &:hover {
         transform: translateY(-3px);
         box-shadow: 0 22px 45px rgba(0, 0, 0, 0.45);
+        border-color: var(--accent);
     }
 }
 
@@ -448,26 +460,16 @@
     border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border));
     background: color-mix(in srgb, var(--accent-soft) 52%, transparent);
     font-weight: 700;
-    color: #b6c9ff;
+    color: var(--text-soft);
     text-decoration: none;
     transition: transform 0.2s ease, background-color 0.2s ease,
         border-color 0.2s ease, box-shadow 0.2s ease;
-
-    &::after {
-        content: '→';
-        font-size: 0.9em;
-        transition: transform 0.2s ease;
-    }
 
     &:hover {
         transform: translateY(-1px);
         border-color: color-mix(in srgb, var(--accent) 70%, var(--border));
         background: color-mix(in srgb, var(--accent-soft) 72%, transparent);
         box-shadow: 0 8px 18px rgba(28, 65, 149, 0.28);
-    }
-
-    &:hover::after {
-        transform: translateX(2px);
     }
 
     &:focus-visible {
@@ -485,23 +487,21 @@
     transition: transform 0.2s ease, background-color 0.2s ease,
         border-color 0.2s ease, box-shadow 0.2s ease;
 
-    &::after {
-        content: '→';
-        font-size: 0.9em;
-        margin-left: 0.35rem;
-        transition: transform 0.2s ease;
-    }
-
     &:hover {
         transform: translateY(-1px);
         border-color: color-mix(in srgb, var(--accent) 72%, var(--border));
         background: color-mix(in srgb, var(--accent-soft) 74%, transparent);
         box-shadow: 0 8px 18px rgba(28, 65, 149, 0.28);
     }
+}
 
-    &:hover::after {
-        transform: translateX(2px);
-    }
+.link-arrow-icon {
+    transition: transform 0.2s ease;
+}
+
+.project-link:hover .link-arrow-icon,
+.section-inline-link-button:hover .link-arrow-icon {
+    transform: translateX(2px);
 }
 
 .tag-list {
@@ -517,10 +517,10 @@
     padding: 0.2rem 0.55rem;
     border-radius: 999px;
     background: var(--accent-soft);
-    border: 1px solid #35539a;
+    border: 1px solid var(--tag-border);
     font-size: var(--fs-meta);
     font-weight: 700;
-    color: #9eb8ff;
+    color: var(--text-soft);
 }
 
 .capabilities-grid {
@@ -535,6 +535,11 @@
 
 .capability-card {
     padding: 1.2rem;
+    transition: border-color 0.2s ease;
+
+    &:hover {
+        border-color: var(--accent);
+    }
 }
 
 .capability-title {
@@ -566,6 +571,12 @@
 
 .service-offer-card {
     padding: 1rem;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent);
+    }
 }
 
 .service-offer-title {
@@ -638,7 +649,18 @@
         font-size: var(--fs-body-sm);
         font-weight: 700;
         text-align: center;
-        color: #bcd0ff;
+        color: var(--text-soft);
+        transition: color 0.2s ease;
+
+        &:hover {
+            color: var(--text);
+        }
+    }
+
+    @media (min-width: 900px) {
+        & li + li {
+            border-left: 1px solid var(--border);
+        }
     }
 }
 
@@ -657,11 +679,38 @@
     gap: 1rem;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     position: relative;
+
+    @media (min-width: 900px) {
+        display: flex;
+        align-items: stretch;
+    }
 }
 
 .process-card {
     padding: 1.2rem;
     position: relative;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+
+    @media (min-width: 900px) {
+        flex: 1;
+    }
+
+    &:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent);
+    }
+}
+
+.process-connector {
+    display: none;
+    width: 2rem;
+    border-top: 1px dashed var(--border);
+    align-self: center;
+    flex-shrink: 0;
+
+    @media (min-width: 900px) {
+        display: block;
+    }
 }
 
 .process-step {
@@ -711,4 +760,16 @@
     padding: 1rem;
     color: var(--muted);
     font-size: var(--fs-body);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .project-card,
+    .service-offer-card,
+    .process-card,
+    .capability-card,
+    .credibility-item,
+    .credibility-dot,
+    .capability-kpi-strip li {
+        transition: none;
+    }
 }

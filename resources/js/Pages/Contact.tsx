@@ -1,0 +1,267 @@
+import '../../css/styles/contact-page.css';
+import InputError from '@/Components/InputError';
+import PublicLayout from '@/Layouts/PublicLayout';
+import type { ContactPayload, SharedPageProps } from '@/types/contracts';
+import { resolveSocialImage } from '@/utils/seo';
+import { Link } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
+import type { FormEvent } from 'react';
+
+interface ContactFormData {
+    name: string;
+    email: string;
+    message: string;
+    website: string;
+    form_started_at: number;
+}
+
+interface ContactPageProps {
+    contact: ContactPayload;
+    formStartedAt: number;
+}
+
+export default function Contact({ contact, formStartedAt }: ContactPageProps) {
+    const { flash = {}, seo = {} } = usePage<SharedPageProps>().props;
+
+    const { data, setData, post, processing, errors, reset } = useForm<ContactFormData>({
+        name: '',
+        email: '',
+        message: '',
+        website: '',
+        form_started_at: formStartedAt,
+    });
+
+    const submit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        post(route('contact.store'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                reset('name', 'email', 'message', 'website');
+                setData('form_started_at', Math.floor(Date.now() / 1000));
+            },
+        });
+    };
+
+    const metaDescription =
+        'Send a project or collaboration inquiry through the portfolio contact form.';
+    const canonicalUrl = route('contact.index');
+    const personName = seo.person_name ?? 'Guillaume Juste';
+    const ogTitle = `Contact | ${personName}`;
+    const socialImage = resolveSocialImage(
+        [],
+        seo.social_default_image,
+        canonicalUrl,
+    );
+
+    const contactSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'ContactPage',
+        name: `Contact ${personName}`,
+        url: canonicalUrl,
+    };
+
+    return (
+        <>
+            <Head title="Contact">
+                <meta name="description" content={metaDescription} />
+                <meta name="author" content={personName} />
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content={canonicalUrl} />
+                {seo.site_name ? (
+                    <meta property="og:site_name" content={seo.site_name} />
+                ) : null}
+                <meta property="og:title" content={ogTitle} />
+                <meta property="og:description" content={metaDescription} />
+                {socialImage ? <meta property="og:image" content={socialImage} /> : null}
+                {socialImage ? (
+                    <meta
+                        property="og:image:alt"
+                        content={`${personName} portfolio contact page image`}
+                    />
+                ) : null}
+                <meta
+                    name="twitter:card"
+                    content={socialImage ? 'summary_large_image' : 'summary'}
+                />
+                <meta name="twitter:title" content={ogTitle} />
+                <meta name="twitter:description" content={metaDescription} />
+                {socialImage ? (
+                    <meta name="twitter:image" content={socialImage} />
+                ) : null}
+                <link rel="canonical" href={canonicalUrl} />
+                <script type="application/ld+json">
+                    {JSON.stringify(contactSchema)}
+                </script>
+            </Head>
+
+            <PublicLayout contact={contact}>
+                <section className="public-shell section-block reveal">
+                    <article className="contact-shell card-surface">
+                        <div className="contact-intro">
+                            <p className="section-eyebrow">Contact</p>
+                            <h1 className="contact-title">
+                                Start a conversation
+                            </h1>
+                            <p className="contact-description">
+                                Share what you are building, what you need, and
+                                your timeline. I will reply as soon as possible.
+                            </p>
+                            <ul className="contact-points">
+                                <li>Clear scope and practical next steps.</li>
+                                <li>Fast response and transparent communication.</li>
+                                <li>Built for product delivery, not buzzwords.</li>
+                            </ul>
+                            <div className="contact-alt-links">
+                                {contact?.email ? (
+                                    <a href={`mailto:${contact.email}`}>
+                                        {contact.email}
+                                    </a>
+                                ) : null}
+                                {contact?.linkedin ? (
+                                    <a
+                                        href={contact.linkedin}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        LinkedIn
+                                    </a>
+                                ) : null}
+                                {contact?.github ? (
+                                    <a
+                                        href={contact.github}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        GitHub
+                                    </a>
+                                ) : null}
+                            </div>
+                            <Link
+                                href={route('projects.index')}
+                                className="contact-side-link"
+                            >
+                                Browse project work
+                            </Link>
+                        </div>
+
+                        <div className="contact-form-wrap">
+                            <header className="contact-form-head">
+                                <h2>Project brief</h2>
+                                <p>
+                                    Name, email, and one concise message are
+                                    enough to get started.
+                                </p>
+                            </header>
+
+                            {flash?.success ? (
+                                <p className="contact-success-note">
+                                    {flash.success}
+                                </p>
+                            ) : null}
+                            {flash?.error ? (
+                                <p className="contact-error">{flash.error}</p>
+                            ) : null}
+
+                            <form onSubmit={submit} className="contact-form">
+                                <input
+                                    type="text"
+                                    name="website"
+                                    value={data.website}
+                                    onChange={(event) =>
+                                        setData('website', event.target.value)
+                                    }
+                                    tabIndex={-1}
+                                    autoComplete="off"
+                                    className="hidden"
+                                    aria-hidden="true"
+                                />
+                                <input
+                                    type="hidden"
+                                    name="form_started_at"
+                                    value={data.form_started_at}
+                                    onChange={(event) => {
+                                        const parsed = Number.parseInt(event.target.value, 10);
+                                        setData('form_started_at', Number.isNaN(parsed) ? 0 : parsed);
+                                    }}
+                                />
+
+                                <label htmlFor="name" className="contact-field">
+                                    <span>Name</span>
+                                    <input
+                                        id="name"
+                                        className="contact-input"
+                                        value={data.name}
+                                        onChange={(event) =>
+                                            setData('name', event.target.value)
+                                        }
+                                        required
+                                    />
+                                    <InputError
+                                        className="contact-error"
+                                        message={errors.name}
+                                    />
+                                </label>
+
+                                <label
+                                    htmlFor="email"
+                                    className="contact-field"
+                                >
+                                    <span>Email</span>
+                                    <input
+                                        id="email"
+                                        type="email"
+                                        className="contact-input"
+                                        value={data.email}
+                                        onChange={(event) =>
+                                            setData('email', event.target.value)
+                                        }
+                                        required
+                                    />
+                                    <InputError
+                                        className="contact-error"
+                                        message={errors.email}
+                                    />
+                                </label>
+
+                                <label
+                                    htmlFor="message"
+                                    className="contact-field"
+                                >
+                                    <span>Message</span>
+                                    <textarea
+                                        id="message"
+                                        rows={7}
+                                        className="contact-input contact-textarea"
+                                        value={data.message}
+                                        onChange={(event) =>
+                                            setData('message', event.target.value)
+                                        }
+                                        required
+                                    />
+                                    <InputError
+                                        className="contact-error"
+                                        message={errors.message}
+                                    />
+                                </label>
+
+                                <InputError
+                                    className="contact-error"
+                                    message={errors.form_started_at}
+                                />
+
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="contact-submit"
+                                >
+                                    {processing ? 'Sending...' : 'Send message'}
+                                </button>
+                            </form>
+                        </div>
+                    </article>
+                </section>
+            </PublicLayout>
+        </>
+    );
+}

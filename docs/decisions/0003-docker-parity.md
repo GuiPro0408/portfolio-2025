@@ -11,11 +11,8 @@ Container users previously needed multiple manual `docker compose exec` commands
 ## Decision
 Adopt `make check-docker` as the Docker parity command.
 
-`make check-docker` runs:
-1. `composer validate --strict` in `app`
-2. `composer run lint:php` in `app`
-3. `composer test` in `app`
-4. `npm run build` in `vite`
+`make check-docker` must mirror the shared harness quality sequence.
+The exact ordered step list is canonical only in `docs/HARNESS.md`.
 
 ## Consequences
 - Pros:

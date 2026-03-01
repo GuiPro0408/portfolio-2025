@@ -12,7 +12,7 @@ class ProfileTest extends TestCase
 
     public function test_profile_page_is_displayed(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
 
         $response = $this
             ->actingAs($user)
@@ -21,15 +21,25 @@ class ProfileTest extends TestCase
         $response->assertOk();
     }
 
+    public function test_non_owner_cannot_access_profile_page(): void
+    {
+        $this->ownerUser();
+        /** @var User $user */
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/profile')->assertForbidden();
+    }
+
     public function test_profile_information_can_be_updated(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
+        $originalEmail = $user->email;
 
         $response = $this
             ->actingAs($user)
             ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => 'test@example.com',
+                'name' => 'New Name',
+                'email' => $originalEmail,
             ]);
 
         $response
@@ -38,14 +48,34 @@ class ProfileTest extends TestCase
 
         $user->refresh();
 
-        $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+        $this->assertSame('New Name', $user->name);
+        $this->assertSame($originalEmail, $user->email);
+    }
+
+    public function test_owner_email_cannot_be_changed_via_profile_update(): void
+    {
+        $user = $this->ownerUser();
+        $originalEmail = $user->email;
+
+        $response = $this
+            ->actingAs($user)
+            ->patch('/profile', [
+                'name' => $user->name,
+                'email' => 'different@example.com',
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/profile');
+
+        // Email must stay locked to the owner's current address.
+        $user->refresh();
+        $this->assertSame($originalEmail, $user->email);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
 
         $response = $this
             ->actingAs($user)
@@ -61,9 +91,9 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
-    public function test_user_can_delete_their_account(): void
+    public function test_owner_cannot_delete_their_account(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
 
         $response = $this
             ->actingAs($user)
@@ -71,17 +101,15 @@ class ProfileTest extends TestCase
                 'password' => 'password',
             ]);
 
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/');
-
-        $this->assertGuest();
-        $this->assertNull($user->fresh());
+        $response->assertRedirect('/profile');
+        $response->assertSessionHas('error', 'Owner account deletion is disabled.');
+        $this->assertAuthenticatedAs($user);
+        $this->assertNotNull($user->fresh());
     }
 
-    public function test_correct_password_must_be_provided_to_delete_account(): void
+    public function test_owner_account_deletion_is_blocked_even_with_wrong_password(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
 
         $response = $this
             ->actingAs($user)
@@ -90,9 +118,9 @@ class ProfileTest extends TestCase
                 'password' => 'wrong-password',
             ]);
 
-        $response
-            ->assertSessionHasErrors('password')
-            ->assertRedirect('/profile');
+        $response->assertRedirect('/profile');
+        $response->assertSessionHas('error', 'Owner account deletion is disabled.');
+        $response->assertSessionDoesntHaveErrors('password');
 
         $this->assertNotNull($user->fresh());
     }

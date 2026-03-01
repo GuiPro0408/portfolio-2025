@@ -2,12 +2,15 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Actions\Projects\SyncProjectTechnologies;
 use App\Models\Project;
 use App\Models\Technology;
 use App\Models\User;
 use App\Support\PublicCacheKeys;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -26,9 +29,23 @@ class ProjectManagementTest extends TestCase
         $this->patch(route('dashboard.projects.sort.update', $project), ['sort_order' => 1])->assertRedirect(route('login'));
     }
 
+    public function test_non_owner_users_are_forbidden_from_project_management_pages(): void
+    {
+        $owner = $this->ownerUser();
+        $project = Project::factory()->create();
+        $user = User::factory()->create();
+        config()->set('portfolio.owner_email', $owner->email);
+
+        $this->actingAs($user)->get(route('dashboard.projects.index'))->assertForbidden();
+        $this->actingAs($user)->get(route('dashboard.projects.create'))->assertForbidden();
+        $this->actingAs($user)->get(route('dashboard.projects.edit', $project))->assertForbidden();
+        $this->actingAs($user)->post(route('dashboard.projects.duplicate', $project))->assertForbidden();
+        $this->actingAs($user)->patch(route('dashboard.projects.sort.update', $project), ['sort_order' => 1])->assertForbidden();
+    }
+
     public function test_authenticated_users_can_open_management_pages(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create();
 
         $this->actingAs($user)->get(route('dashboard.projects.index'))->assertOk();
@@ -38,7 +55,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_authenticated_user_can_create_a_project(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
 
         $response = $this->actingAs($user)->post(route('dashboard.projects.store'), [
             'title' => 'My Portfolio App',
@@ -79,7 +96,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_validation_errors_are_returned_for_invalid_payload(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
 
         $response = $this->actingAs($user)->post(route('dashboard.projects.store'), [
             'title' => '',
@@ -102,7 +119,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_authenticated_user_can_update_a_project(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create([
             'title' => 'Old Title',
             'slug' => 'old-title',
@@ -135,9 +152,99 @@ class ProjectManagementTest extends TestCase
         $this->assertSame(['laravel'], $project->technologies()->pluck('name_normalized')->all());
     }
 
+    public function test_authenticated_user_can_create_a_project_with_uploaded_cover_image(): void
+    {
+        Storage::fake('public');
+
+        $user = $this->ownerUser();
+
+        $response = $this->actingAs($user)->post(route('dashboard.projects.store'), [
+            'title' => 'Upload Project',
+            'summary' => 'Summary text',
+            'body' => 'Body text',
+            'stack' => 'Laravel, React',
+            'cover_image' => UploadedFile::fake()->create('cover.webp', 512, 'image/webp'),
+            'repo_url' => 'https://github.com/example/repo',
+            'live_url' => 'https://example.com',
+            'is_featured' => false,
+            'is_published' => false,
+            'sort_order' => 2,
+        ]);
+
+        $response->assertRedirect(route('dashboard.projects.index'));
+
+        $project = Project::query()->where('title', 'Upload Project')->firstOrFail();
+
+        $this->assertNotNull($project->cover_image_url);
+        $this->assertStringStartsWith('/storage/projects/covers/', $project->cover_image_url);
+
+        $storedPath = ltrim(str_replace('/storage/', '', (string) $project->cover_image_url), '/');
+        $this->assertTrue(Storage::disk('public')->exists($storedPath));
+    }
+
+    public function test_authenticated_user_can_replace_existing_uploaded_cover_image(): void
+    {
+        Storage::fake('public');
+
+        $oldPath = 'projects/covers/old-cover.webp';
+        Storage::disk('public')->put($oldPath, 'old-image-content');
+
+        $user = $this->ownerUser();
+        $project = Project::factory()->create([
+            'cover_image_url' => '/storage/'.$oldPath,
+        ]);
+
+        $response = $this->actingAs($user)->put(route('dashboard.projects.update', $project), [
+            'title' => $project->title,
+            'slug' => $project->slug,
+            'summary' => $project->summary,
+            'body' => $project->body,
+            'stack' => $project->stack,
+            'cover_image_url' => $project->cover_image_url,
+            'cover_image' => UploadedFile::fake()->create('new-cover.png', 512, 'image/png'),
+            'repo_url' => $project->repo_url,
+            'live_url' => $project->live_url,
+            'is_featured' => $project->is_featured,
+            'is_published' => $project->is_published,
+            'sort_order' => $project->sort_order,
+        ]);
+
+        $response->assertRedirect(route('dashboard.projects.index'));
+
+        $project->refresh();
+
+        $this->assertNotNull($project->cover_image_url);
+        $this->assertStringStartsWith('/storage/projects/covers/', $project->cover_image_url);
+
+        $newPath = ltrim(str_replace('/storage/', '', (string) $project->cover_image_url), '/');
+
+        $this->assertFalse(Storage::disk('public')->exists($oldPath));
+        $this->assertTrue(Storage::disk('public')->exists($newPath));
+    }
+
+    public function test_project_create_validation_rejects_invalid_cover_image_upload_type(): void
+    {
+        Storage::fake('public');
+
+        $user = $this->ownerUser();
+
+        $response = $this->actingAs($user)->post(route('dashboard.projects.store'), [
+            'title' => 'Invalid upload project',
+            'summary' => 'Summary text',
+            'body' => 'Body text',
+            'stack' => 'Laravel, React',
+            'cover_image' => UploadedFile::fake()->create('cover.pdf', 100, 'application/pdf'),
+            'is_featured' => false,
+            'is_published' => false,
+            'sort_order' => 1,
+        ]);
+
+        $response->assertSessionHasErrors(['cover_image']);
+    }
+
     public function test_authenticated_user_can_delete_a_project(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create();
 
         $response = $this->actingAs($user)->delete(route('dashboard.projects.destroy', $project));
@@ -148,7 +255,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_slug_must_be_unique(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         Project::factory()->create(['slug' => 'existing-slug']);
 
         $response = $this->actingAs($user)->post(route('dashboard.projects.store'), [
@@ -163,7 +270,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_unpublishing_clears_published_at_timestamp(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->published()->create([
             'slug' => 'published-project',
         ]);
@@ -191,7 +298,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_projects_index_supports_search_filter_and_sort(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
 
         Project::factory()->create([
             'title' => 'Alpha Project',
@@ -215,7 +322,7 @@ class ProjectManagementTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->get(route('dashboard.projects.index', [
-            'q' => 'project',
+            'q' => 'PrOjEcT',
             'status' => 'published',
             'featured' => 'all',
             'sort' => 'title_desc',
@@ -225,7 +332,7 @@ class ProjectManagementTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard/Projects/Index')
-                ->where('filters.q', 'project')
+                ->where('filters.q', 'PrOjEcT')
                 ->where('filters.status', 'published')
                 ->where('filters.featured', 'all')
                 ->where('filters.sort', 'title_desc')
@@ -236,7 +343,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_projects_index_preserves_query_through_pagination_links(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
 
         Project::factory()->count(20)->create([
             'title' => 'Query Match',
@@ -272,7 +379,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_authenticated_user_can_update_project_flags_and_publish_timestamp(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create([
             'is_published' => false,
             'is_featured' => false,
@@ -308,7 +415,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_project_flags_validation_rejects_invalid_values(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create();
 
         $response = $this
@@ -325,7 +432,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_authenticated_user_can_duplicate_a_project_as_draft_copy(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->published()->featured()->create([
             'slug' => 'core-platform',
             'title' => 'Core Platform',
@@ -356,7 +463,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_duplicate_project_slug_suffix_is_incremented_when_needed(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create(['slug' => 'alpha']);
         Project::factory()->create(['slug' => 'alpha-copy']);
 
@@ -373,7 +480,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_authenticated_user_can_update_project_sort_order_inline(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create(['sort_order' => 2]);
 
         $this
@@ -391,7 +498,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_project_sort_update_validation_rejects_invalid_values(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
         $project = Project::factory()->create();
 
         $response = $this
@@ -407,7 +514,7 @@ class ProjectManagementTest extends TestCase
 
     public function test_project_mutations_clear_public_cache_entries(): void
     {
-        $user = User::factory()->create();
+        $user = $this->ownerUser();
 
         Cache::put(PublicCacheKeys::HOME_PAYLOAD, ['cached' => true], 600);
         Cache::put(PublicCacheKeys::SITEMAP_XML, '<xml/>', 600);
@@ -424,5 +531,202 @@ class ProjectManagementTest extends TestCase
 
         $this->assertFalse(Cache::has(PublicCacheKeys::HOME_PAYLOAD));
         $this->assertFalse(Cache::has(PublicCacheKeys::SITEMAP_XML));
+    }
+
+    public function test_duplicate_submission_guard_blocks_identical_project_create_requests(): void
+    {
+        $user = $this->ownerUser();
+
+        $payload = [
+            'title' => 'Replay Guard Project',
+            'summary' => 'Summary text',
+            'body' => 'Body text',
+            'stack' => 'Laravel, React',
+            'is_featured' => false,
+            'is_published' => false,
+            'sort_order' => 1,
+        ];
+
+        $this->actingAs($user)
+            ->post(route('dashboard.projects.store'), $payload)
+            ->assertRedirect(route('dashboard.projects.index'));
+
+        $this->actingAs($user)
+            ->post(route('dashboard.projects.store'), $payload)
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseCount('projects', 1);
+    }
+
+    public function test_duplicate_submission_guard_blocks_identical_duplicate_actions(): void
+    {
+        $user = $this->ownerUser();
+        $project = Project::factory()->create([
+            'slug' => 'replay-source-project',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('dashboard.projects.duplicate', $project))
+            ->assertRedirect();
+
+        $this->actingAs($user)
+            ->post(route('dashboard.projects.duplicate', $project))
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseCount('projects', 2);
+        $this->assertDatabaseHas('projects', [
+            'slug' => 'replay-source-project-copy',
+        ]);
+    }
+
+    public function test_duplicate_submission_guard_allows_different_project_create_payloads(): void
+    {
+        $user = $this->ownerUser();
+
+        $this->actingAs($user)
+            ->post(route('dashboard.projects.store'), [
+                'title' => 'Replay Allowed Project A',
+                'summary' => 'Summary A',
+                'body' => 'Body A',
+                'stack' => 'Laravel',
+                'is_featured' => false,
+                'is_published' => false,
+                'sort_order' => 1,
+            ])
+            ->assertRedirect(route('dashboard.projects.index'));
+
+        $this->actingAs($user)
+            ->post(route('dashboard.projects.store'), [
+                'title' => 'Replay Allowed Project B',
+                'summary' => 'Summary B',
+                'body' => 'Body B',
+                'stack' => 'React',
+                'is_featured' => false,
+                'is_published' => false,
+                'sort_order' => 2,
+            ])
+            ->assertRedirect(route('dashboard.projects.index'));
+
+        $this->assertDatabaseCount('projects', 2);
+    }
+
+    public function test_project_store_rolls_back_when_technology_sync_fails(): void
+    {
+        $user = $this->ownerUser();
+        Cache::put(PublicCacheKeys::HOME_PAYLOAD, ['cached' => true], 600);
+        Cache::put(PublicCacheKeys::SITEMAP_XML, '<xml/>', 600);
+
+        $mock = \Mockery::mock(SyncProjectTechnologies::class);
+        $mock->shouldReceive('sync')->once()->andThrow(new \RuntimeException('Sync failed'));
+        $this->app->instance(SyncProjectTechnologies::class, $mock);
+
+        $this->actingAs($user)->post(route('dashboard.projects.store'), [
+            'title' => 'Rollback Store Project',
+            'summary' => 'Summary',
+            'body' => 'Body',
+            'stack' => 'Laravel, React',
+            'is_featured' => false,
+            'is_published' => false,
+            'sort_order' => 1,
+        ])->assertStatus(500);
+
+        $this->assertDatabaseMissing('projects', [
+            'title' => 'Rollback Store Project',
+        ]);
+        $this->assertTrue(Cache::has(PublicCacheKeys::HOME_PAYLOAD));
+        $this->assertTrue(Cache::has(PublicCacheKeys::SITEMAP_XML));
+    }
+
+    public function test_project_update_rolls_back_when_technology_sync_fails(): void
+    {
+        $user = $this->ownerUser();
+        $project = Project::factory()->create([
+            'title' => 'Original Title',
+            'summary' => 'Original summary',
+            'body' => 'Original body',
+            'stack' => 'Laravel',
+            'is_featured' => false,
+            'is_published' => false,
+            'sort_order' => 3,
+        ]);
+
+        Cache::put(PublicCacheKeys::HOME_PAYLOAD, ['cached' => true], 600);
+        Cache::put(PublicCacheKeys::SITEMAP_XML, '<xml/>', 600);
+
+        $mock = \Mockery::mock(SyncProjectTechnologies::class);
+        $mock->shouldReceive('sync')->once()->andThrow(new \RuntimeException('Sync failed'));
+        $this->app->instance(SyncProjectTechnologies::class, $mock);
+
+        $this->actingAs($user)->put(route('dashboard.projects.update', $project), [
+            'title' => 'Updated Title',
+            'slug' => $project->slug,
+            'summary' => 'Updated summary',
+            'body' => 'Updated body',
+            'stack' => 'Vue',
+            'cover_image_url' => $project->cover_image_url,
+            'repo_url' => $project->repo_url,
+            'live_url' => $project->live_url,
+            'is_featured' => true,
+            'is_published' => true,
+            'sort_order' => 99,
+        ])->assertStatus(500);
+
+        $project->refresh();
+        $this->assertSame('Original Title', $project->title);
+        $this->assertSame('Original summary', $project->summary);
+        $this->assertSame('Original body', $project->body);
+        $this->assertFalse($project->is_published);
+        $this->assertFalse($project->is_featured);
+        $this->assertSame(3, $project->sort_order);
+        $this->assertTrue(Cache::has(PublicCacheKeys::HOME_PAYLOAD));
+        $this->assertTrue(Cache::has(PublicCacheKeys::SITEMAP_XML));
+    }
+
+    public function test_project_create_and_update_accept_long_urls(): void
+    {
+        $user = $this->ownerUser();
+        $longUrl = 'https://cdn.example.com/'.str_repeat('segment-', 60).'asset.png';
+
+        $this->actingAs($user)->post(route('dashboard.projects.store'), [
+            'title' => 'Long URL Project',
+            'summary' => 'Summary text',
+            'body' => 'Body text',
+            'stack' => 'Laravel, React',
+            'cover_image_url' => $longUrl,
+            'repo_url' => $longUrl,
+            'live_url' => $longUrl,
+            'is_featured' => false,
+            'is_published' => false,
+            'sort_order' => 1,
+        ])->assertRedirect(route('dashboard.projects.index'));
+
+        $project = Project::query()->where('title', 'Long URL Project')->firstOrFail();
+
+        $this->assertSame($longUrl, $project->cover_image_url);
+        $this->assertSame($longUrl, $project->repo_url);
+        $this->assertSame($longUrl, $project->live_url);
+
+        $updatedLongUrl = $longUrl.'?v=2';
+
+        $this->actingAs($user)->put(route('dashboard.projects.update', $project), [
+            'title' => $project->title,
+            'slug' => $project->slug,
+            'summary' => $project->summary,
+            'body' => $project->body,
+            'stack' => $project->stack,
+            'cover_image_url' => $updatedLongUrl,
+            'repo_url' => $updatedLongUrl,
+            'live_url' => $updatedLongUrl,
+            'is_featured' => $project->is_featured,
+            'is_published' => $project->is_published,
+            'sort_order' => $project->sort_order,
+        ])->assertRedirect(route('dashboard.projects.index'));
+
+        $project->refresh();
+        $this->assertSame($updatedLongUrl, $project->cover_image_url);
+        $this->assertSame($updatedLongUrl, $project->repo_url);
+        $this->assertSame($updatedLongUrl, $project->live_url);
     }
 }

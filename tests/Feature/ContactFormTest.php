@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Notifications\ContactFormSubmissionNotification;
+use App\Jobs\SendContactSubmissionNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Bus;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -26,7 +26,7 @@ class ContactFormTest extends TestCase
 
     public function test_valid_contact_submission_sends_email_notification(): void
     {
-        Notification::fake();
+        Bus::fake();
         config()->set('portfolio.email', 'portfolio@example.com');
 
         $response = $this->post(route('contact.store'), [
@@ -41,12 +41,12 @@ class ContactFormTest extends TestCase
             ->assertRedirect(route('contact.index'))
             ->assertSessionHas('success');
 
-        Notification::assertSentOnDemand(ContactFormSubmissionNotification::class);
+        Bus::assertDispatched(SendContactSubmissionNotification::class);
     }
 
     public function test_contact_submission_rejects_honeypot_and_fast_submission(): void
     {
-        Notification::fake();
+        Bus::fake();
 
         $response = $this->from(route('contact.index'))->post(route('contact.store'), [
             'name' => 'Spam Bot',
@@ -60,12 +60,12 @@ class ContactFormTest extends TestCase
             ->assertRedirect(route('contact.index'))
             ->assertSessionHasErrors(['website', 'form_started_at']);
 
-        Notification::assertNothingSent();
+        Bus::assertNotDispatched(SendContactSubmissionNotification::class);
     }
 
     public function test_contact_submission_is_rate_limited(): void
     {
-        Notification::fake();
+        Bus::fake();
 
         $payload = [
             'name' => 'Rate Test',
@@ -80,5 +80,22 @@ class ContactFormTest extends TestCase
         }
 
         $this->post(route('contact.store'), $payload)->assertStatus(429);
+    }
+
+    public function test_contact_submission_returns_controlled_error_when_queue_dispatch_fails(): void
+    {
+        Bus::shouldReceive('dispatch')->once()->andThrow(new \RuntimeException('Queue unavailable'));
+
+        $response = $this->post(route('contact.store'), [
+            'name' => 'Queue Test',
+            'email' => 'queue@example.com',
+            'message' => 'Queue dispatch should fail gracefully.',
+            'website' => '',
+            'form_started_at' => now()->subSeconds(5)->timestamp,
+        ]);
+
+        $response
+            ->assertRedirect(route('contact.index'))
+            ->assertSessionHas('error');
     }
 }

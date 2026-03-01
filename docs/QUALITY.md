@@ -7,19 +7,21 @@ Command-level definitions are canonical in [`docs/HARNESS.md`](HARNESS.md).
 - Run `make docs-check` and `make check` before opening a PR.
 - Keep CI green on the same command path as local (`setup-ci -> docs-check -> check`).
 - Treat Docker checks as parity checks when container workflow is used.
+- Treat `make docs-check` as a contract gate for docs integrity, agent artifact structure, and memory freshness.
 
 ## Test Expectations
 - Backend behavior changes require tests in `tests/Feature` and/or `tests/Unit`.
-- Frontend changes must pass `npm run build`.
+- Frontend changes must pass `npm run lint`, `npm run typecheck`, and `npm run build`.
 - Browser-critical paths should be covered by Playwright smoke tests when affected.
 - For list UX changes, verify debounced server-driven filters, partial reload contracts (`only` props), and active-filter chips behavior.
 - Perceived-performance UX changes must verify skeleton behavior (visible during list transitions, no flashing on unrelated actions).
 - Prefetch behavior should stay scoped to high-intent public links and avoid dashboard-wide prefetch.
+- Public project links should use `prefetch="hover"` with `cacheFor="30s"` as the established convention for anticipatory loading.
 
 ## Static Analysis And Formatting
 - Canonical formatter: Laravel Pint (`make format`).
 - Canonical static analyzer: Larastan/PHPStan (`make analyse`).
-- `make check` is the integration gate and must remain deterministic.
+- `make check` is the integration gate and must remain deterministic across native and Docker parity workflows.
 
 ## PR Hygiene
 - Keep changes focused and reviewable.

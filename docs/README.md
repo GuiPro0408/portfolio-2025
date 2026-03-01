@@ -2,35 +2,52 @@
 
 `docs/` is the canonical system of record for this repository.
 
-## Core Documents
-- [Architecture](ARCHITECTURE.md): Laravel/Inertia boundaries, dashboard component patterns, and code placement rules.
-- [Harness](HARNESS.md): command contract, CI parity mapping, and browser smoke path.
-- [System of record](SYSTEM-OF-RECORD.md): canonical-vs-mirror policy and doc update triggers.
-- [Quality](QUALITY.md): quality expectations and links to harness commands.
-- [Deploy](DEPLOY.md): Koyeb deployment runbook, env var contract, and migration flow.
-- [MVP v1](MVP.md): first-shipping scope, data model, homepage settings scope, and acceptance criteria.
-- [v1.1 Backlog](V1.1-BACKLOG.md): post-MVP prioritized improvements (top 4).
-- [v1.2 Backlog](V1.2-BACKLOG.md): completed release scope and closure notes.
+## By Task
+- Build or modify product behavior: [Architecture](ARCHITECTURE.md), [MVP](MVP.md), [Roadmap](ROADMAP.md)
+- Update quality workflow or CI: [Harness](HARNESS.md), [Quality](QUALITY.md), [System of record](SYSTEM-OF-RECORD.md)
+- Update deployment/runtime operations: [Deploy](DEPLOY.md)
+- Add or revise engineering process guidance: [System of record](SYSTEM-OF-RECORD.md), [Knowledge base](#by-document-type)
+- Operate specialized agent workflow: [Agent workflow contract](agents/WORKFLOW.md), [Context map](agents/CONTEXT-MAP.md), [Memory lifecycle](agents/MEMORY-LIFECYCLE.md)
 
-## Knowledge Base
-- [FAQ](knowledge/faq.md): common process and workflow questions.
-- [Troubleshooting](knowledge/troubleshooting.md): common failure modes and fixes.
-- [Recipes](knowledge/recipes.md): repeatable implementation playbooks.
+## By Document Type
 
-## Architecture Decision Records (ADRs)
-- [0001 - Golden command](decisions/0001-golden-command.md): adopt `make check` as the quality gate.
-- [0002 - CI parity](decisions/0002-ci-parity.md): CI runs identical checks to local harness.
-- [0003 - Docker parity](decisions/0003-docker-parity.md): container workflows use `make check-docker`.
+### Canonical Core
+- [Architecture](ARCHITECTURE.md)
+- [Harness](HARNESS.md)
+- [System of record](SYSTEM-OF-RECORD.md)
+- [Quality](QUALITY.md)
+- [Deploy](DEPLOY.md)
+- [MVP](MVP.md)
+- [Active roadmap](ROADMAP.md)
 
-## Historical / Archived
-- [Archived portfolio overview](archive/portfolio-project-overview.md): deprecated Next.js-era planning document (non-canonical).
+### Agent Workflow Contracts
+- [Workflow](agents/WORKFLOW.md)
+- [Context map](agents/CONTEXT-MAP.md)
+- [Memory lifecycle](agents/MEMORY-LIFECYCLE.md)
+- Memory registry: [`agents/memory-registry.yaml`](agents/memory-registry.yaml)
+- Docs contract: [`contracts/docs-contract.json`](contracts/docs-contract.json)
+- Templates:
+  - [`agents/templates/task-brief.md`](agents/templates/task-brief.md)
+  - [`agents/templates/plan-spec.md`](agents/templates/plan-spec.md)
+  - [`agents/templates/implementation-report.md`](agents/templates/implementation-report.md)
+  - [`agents/templates/review-report.md`](agents/templates/review-report.md)
+
+### Knowledge Base
+- [FAQ](knowledge/faq.md)
+- [Troubleshooting](knowledge/troubleshooting.md)
+- [Recipes](knowledge/recipes.md)
+
+### Architecture Decision Records
+- [0001 - Golden command](decisions/0001-golden-command.md)
+- [0002 - CI parity](decisions/0002-ci-parity.md)
+- [0003 - Docker parity](decisions/0003-docker-parity.md)
+
+### Historical / Archived (Non-Canonical)
+- [v1.1 backlog archive](archive/V1.1-BACKLOG.md)
+- [v1.2 backlog archive](archive/V1.2-BACKLOG.md)
+- [Archived portfolio overview](archive/portfolio-project-overview.md)
 
 ## Related Entry Points
-- Root project overview: [`README.md`](../README.md)
-- Native setup notes: [`LOCAL_SETUP.md`](../LOCAL_SETUP.md)
-- Quick deployment guide: [`DEPLOYMENT.md`](../DEPLOYMENT.md)
-
-## Current UI Performance Baseline
-- `/projects` and `/dashboard/projects` are server-driven filter UIs with partial reload discipline and active criteria chips.
-- Dashboard project rows are virtualized; keep accessibility roles and inline actions intact when modifying row rendering.
-- Route-specific CSS loading is active (public vs dashboard vs contact-only styles).
+- Root overview mirror: [`README.md`](../README.md)
+- Native setup mirror: [`LOCAL_SETUP.md`](../LOCAL_SETUP.md)
+- Deployment quick guide mirror: [`DEPLOYMENT.md`](../DEPLOYMENT.md)

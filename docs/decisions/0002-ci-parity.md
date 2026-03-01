@@ -9,9 +9,13 @@ Accepted
 Historically, CI pipelines often diverge from local developer commands. Divergence causes “works on my machine” failures and unclear ownership of quality regressions.
 
 ## Decision
-Set CI to install dependencies with `make setup-ci`, then run the same golden check command used locally: `make check`.
+Set CI to use the same canonical non-browser quality path as local harness usage:
+1. `make setup-ci`
+2. `make docs-check`
+3. `make check`
 
-This guarantees CI enforces the exact same validation/lint/test/build sequence.
+The exact command-step contract is canonical only in `docs/HARNESS.md`.
+This guarantees CI enforces the same validated workflow as local execution.
 
 ## Consequences
 - Pros:

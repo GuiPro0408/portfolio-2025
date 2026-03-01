@@ -8,7 +8,9 @@ use App\Models\Technology;
 use App\Models\User;
 use App\Support\PublicCacheKeys;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -148,6 +150,96 @@ class ProjectManagementTest extends TestCase
         $this->assertTrue($project->is_published);
         $this->assertNotNull($project->published_at);
         $this->assertSame(['laravel'], $project->technologies()->pluck('name_normalized')->all());
+    }
+
+    public function test_authenticated_user_can_create_a_project_with_uploaded_cover_image(): void
+    {
+        Storage::fake('public');
+
+        $user = $this->ownerUser();
+
+        $response = $this->actingAs($user)->post(route('dashboard.projects.store'), [
+            'title' => 'Upload Project',
+            'summary' => 'Summary text',
+            'body' => 'Body text',
+            'stack' => 'Laravel, React',
+            'cover_image' => UploadedFile::fake()->create('cover.webp', 512, 'image/webp'),
+            'repo_url' => 'https://github.com/example/repo',
+            'live_url' => 'https://example.com',
+            'is_featured' => false,
+            'is_published' => false,
+            'sort_order' => 2,
+        ]);
+
+        $response->assertRedirect(route('dashboard.projects.index'));
+
+        $project = Project::query()->where('title', 'Upload Project')->firstOrFail();
+
+        $this->assertNotNull($project->cover_image_url);
+        $this->assertStringStartsWith('/storage/projects/covers/', $project->cover_image_url);
+
+        $storedPath = ltrim(str_replace('/storage/', '', (string) $project->cover_image_url), '/');
+        $this->assertTrue(Storage::disk('public')->exists($storedPath));
+    }
+
+    public function test_authenticated_user_can_replace_existing_uploaded_cover_image(): void
+    {
+        Storage::fake('public');
+
+        $oldPath = 'projects/covers/old-cover.webp';
+        Storage::disk('public')->put($oldPath, 'old-image-content');
+
+        $user = $this->ownerUser();
+        $project = Project::factory()->create([
+            'cover_image_url' => '/storage/'.$oldPath,
+        ]);
+
+        $response = $this->actingAs($user)->put(route('dashboard.projects.update', $project), [
+            'title' => $project->title,
+            'slug' => $project->slug,
+            'summary' => $project->summary,
+            'body' => $project->body,
+            'stack' => $project->stack,
+            'cover_image_url' => $project->cover_image_url,
+            'cover_image' => UploadedFile::fake()->create('new-cover.png', 512, 'image/png'),
+            'repo_url' => $project->repo_url,
+            'live_url' => $project->live_url,
+            'is_featured' => $project->is_featured,
+            'is_published' => $project->is_published,
+            'sort_order' => $project->sort_order,
+        ]);
+
+        $response->assertRedirect(route('dashboard.projects.index'));
+
+        $project->refresh();
+
+        $this->assertNotNull($project->cover_image_url);
+        $this->assertStringStartsWith('/storage/projects/covers/', $project->cover_image_url);
+
+        $newPath = ltrim(str_replace('/storage/', '', (string) $project->cover_image_url), '/');
+
+        $this->assertFalse(Storage::disk('public')->exists($oldPath));
+        $this->assertTrue(Storage::disk('public')->exists($newPath));
+    }
+
+    public function test_project_create_validation_rejects_invalid_cover_image_upload_type(): void
+    {
+        Storage::fake('public');
+
+        $user = $this->ownerUser();
+
+        $response = $this->actingAs($user)->post(route('dashboard.projects.store'), [
+            'title' => 'Invalid upload project',
+            'summary' => 'Summary text',
+            'body' => 'Body text',
+            'stack' => 'Laravel, React',
+            'cover_image' => UploadedFile::fake()->create('cover.pdf', 100, 'application/pdf'),
+            'is_featured' => false,
+            'is_published' => false,
+            'sort_order' => 1,
+        ]);
+
+        $response->assertSessionHasErrors(['cover_image']);
     }
 
     public function test_authenticated_user_can_delete_a_project(): void

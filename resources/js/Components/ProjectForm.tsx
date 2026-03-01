@@ -8,8 +8,8 @@ import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { CalendarDays } from 'lucide-react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-import type { FormEvent, ReactNode } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import type { ChangeEvent, FormEvent, ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export interface ProjectFormData {
     title: string;
@@ -18,6 +18,7 @@ export interface ProjectFormData {
     body: string;
     stack: string;
     cover_image_url: string;
+    cover_image: File | null;
     repo_url: string;
     live_url: string;
     is_featured: boolean;
@@ -147,6 +148,10 @@ export default function ProjectForm({
     const [displayMonth, setDisplayMonth] = useState<Date>(
         () => selectedPublishedAt ?? today,
     );
+    const [coverImagePreviewUrl, setCoverImagePreviewUrl] = useState<string>(
+        data.cover_image_url,
+    );
+    const coverImageInputRef = useRef<HTMLInputElement | null>(null);
 
     const monthOptions = useMemo(
         () =>
@@ -187,6 +192,35 @@ export default function ProjectForm({
             ),
         );
     }, [data.published_at]);
+
+    useEffect(() => {
+        if (!(data.cover_image instanceof File)) {
+            setCoverImagePreviewUrl(data.cover_image_url);
+
+            return;
+        }
+
+        const objectUrl = URL.createObjectURL(data.cover_image);
+        setCoverImagePreviewUrl(objectUrl);
+
+        return () => {
+            URL.revokeObjectURL(objectUrl);
+        };
+    }, [data.cover_image, data.cover_image_url]);
+
+    const onCoverImageSelected = (event: ChangeEvent<HTMLInputElement>) => {
+        const nextFile = event.target.files?.[0] ?? null;
+
+        setData('cover_image', nextFile);
+    };
+
+    const clearCoverImageFile = () => {
+        setData('cover_image', null);
+
+        if (coverImageInputRef.current) {
+            coverImageInputRef.current.value = '';
+        }
+    };
 
     const updateDisplayMonth = (nextMonth: number, nextYear: number) => {
         setDisplayMonth(new Date(nextYear, nextMonth, 1));
@@ -288,14 +322,54 @@ export default function ProjectForm({
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="cover_image_url" value="Cover Image URL" />
+                        <InputLabel htmlFor="cover_image_url" value="Cover Image" />
                         <TextInput
                             id="cover_image_url"
                             className="mt-1 block w-full"
                             value={data.cover_image_url}
                             onChange={(event) => setData('cover_image_url', event.target.value)}
                         />
+                        <FieldHelp>Use a direct image URL, or upload a JPG/PNG/WebP file (max 5MB).</FieldHelp>
                         <InputError className="mt-2" message={errors.cover_image_url} />
+
+                        <div className="mt-3 flex flex-wrap items-center gap-3">
+                            <input
+                                ref={coverImageInputRef}
+                                id="cover_image"
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                onChange={onCoverImageSelected}
+                                className="block w-full rounded-md border border-gray-300 bg-transparent text-sm file:mr-3 file:rounded-md file:border-0 file:bg-slate-700 file:px-3 file:py-2 file:text-xs file:font-semibold file:uppercase file:tracking-wider file:text-slate-100 hover:file:bg-slate-600"
+                            />
+                            {data.cover_image ? (
+                                <button
+                                    type="button"
+                                    onClick={clearCoverImageFile}
+                                    className="dashboard-inline-action"
+                                >
+                                    Remove selected file
+                                </button>
+                            ) : null}
+                        </div>
+
+                        {data.cover_image ? (
+                            <p className="dashboard-field-help mt-2">
+                                Selected file: <strong>{data.cover_image.name}</strong>
+                            </p>
+                        ) : null}
+
+                        <InputError className="mt-2" message={errors.cover_image} />
+
+                        {coverImagePreviewUrl ? (
+                            <div className="mt-3 overflow-hidden rounded-lg border border-slate-700 bg-slate-950/40 p-2">
+                                <img
+                                    src={coverImagePreviewUrl}
+                                    alt="Cover image preview"
+                                    className="max-h-56 w-full rounded-md object-cover"
+                                    loading="lazy"
+                                />
+                            </div>
+                        ) : null}
                     </div>
 
                     <div>

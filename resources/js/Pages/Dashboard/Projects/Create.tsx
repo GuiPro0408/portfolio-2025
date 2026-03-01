@@ -5,17 +5,25 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 
+type ProjectFormPageData = Omit<ProjectFormData, 'cover_image'>;
+
 interface CreateProjectPageProps {
-    project: ProjectFormData;
+    project: ProjectFormPageData;
 }
 
 export default function Create({ project }: CreateProjectPageProps) {
     const { data, setData, post, processing, errors } =
-        useForm<ProjectFormData>(project);
+        useForm<ProjectFormData>({
+            ...project,
+            cover_image: null,
+        });
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        post(route('dashboard.projects.store'));
+        post(route('dashboard.projects.store'), {
+            forceFormData: true,
+            preserveScroll: true,
+        });
     };
 
     return (

@@ -13,10 +13,13 @@ use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Requests\UpdateProjectSortRequest;
 use App\Models\Project;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class ProjectController extends Controller
 {
@@ -46,12 +49,31 @@ class ProjectController extends Controller
 
     public function store(StoreProjectRequest $request)
     {
-        DB::transaction(function () use ($request): void {
-            $project = Project::create($request->validated());
-            $this->syncProjectTechnologies->sync($project, $project->stack);
+        $validated = $request->validated();
+        $uploadedCoverImage = $request->file('cover_image');
+        if (! $uploadedCoverImage instanceof UploadedFile) {
+            $uploadedCoverImage = null;
+        }
+        unset($validated['cover_image']);
 
-            DB::afterCommit(fn () => $this->invalidatePublicCaches->handle());
-        });
+        $storedCoverImageUrl = $this->storeCoverImage($uploadedCoverImage);
+
+        if ($storedCoverImageUrl !== null) {
+            $validated['cover_image_url'] = $storedCoverImageUrl;
+        }
+
+        try {
+            DB::transaction(function () use ($validated): void {
+                $project = Project::create($validated);
+                $this->syncProjectTechnologies->sync($project, $project->stack);
+
+                DB::afterCommit(fn () => $this->invalidatePublicCaches->handle());
+            });
+        } catch (Throwable $exception) {
+            $this->deleteCoverImage($storedCoverImageUrl);
+
+            throw $exception;
+        }
 
         return redirect()
             ->route('dashboard.projects.index')
@@ -85,12 +107,38 @@ class ProjectController extends Controller
 
     public function update(UpdateProjectRequest $request, Project $project)
     {
-        DB::transaction(function () use ($project, $request): void {
-            $project->update($request->validated());
-            $this->syncProjectTechnologies->sync($project, $project->stack);
+        $validated = $request->validated();
+        $uploadedCoverImage = $request->file('cover_image');
+        if (! $uploadedCoverImage instanceof UploadedFile) {
+            $uploadedCoverImage = null;
+        }
+        unset($validated['cover_image']);
 
-            DB::afterCommit(fn () => $this->invalidatePublicCaches->handle());
-        });
+        $oldCoverImageUrl = $project->cover_image_url;
+        $storedCoverImageUrl = $this->storeCoverImage($uploadedCoverImage);
+
+        if ($storedCoverImageUrl !== null) {
+            $validated['cover_image_url'] = $storedCoverImageUrl;
+        }
+
+        try {
+            DB::transaction(function () use ($project, $validated): void {
+                $project->update($validated);
+                $this->syncProjectTechnologies->sync($project, $project->stack);
+
+                DB::afterCommit(fn () => $this->invalidatePublicCaches->handle());
+            });
+        } catch (Throwable $exception) {
+            $this->deleteCoverImage($storedCoverImageUrl);
+
+            throw $exception;
+        }
+
+        $project->refresh();
+
+        if ($oldCoverImageUrl !== $project->cover_image_url) {
+            $this->deleteCoverImage($oldCoverImageUrl);
+        }
 
         return redirect()
             ->route('dashboard.projects.index')
@@ -167,5 +215,31 @@ class ProjectController extends Controller
             'published_at' => '',
             'sort_order' => 0,
         ];
+    }
+
+    private function storeCoverImage(?UploadedFile $coverImage): ?string
+    {
+        if (! $coverImage instanceof UploadedFile) {
+            return null;
+        }
+
+        $storedPath = $coverImage->store('projects/covers', 'public');
+
+        return '/storage/'.$storedPath;
+    }
+
+    private function deleteCoverImage(?string $coverImageUrl): void
+    {
+        if (! is_string($coverImageUrl) || ! str_starts_with($coverImageUrl, '/storage/')) {
+            return;
+        }
+
+        $diskPath = ltrim(substr($coverImageUrl, strlen('/storage/')), '/');
+
+        if ($diskPath === '') {
+            return;
+        }
+
+        Storage::disk('public')->delete($diskPath);
     }
 }

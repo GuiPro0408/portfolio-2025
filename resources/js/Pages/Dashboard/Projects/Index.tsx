@@ -379,7 +379,7 @@ export default function Index({ projects, filters }: DashboardProjectsIndexProps
     });
 
     useEffect(() => {
-        const query = window.matchMedia('(max-width: 640px)');
+        const query = window.matchMedia('(max-width: 1100px)');
         const apply = () => setIsMobileView(query.matches);
 
         apply();
@@ -415,8 +415,19 @@ export default function Index({ projects, filters }: DashboardProjectsIndexProps
     }, [isListLoading]);
 
     useEffect(() => {
+        if (isMobileView) {
+            return;
+        }
+
         rowVirtualizer.measure();
-    }, [rowVirtualizer, projectsData]);
+    }, [
+        rowVirtualizer,
+        projectsData,
+        pendingRows,
+        pendingSortRows,
+        pendingDuplicateId,
+        isMobileView,
+    ]);
 
     const statusOptions = useMemo<ListboxOptionItem[]>(
         () => [

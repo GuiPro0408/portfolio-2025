@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Project;
 use App\Support\OwnerAuthorization;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -62,7 +63,23 @@ class UpdateProjectRequest extends FormRequest
             'summary' => ['required', 'string', 'max:500'],
             'body' => ['required', 'string'],
             'stack' => ['nullable', 'string', 'max:255'],
-            'cover_image_url' => ['nullable', 'url', 'max:2048'],
+            'cover_image_url' => [
+                'nullable',
+                'string',
+                'max:2048',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    if (! is_string($value) || trim($value) === '') {
+                        return;
+                    }
+
+                    if (filter_var($value, FILTER_VALIDATE_URL) !== false || str_starts_with($value, '/')) {
+                        return;
+                    }
+
+                    $fail('The '.$attribute.' field must be a valid URL or an application path.');
+                },
+            ],
+            'cover_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'repo_url' => ['nullable', 'url', 'max:2048'],
             'live_url' => ['nullable', 'url', 'max:2048'],
             'is_featured' => ['boolean'],

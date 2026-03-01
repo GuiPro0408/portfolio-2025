@@ -5,18 +5,26 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 
+type ProjectFormPageData = Omit<ProjectFormData, 'cover_image'>;
+
 interface EditProjectPageProps {
-    project: ProjectFormData & { id: number };
+    project: ProjectFormPageData & { id: number };
 }
 
 export default function Edit({ project }: EditProjectPageProps) {
     const { data, setData, put, processing, errors } = useForm<ProjectFormData>(
-        project,
+        {
+            ...project,
+            cover_image: null,
+        },
     );
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        put(route('dashboard.projects.update', project.id));
+        put(route('dashboard.projects.update', project.id), {
+            forceFormData: true,
+            preserveScroll: true,
+        });
     };
 
     return (

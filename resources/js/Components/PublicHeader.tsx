@@ -8,7 +8,7 @@ export default function PublicHeader() {
 
     return (
         <Disclosure as="header" className="public-header">
-            {({ open, close }) => (
+            {({ open, close }: { open: boolean; close: () => void }) => (
                 <div className="public-shell public-header-inner">
                     <div className="public-header-bar">
                         <Link href={route('home')} className="brand-link">

@@ -332,7 +332,7 @@ export default function ProjectForm({
                     <div>
                         <InputLabel htmlFor="published_at" value="Published At" />
                         <Popover className="dashboard-modern-datefield mt-1">
-                            {({ close }) => (
+                            {({ close }: { close: () => void }) => (
                                 <>
                                     <PopoverButton
                                         id="published_at"

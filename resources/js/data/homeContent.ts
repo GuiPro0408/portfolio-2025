@@ -41,9 +41,9 @@ export const homeContent: HomeContent = {
         'Production release checklist',
     ],
     stackGroups: {
-        frontend: ['React', 'Inertia.js', 'Tailwind CSS'],
-        backend: ['Laravel', 'API design', 'Validation'],
-        dataDevops: ['PostgreSQL', 'SQLite', 'Docker', 'GitHub Actions'],
+        frontend: ['React', 'JavaScript ES6', 'SASS / CSS', 'Tailwind CSS', 'Figma', 'StimulusJS'],
+        backend: ['Laravel / PHP', 'Ruby on Rails', 'Python / Django', 'Next.js', 'WordPress'],
+        dataDevops: ['PostgreSQL', 'MySQL', 'SQLite', 'Docker', 'Vercel', 'Heroku', 'GitHub / GitLab'],
     },
     capabilityKpis: [
         'Fast onboarding',

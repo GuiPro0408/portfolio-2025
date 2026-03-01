@@ -5,6 +5,7 @@ import type {
     HomepageSettingsPayload,
 } from '@/types/home';
 import { Link } from '@inertiajs/react';
+import { ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 
 function toTags(stack: string | null): string[] {
@@ -56,6 +57,7 @@ export default function FeaturedProjectsGrid({
                     cacheFor="30s"
                 >
                     View all projects
+                    <ArrowRight size={14} aria-hidden="true" className="link-arrow-icon" />
                 </Link>
             </div>
 
@@ -116,6 +118,11 @@ export default function FeaturedProjectsGrid({
                                         cacheFor="30s"
                                     >
                                         View project
+                                        <ArrowRight
+                                            size={14}
+                                            aria-hidden="true"
+                                            className="link-arrow-icon"
+                                        />
                                     </Link>
                                 </div>
                             </article>

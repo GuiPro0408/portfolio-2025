@@ -14,7 +14,7 @@ export default function PublicLayout({ children, contact }: PublicLayoutProps) {
     return (
         <div className="public-page">
             <div className="background-aura" aria-hidden="true" />
-            <PublicHeader contact={contact} />
+            <PublicHeader />
             <main>{children}</main>
             <PublicFooter contact={contact} />
         </div>

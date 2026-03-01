@@ -453,21 +453,11 @@
     transition: transform 0.2s ease, background-color 0.2s ease,
         border-color 0.2s ease, box-shadow 0.2s ease;
 
-    &::after {
-        content: '→';
-        font-size: 0.9em;
-        transition: transform 0.2s ease;
-    }
-
     &:hover {
         transform: translateY(-1px);
         border-color: color-mix(in srgb, var(--accent) 70%, var(--border));
         background: color-mix(in srgb, var(--accent-soft) 72%, transparent);
         box-shadow: 0 8px 18px rgba(28, 65, 149, 0.28);
-    }
-
-    &:hover::after {
-        transform: translateX(2px);
     }
 
     &:focus-visible {
@@ -485,23 +475,21 @@
     transition: transform 0.2s ease, background-color 0.2s ease,
         border-color 0.2s ease, box-shadow 0.2s ease;
 
-    &::after {
-        content: '→';
-        font-size: 0.9em;
-        margin-left: 0.35rem;
-        transition: transform 0.2s ease;
-    }
-
     &:hover {
         transform: translateY(-1px);
         border-color: color-mix(in srgb, var(--accent) 72%, var(--border));
         background: color-mix(in srgb, var(--accent-soft) 74%, transparent);
         box-shadow: 0 8px 18px rgba(28, 65, 149, 0.28);
     }
+}
 
-    &:hover::after {
-        transform: translateX(2px);
-    }
+.link-arrow-icon {
+    transition: transform 0.2s ease;
+}
+
+.project-link:hover .link-arrow-icon,
+.section-inline-link-button:hover .link-arrow-icon {
+    transform: translateX(2px);
 }
 
 .tag-list {

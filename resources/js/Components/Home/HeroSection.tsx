@@ -18,6 +18,9 @@ export default function HeroSection({
     const [imageFailed, setImageFailed] = useState(false);
     const hasLinkedIn = Boolean(contact.linkedin);
     const hasGithub = Boolean(contact.github);
+    const heroImageAlt = settings.hero_headline
+        ? `${settings.hero_headline} hero visual`
+        : 'Portfolio hero visual';
 
     return (
         <section className="public-shell section-block reveal">
@@ -63,7 +66,7 @@ export default function HeroSection({
                     ) : (
                         <img
                             src={settings.hero_image_url}
-                            alt="Homepage hero visual"
+                            alt={heroImageAlt}
                             className="hero-media"
                             loading="eager"
                             fetchpriority="high"

@@ -1,13 +1,9 @@
 import { Disclosure } from '@headlessui/react';
 import { Link, usePage } from '@inertiajs/react';
 import { Menu, X } from 'lucide-react';
-import type { ContactPayload, SharedPageProps } from '@/types/contracts';
+import type { SharedPageProps } from '@/types/contracts';
 
-interface PublicHeaderProps {
-    contact: ContactPayload;
-}
-
-export default function PublicHeader({ contact: _contact }: PublicHeaderProps) {
+export default function PublicHeader() {
     const { auth } = usePage<SharedPageProps>().props;
 
     return (

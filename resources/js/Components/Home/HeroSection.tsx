@@ -71,6 +71,8 @@ export default function HeroSection({
                             loading="eager"
                             fetchpriority="high"
                             decoding="async"
+                            width="16"
+                            height="10"
                             onError={() => setImageFailed(true)}
                         />
                     )}

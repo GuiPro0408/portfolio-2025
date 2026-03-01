@@ -1,3 +1,4 @@
+import '../../css/styles/auth-login.css';
 import type { ReactNode } from 'react';
 
 interface GuestLayoutProps {

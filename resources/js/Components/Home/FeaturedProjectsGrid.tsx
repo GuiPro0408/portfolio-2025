@@ -80,6 +80,8 @@ export default function FeaturedProjectsGrid({
                                         className="project-cover"
                                         loading="lazy"
                                         decoding="async"
+                                        width="16"
+                                        height="10"
                                         onError={() => handleImageError(project.id)}
                                     />
                                 ) : (

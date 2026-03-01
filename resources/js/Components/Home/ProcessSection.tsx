@@ -40,6 +40,10 @@ export default function ProcessSection({ steps, settings }: ProcessSectionProps)
                         src={settings.process_image_url}
                         alt="Process section visual"
                         className="section-media"
+                        loading="lazy"
+                        decoding="async"
+                        width="21"
+                        height="9"
                         onError={() => setImageFailed(true)}
                     />
                 ) : (

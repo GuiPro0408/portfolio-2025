@@ -98,6 +98,10 @@ export default function SkillsServicesSection({
                         src={settings.capabilities_image_url}
                         alt="Capabilities section visual"
                         className="section-media"
+                        loading="lazy"
+                        decoding="async"
+                        width="21"
+                        height="9"
                         onError={() => setImageFailed(true)}
                     />
                 ) : (

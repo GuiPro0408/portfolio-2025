@@ -16,6 +16,7 @@ Command-level definitions are canonical in [`docs/HARNESS.md`](HARNESS.md).
 - For list UX changes, verify debounced server-driven filters, partial reload contracts (`only` props), and active-filter chips behavior.
 - Perceived-performance UX changes must verify skeleton behavior (visible during list transitions, no flashing on unrelated actions).
 - Prefetch behavior should stay scoped to high-intent public links and avoid dashboard-wide prefetch.
+- Public project links should use `prefetch="hover"` with `cacheFor="30s"` as the established convention for anticipatory loading.
 
 ## Static Analysis And Formatting
 - Canonical formatter: Laravel Pint (`make format`).

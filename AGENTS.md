@@ -12,7 +12,7 @@ Use this file as the working contract for agents in this repository.
 ## Repo Map
 - `app/`: Laravel controllers, requests, models, providers.
 - `routes/`: Web/auth route entrypoints.
-- `resources/js/`: Inertia React app (`Pages`, `Layouts`, `Components`).
+- `resources/js/`: Inertia React app (`Pages`, `Layouts`, `Components`, `types`, `utils`).
 - `database/`: Migrations, factories, seeders.
 - `.github/workflows/ci.yml`: CI pipeline.
 - `docs/`: Canonical architecture, quality, and deployment guidance.

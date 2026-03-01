@@ -30,6 +30,8 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - Inertia page entrypoints live in `resources/js/Pages`.
 - Layout shells live in `resources/js/Layouts`.
 - Reusable UI components live in `resources/js/Components`.
+- Shared TypeScript type contracts live in `resources/js/types` (`PaginationShape<T>`, `SharedPageProps`, `ContactPayload`, etc.).
+- Shared utility functions live in `resources/js/utils` (e.g. `resolveSocialImage` for SEO image resolution).
 - App bootstrap and page resolution live in `resources/js/app.tsx`.
 - Frontend source under `resources/js` is TypeScript-only (`.ts` / `.tsx`) with strict type checking.
 - Global style tokens and section-level styles are split under `resources/css/styles/` to keep concerns maintainable.
@@ -51,6 +53,7 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - Test data factories: `database/factories`.
 - Project stack taxonomy is modeled relationally (`projects` <-> `technologies` via pivot) and should be the filtering source of truth.
 - `technologies` and `project_technology` are baseline schema requirements; runtime `Schema::hasTable(...)` fallbacks are intentionally removed from request paths.
+- `Technology.name_normalized` stores a lowercase version of the technology name and is used for case-insensitive filtering in public query resolution.
 - Public payload caching (homepage/sitemap) must use explicit cache keys with clear invalidation on project/homepage-admin writes.
 - Backfill data migrations that cannot be safely reversed should use non-destructive `down()` no-op behavior and be documented as irreversible.
 
@@ -66,5 +69,7 @@ Current development mode is SQLite-first. Koyeb/PostgreSQL remains the deferred 
 - New page flow: route -> controller -> Inertia page in `resources/js/Pages/...`.
 - New backend behavior: controller + request validation + service/action class as needed.
 - New reusable UI: create component in `resources/js/Components` and compose from pages/layouts.
+- New TypeScript type contract: add in `resources/js/types`.
+- New shared utility function: add in `resources/js/utils`.
 - New business rule: unit test in `tests/Unit` and feature/integration coverage in `tests/Feature`.
 - Bundle hygiene adjustments: prefer route-level lazy boundaries first (Inertia page resolution); add Vite chunk tuning only for verified leakage.

@@ -3,8 +3,8 @@
 This file is the active planning surface for upcoming repository work.
 
 ## Status
-- Current phase: Post-v1.2 stabilization and workflow hardening
-- Last updated: February 17, 2026
+- Current phase: v1.2 complete — all six scope tracks delivered (public projects discovery, technical SEO pack, contact conversion flow, dashboard productivity, Playwright smoke coverage, harness + system-of-record docs enhancement). Post-v1.2 stabilization and workflow hardening in progress.
+- Last updated: March 1, 2026
 
 ## Current Priorities
 1. Keep documentation and agent workflow contracts synchronized through automated checks.

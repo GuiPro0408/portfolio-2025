@@ -35,6 +35,9 @@ FROM webdevops/php-nginx:8.3-alpine
 # Set working directory
 WORKDIR /app
 
+# Override nginx vhost configuration to enable explicit static asset caching.
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+
 # Install PostgreSQL extension
 RUN apk add --no-cache postgresql-dev \
     && docker-php-ext-install pdo_pgsql pgsql

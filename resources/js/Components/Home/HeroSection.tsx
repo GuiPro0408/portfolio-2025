@@ -1,6 +1,7 @@
 import ImagePlaceholder from '@/Components/Home/ImagePlaceholder';
 import type { ContactPayload } from '@/types/contracts';
 import type { HomeContent, HomepageSettingsPayload } from '@/types/home';
+import { buildSrcset } from '@/utils/images';
 import { Link } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -21,6 +22,7 @@ export default function HeroSection({
     const heroImageAlt = settings.hero_headline
         ? `${settings.hero_headline} hero visual`
         : 'Portfolio hero visual';
+    const heroSrcSet = buildSrcset(settings.hero_image_url);
 
     return (
         <section className="public-shell section-block reveal">
@@ -66,6 +68,8 @@ export default function HeroSection({
                     ) : (
                         <img
                             src={settings.hero_image_url}
+                            srcSet={heroSrcSet}
+                            sizes="(min-width: 900px) 576px, calc(100vw - 2rem)"
                             alt={heroImageAlt}
                             className="hero-media"
                             loading="eager"

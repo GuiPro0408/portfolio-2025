@@ -4,6 +4,7 @@ import type {
     FeaturedProjectSummary,
     HomepageSettingsPayload,
 } from '@/types/home';
+import { buildSrcset } from '@/utils/images';
 import { Link } from '@inertiajs/react';
 import { ArrowRight } from 'lucide-react';
 import { useState } from 'react';
@@ -70,12 +71,15 @@ export default function FeaturedProjectsGrid({
                         const imageUrl =
                             imageOverrides[index] ?? project.cover_image_url;
                         const imageIsBroken = failedImages[project.id] === true;
+                        const imageSrcSet = buildSrcset(imageUrl);
 
                         return (
                             <article key={project.id} className="project-card card-surface">
                                 {imageUrl && !imageIsBroken ? (
                                     <img
                                         src={imageUrl}
+                                        srcSet={imageSrcSet}
+                                        sizes="(min-width: 900px) 33vw, calc(100vw - 2rem)"
                                         alt={`${project.title} cover`}
                                         className="project-cover"
                                         loading="lazy"

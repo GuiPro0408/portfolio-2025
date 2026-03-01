@@ -12,6 +12,9 @@
         <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
         <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap"></noscript>
+        @if (!empty($heroImageUrl))
+            <link rel="preload" as="image" href="{{ $heroImageUrl }}" fetchpriority="high">
+        @endif
 
         <!-- Scripts -->
         @routes

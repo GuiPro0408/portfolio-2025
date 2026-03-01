@@ -21,6 +21,8 @@ class HomeController extends Controller
         return Inertia::render('Welcome', [
             ...$payload,
             'contact' => $this->resolveContactPayload->resolve(),
+        ])->withViewData([
+            'heroImageUrl' => data_get($payload, 'homepageSettings.hero_image_url'),
         ]);
     }
 }

@@ -3,8 +3,9 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
+        "build": "npm run generate:images && vite build",
         "dev": "vite",
+        "generate:images": "node scripts/generate-image-variants.mjs",
         "typecheck": "tsc --noEmit",
         "lint": "eslint \"resources/js/**/*.{ts,tsx}\"",
         "lint:fix": "eslint \"resources/js/**/*.{ts,tsx}\" --fix",
@@ -32,6 +33,7 @@
         "postcss": "^8.4.31",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
+        "sharp": "^0.34.4",
         "tailwindcss": "^3.2.1",
         "typescript-eslint": "^8.46.2",
         "typescript": "^5.9.2",

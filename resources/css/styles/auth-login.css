@@ -506,6 +506,68 @@
         }
     }
 
+    /* ── Responsive mobile layout ────────────────────── */
+
+    @media (max-width: 767px) {
+        padding: 1rem;
+
+        & .owner-login-grid {
+            min-height: auto;
+            gap: 1rem;
+        }
+
+        & .owner-login-hero,
+        & .owner-login-panel {
+            padding: 1.25rem;
+        }
+
+        & .owner-login-panel {
+            width: 100%;
+            margin-left: 0;
+        }
+
+        & .owner-login-hero-media {
+            max-height: 200px;
+            aspect-ratio: auto;
+
+            & img {
+                height: 200px;
+            }
+        }
+    }
+
+    /* ── Responsive tablet layout ────────────────────── */
+
+    @media (min-width: 768px) and (max-width: 1023px) {
+        padding: 1.5rem;
+
+        & .owner-login-grid {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 1.5rem;
+            min-height: auto;
+        }
+
+        & .owner-login-hero,
+        & .owner-login-panel {
+            padding: 2rem;
+        }
+
+        & .owner-login-panel {
+            width: 100%;
+            margin-left: 0;
+            align-self: center;
+        }
+
+        & .owner-login-hero-media {
+            max-height: 220px;
+            aspect-ratio: auto;
+
+            & img {
+                height: 220px;
+            }
+        }
+    }
+
     /* ── Responsive desktop layout ───────────────────── */
 
     @media (min-width: 1024px) {

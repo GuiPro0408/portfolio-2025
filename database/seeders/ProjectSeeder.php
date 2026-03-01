@@ -12,6 +12,10 @@ class ProjectSeeder extends Seeder
      */
     public function run(): void
     {
+        // Remove all existing projects before seeding new ones
+        Project::truncate();
+
+        // Create new projects with specific attributes
         Project::factory()->create([
             'title' => 'Frontend Mentor - Age calculator app solution',
             'slug' => 'frontend-mentor-age-calculator-app-solution',

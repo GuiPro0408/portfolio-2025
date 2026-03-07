@@ -32,10 +32,90 @@ function formatStack(stack: string | null): string[] {
         .filter(Boolean);
 }
 
+interface CaseStudySection {
+    title: string;
+    paragraphs: string[];
+}
+
+function formatPublishedAt(publishedAt: string | null): string | null {
+    if (!publishedAt) {
+        return null;
+    }
+
+    const date = new Date(publishedAt);
+
+    if (Number.isNaN(date.getTime())) {
+        return null;
+    }
+
+    return new Intl.DateTimeFormat('en', {
+        month: 'long',
+        year: 'numeric',
+    }).format(date);
+}
+
+function formatBodySections(body: string): CaseStudySection[] {
+    const blocks = body
+        .split(/\n{2,}/)
+        .map((block) => block.trim())
+        .filter(Boolean);
+
+    if (blocks.length === 0) {
+        return [];
+    }
+
+    const sections: CaseStudySection[] = [];
+    let currentSection: CaseStudySection = {
+        title: 'Overview',
+        paragraphs: [],
+    };
+
+    for (const block of blocks) {
+        const markdownHeading = block.match(/^#{1,6}\s+(.+)$/);
+        const labelledHeading = block.match(
+            /^([A-Za-z][A-Za-z0-9/&'(), -]{2,48}):\s*([\s\S]+)$/,
+        );
+
+        if (markdownHeading) {
+            if (currentSection.paragraphs.length > 0) {
+                sections.push(currentSection);
+            }
+
+            currentSection = {
+                title: markdownHeading[1].trim(),
+                paragraphs: [],
+            };
+            continue;
+        }
+
+        if (labelledHeading) {
+            if (currentSection.paragraphs.length > 0) {
+                sections.push(currentSection);
+            }
+
+            currentSection = {
+                title: labelledHeading[1].trim(),
+                paragraphs: [labelledHeading[2].trim()],
+            };
+            continue;
+        }
+
+        currentSection.paragraphs.push(block);
+    }
+
+    if (currentSection.paragraphs.length > 0) {
+        sections.push(currentSection);
+    }
+
+    return sections;
+}
+
 export default function Show({ project, contact }: ProjectShowPageProps) {
     const { seo = {} } = usePage<SharedPageProps>().props;
     const personName = seo.person_name ?? 'Guillaume Juste';
     const tags = formatStack(project.stack);
+    const publishedLabel = formatPublishedAt(project.published_at);
+    const bodySections = formatBodySections(project.body);
     const metaDescription =
         project.summary ??
         'Detailed case study of a delivered software project.';
@@ -114,65 +194,121 @@ export default function Show({ project, contact }: ProjectShowPageProps) {
 
             <PublicLayout contact={contact}>
                 <section className="public-shell section-block reveal">
-                    <Link href={route('projects.index')} className="section-inline-link">
-                        Back to projects
-                    </Link>
+                    <div className="project-detail-shell">
+                        <article className="card-surface project-detail-main">
+                            <Link href={route('projects.index')} className="section-inline-link">
+                                Back to projects
+                            </Link>
 
-                    <article className="card-surface project-detail mt-6">
-                        <header className="space-y-4">
-                            <h1 className="hero-title !text-[clamp(2rem,4vw,3rem)]">
-                                {project.title}
-                            </h1>
-                            <p className="hero-description !max-w-3xl">
-                                {project.summary}
-                            </p>
-                        </header>
+                            <header className="project-detail-header">
+                                <p className="project-detail-kicker">Case study</p>
+                                <h1 className="project-detail-title">{project.title}</h1>
+                                <p className="project-detail-summary">{project.summary}</p>
+                            </header>
 
-                        {project.cover_image_url && (
-                            <img
-                                src={project.cover_image_url}
-                                alt={`${project.title} cover`}
-                                className="project-cover mt-8"
-                            />
-                        )}
+                            {project.cover_image_url && (
+                                <img
+                                    src={project.cover_image_url}
+                                    alt={`${project.title} cover`}
+                                    className="project-cover project-detail-cover"
+                                />
+                            )}
 
-                        <article className="prose prose-invert mt-8 max-w-none whitespace-pre-line leading-8">
-                            {project.body}
+                            <div className="project-detail-content">
+                                {bodySections.length > 0 ? (
+                                    bodySections.map((section, index) => (
+                                        <section
+                                            key={`${section.title}-${index}`}
+                                            className="project-body-section"
+                                        >
+                                            <div className="project-body-section-label">
+                                                <span>{String(index + 1).padStart(2, '0')}</span>
+                                                <h2>{section.title}</h2>
+                                            </div>
+                                            <div className="project-body-section-copy">
+                                                {section.paragraphs.map((paragraph, paragraphIndex) => (
+                                                    <p key={`${section.title}-${paragraphIndex}`}>
+                                                        {paragraph}
+                                                    </p>
+                                                ))}
+                                            </div>
+                                        </section>
+                                    ))
+                                ) : (
+                                    <section className="project-body-section">
+                                        <div className="project-body-section-label">
+                                            <span>01</span>
+                                            <h2>Overview</h2>
+                                        </div>
+                                        <div className="project-body-section-copy">
+                                            <p>{project.body}</p>
+                                        </div>
+                                    </section>
+                                )}
+                            </div>
                         </article>
 
-                        {tags.length > 0 && (
-                            <ul className="tag-list mt-8" aria-label="Project stack">
-                                {tags.map((tag) => (
-                                    <li key={tag} className="tag-item">
-                                        {tag}
+                        <aside className="card-surface project-detail-sidebar">
+                            <div className="project-detail-sidebar-block">
+                                <p className="project-detail-sidebar-label">Snapshot</p>
+                                <ul className="project-fact-list">
+                                    {publishedLabel ? (
+                                        <li>
+                                            <span>Published</span>
+                                            <strong>{publishedLabel}</strong>
+                                        </li>
+                                    ) : null}
+                                    <li>
+                                        <span>Format</span>
+                                        <strong>Build case study</strong>
                                     </li>
-                                ))}
-                            </ul>
-                        )}
+                                    <li>
+                                        <span>Stack tags</span>
+                                        <strong>{tags.length > 0 ? tags.length : 0}</strong>
+                                    </li>
+                                </ul>
+                            </div>
 
-                        <div className="mt-10 flex flex-wrap gap-3">
-                            {project.repo_url && (
-                                <a
-                                    href={project.repo_url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="button-secondary"
-                                >
-                                    Repository
-                                </a>
+                            {tags.length > 0 && (
+                                <div className="project-detail-sidebar-block">
+                                    <p className="project-detail-sidebar-label">Core stack</p>
+                                    <ul className="tag-list project-detail-tag-list" aria-label="Project stack">
+                                        {tags.map((tag) => (
+                                            <li key={tag} className="tag-item">
+                                                {tag}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
                             )}
-                            {project.live_url && (
-                                <a
-                                    href={project.live_url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="button-primary"
-                                >
-                                    Live demo
-                                </a>
-                            )}
-                        </div>
-                    </article>
+
+                            <div className="project-detail-sidebar-block">
+                                <p className="project-detail-sidebar-label">Links</p>
+                                <div className="project-detail-actions">
+                                    {project.repo_url && (
+                                        <a
+                                            href={project.repo_url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="button-secondary"
+                                        >
+                                            Repository
+                                        </a>
+                                    )}
+                                    {project.live_url && (
+                                        <a
+                                            href={project.live_url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="button-primary"
+                                        >
+                                            Live demo
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        </aside>
+                    </div>
                 </section>
             </PublicLayout>
         </>

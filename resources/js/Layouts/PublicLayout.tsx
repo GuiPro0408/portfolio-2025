@@ -14,8 +14,13 @@ export default function PublicLayout({ children, contact }: PublicLayoutProps) {
     return (
         <div className="public-page">
             <div className="background-aura" aria-hidden="true" />
+            <a href="#main-content" className="skip-link">
+                Skip to content
+            </a>
             <PublicHeader />
-            <main>{children}</main>
+            <main id="main-content" tabIndex={-1}>
+                {children}
+            </main>
             <PublicFooter contact={contact} />
         </div>
     );

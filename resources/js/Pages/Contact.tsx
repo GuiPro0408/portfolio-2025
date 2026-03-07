@@ -112,6 +112,12 @@ export default function Contact({ contact, formStartedAt }: ContactPageProps) {
                                 <li>Fast response and transparent communication.</li>
                                 <li>Built for product delivery, not buzzwords.</li>
                             </ul>
+                            <div className="contact-prompt-strip" aria-label="Helpful prompts">
+                                <span>New product</span>
+                                <span>Feature delivery</span>
+                                <span>Architecture cleanup</span>
+                                <span>Portfolio collaboration</span>
+                            </div>
                             <div className="contact-alt-links">
                                 {contact?.email ? (
                                     <a href={`mailto:${contact.email}`}>
@@ -152,6 +158,11 @@ export default function Contact({ contact, formStartedAt }: ContactPageProps) {
                                     Name, email, and one concise message are
                                     enough to get started.
                                 </p>
+                                <div className="contact-form-hints" aria-label="Suggested prompts">
+                                    <span>Scope</span>
+                                    <span>Timeline</span>
+                                    <span>Current blocker</span>
+                                </div>
                             </header>
 
                             {flash?.success ? (

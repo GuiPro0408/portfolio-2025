@@ -1,9 +1,14 @@
 :root {
     --bg: #0b1020;
     --surface: #121a2b;
+    --surface-elevated: #162238;
+    --surface-strong: #0f182a;
+    --surface-muted: rgba(22, 34, 58, 0.72);
     --text: #e7edff;
     --muted: #9aa8c9;
+    --muted-strong: #c0ccec;
     --border: #2a3552;
+    --border-strong: #3a4b70;
     --accent: #5b8cff;
     --accent-soft: #1a2a4e;
     --text-light: #d9e6ff;
@@ -11,6 +16,10 @@
     --eyebrow: #afbddb;
     --tag-border: #35539a;
     --button-text: #081126;
+    --space-section: clamp(3.25rem, 7vw, 5.5rem);
+    --space-card: clamp(1rem, 2vw, 1.4rem);
+    --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.26);
+    --shadow-strong: 0 26px 54px rgba(0, 0, 0, 0.38);
     --fs-display: clamp(2.05rem, 4.4vw, 3.35rem);
     --fs-h2: clamp(1.72rem, 2.8vw, 2.55rem);
     --fs-h3: clamp(1.2rem, 1.7vw, 1.5rem);
@@ -29,6 +38,7 @@ body {
     background: var(--bg);
     color: var(--text);
     font-family: 'Source Sans 3', sans-serif;
+    text-rendering: optimizeLegibility;
 }
 
 html {

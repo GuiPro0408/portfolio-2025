@@ -4,9 +4,11 @@ import ActiveFilterChips, {
 import ListboxSelect, {
     type ListboxOptionItem,
 } from '@/Components/Filters/ListboxSelect';
+import ImagePlaceholder from '@/Components/Home/ImagePlaceholder';
 import SectionHeading from '@/Components/SectionHeading';
 import PublicLayout from '@/Layouts/PublicLayout';
 import type { ContactPayload, PaginationShape, SharedPageProps } from '@/types/contracts';
+import { buildSrcset } from '@/utils/images';
 import { resolveSocialImage } from '@/utils/seo';
 import {
     Listbox,
@@ -70,6 +72,23 @@ function parseFilterStack(stack: string): string[] {
         .split(',')
         .map((item) => item.trim())
         .filter(Boolean);
+}
+
+function formatPublishedAt(publishedAt: string | null): string | null {
+    if (!publishedAt) {
+        return null;
+    }
+
+    const date = new Date(publishedAt);
+
+    if (Number.isNaN(date.getTime())) {
+        return null;
+    }
+
+    return new Intl.DateTimeFormat('en', {
+        month: 'short',
+        year: 'numeric',
+    }).format(date);
 }
 
 interface StackMultiSelectProps {
@@ -148,12 +167,53 @@ const ProjectCard = memo(function ProjectCard({
 }: {
     project: ProjectCardData;
 }) {
+    const [imageFailed, setImageFailed] = useState(false);
     const tags = useMemo(() => toTags(project.stack), [project.stack]);
     const detailHref = route('projects.show', project.slug);
+    const coverSrcSet = useMemo(
+        () => buildSrcset(project.cover_image_url),
+        [project.cover_image_url],
+    );
+    const publishedLabel = useMemo(
+        () => formatPublishedAt(project.published_at),
+        [project.published_at],
+    );
 
     return (
         <article className="project-card card-surface">
+            <div className="project-card-media">
+                {project.cover_image_url && !imageFailed ? (
+                    <img
+                        src={project.cover_image_url}
+                        srcSet={coverSrcSet}
+                        sizes="(min-width: 1100px) 360px, (min-width: 700px) 45vw, calc(100vw - 2rem)"
+                        alt={`${project.title} cover`}
+                        className="project-cover"
+                        loading="lazy"
+                        decoding="async"
+                        width="16"
+                        height="10"
+                        onError={() => setImageFailed(true)}
+                    />
+                ) : (
+                    <ImagePlaceholder variant="featured" label={project.title} />
+                )}
+                <div className="project-card-overlay">
+                    <span className="project-card-kicker">Case study</span>
+                    {publishedLabel ? (
+                        <span className="project-card-date">{publishedLabel}</span>
+                    ) : null}
+                </div>
+            </div>
             <div className="project-card-body">
+                <div className="project-card-meta">
+                    <p className="project-card-meta-label">Delivery snapshot</p>
+                    {tags.length > 0 ? (
+                        <p className="project-card-meta-value">{tags.join(' / ')}</p>
+                    ) : (
+                        <p className="project-card-meta-value">Architecture and delivery notes</p>
+                    )}
+                </div>
                 <h2 className="project-card-title">
                     <Link href={detailHref} prefetch="hover" cacheFor="30s">
                         {project.title}
@@ -415,13 +475,34 @@ export default function Index({
 
             <PublicLayout contact={contact}>
                 <section className="public-shell section-block reveal">
-                    <SectionHeading
-                        eyebrow="Portfolio"
-                        title="Published Projects"
-                        description="A curated list of shipped work, ordered by editorial priority."
-                    />
+                    <div className="projects-hero-shell">
+                        <SectionHeading
+                            eyebrow="Portfolio"
+                            title="Published Projects"
+                            description="A curated set of shipped work focused on architecture decisions, implementation tradeoffs, and delivery outcomes."
+                        />
+                        <aside className="projects-hero-aside card-surface">
+                            <p className="projects-hero-aside-label">Browse by</p>
+                            <ul className="projects-hero-points">
+                                <li>Product surface and use case</li>
+                                <li>Stack signals and technical depth</li>
+                                <li>Editorial order or chronology</li>
+                            </ul>
+                        </aside>
+                    </div>
 
-                    <div className="projects-filter-form card-surface mt-6">
+                    <div className="projects-filter-panel card-surface mt-6">
+                        <div className="projects-filter-panel-head">
+                            <div>
+                                <p className="projects-filter-kicker">Project filters</p>
+                                <h2 className="projects-filter-title">Narrow the project set</h2>
+                            </div>
+                            <p className="projects-filter-copy">
+                                Search by title or summary, then filter by stack without leaving the page.
+                            </p>
+                        </div>
+
+                        <div className="projects-filter-form">
                         <label className="projects-filter-label projects-filter-search">
                             Search
                             <input
@@ -462,6 +543,7 @@ export default function Index({
                         >
                             Reset
                         </button>
+                        </div>
                     </div>
 
                     <ActiveFilterChips
@@ -484,14 +566,11 @@ export default function Index({
                         </div>
                     )}
 
-                    <nav
-                        className="mt-10 flex items-center justify-between text-sm"
-                        aria-label="Projects pagination"
-                    >
-                        <p className="text-[var(--muted)]">
+                    <nav className="projects-pagination mt-10" aria-label="Projects pagination">
+                        <p className="projects-pagination-label">
                             Page {projects.current_page} of {projects.last_page}
                         </p>
-                        <div className="flex gap-3">
+                        <div className="projects-pagination-actions">
                             {projects.prev_page_url && (
                                 <button
                                     type="button"

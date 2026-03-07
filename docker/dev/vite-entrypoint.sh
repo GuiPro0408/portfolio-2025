@@ -13,7 +13,7 @@ fi
 
 cd "${APP_DIR}"
 
-if [ ! -x node_modules/.bin/vite ]; then
+if [ ! -x node_modules/.bin/vite ] || [ ! -d node_modules/sharp ]; then
     echo "[vite-entrypoint] Installing npm dependencies"
     npm install
 fi

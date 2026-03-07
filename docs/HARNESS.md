@@ -29,6 +29,8 @@ This sequence is the canonical non-browser CI quality path.
 3. `composer run lint:php`
 4. `composer run lint:static`
 5. `composer test`
+   Docker parity runs clear Docker-only env overrides such as empty `APP_KEY` and local `PORTFOLIO_SEED_PROJECTS` before invoking tests so PHPUnit and seeder behavior match the canonical testing contract.
+   Docker parity also verifies container Node dependencies are complete before frontend checks so stale named volumes do not skip required packages such as `sharp`.
 6. `npm run lint`
 7. `npm run typecheck`
 8. `npm run build`

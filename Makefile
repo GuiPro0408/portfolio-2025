@@ -109,10 +109,11 @@ docs-check:
 check-docker:
 	$(MAKE) docs-check
 	docker compose -f docker-compose.yml exec -T app sh -lc 'while [ ! -f vendor/autoload.php ]; do echo "Waiting for Composer dependencies..."; sleep 1; done'
+	docker compose -f docker-compose.yml exec -T -u node vite sh -lc 'if [ ! -x node_modules/.bin/vite ] || [ ! -d node_modules/sharp ]; then echo "Installing Node dependencies..."; npm install; fi'
 	docker compose -f docker-compose.yml exec -T app composer validate --strict
 	docker compose -f docker-compose.yml exec -T app composer run lint:php
 	docker compose -f docker-compose.yml exec -T app composer run lint:static
-	docker compose -f docker-compose.yml exec -T -e APP_ENV=testing app composer test
+	docker compose -f docker-compose.yml exec -T app sh -lc 'unset APP_KEY PORTFOLIO_SEED_PROJECTS; APP_ENV=testing composer test'
 	docker compose -f docker-compose.yml exec -T -u node vite npm run lint
 	docker compose -f docker-compose.yml exec -T -u node vite npm run typecheck
 	docker compose -f docker-compose.yml exec -T -u node vite npm run build

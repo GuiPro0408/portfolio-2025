@@ -20,7 +20,7 @@ Production env policy:
 ## Post-Deploy Verification
 - Public app loads.
 - Owner authentication + verification flow works.
-- Projects/homepage settings workflows are operational.
+- Dashboard, projects, homepage settings, and profile/password workflows are operational.
 
 ## Canonical References
 - [docs/DEPLOY.md](docs/DEPLOY.md)

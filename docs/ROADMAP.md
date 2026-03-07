@@ -3,13 +3,13 @@
 This file is the active planning surface for upcoming repository work.
 
 ## Status
-- Current phase: v1.2 complete — all six scope tracks delivered (public projects discovery, technical SEO pack, contact conversion flow, dashboard productivity, Playwright smoke coverage, harness + system-of-record docs enhancement). Post-v1.2 stabilization and workflow hardening in progress.
-- Last updated: March 1, 2026
+- Current phase: post-v1.2 stabilization. The shipped surface now includes the public portfolio, SEO endpoints, owner dashboard/project workflows, homepage settings, and owner auth/profile flows. Current work is focused on keeping docs, workflow contracts, and quality checks aligned with that shipped surface.
+- Last updated: March 7, 2026
 
 ## Current Priorities
-1. Keep documentation and agent workflow contracts synchronized through automated checks.
+1. Keep canonical docs and root mirrors synchronized with the actual route, page, and workflow surface.
 2. Maintain CI/local parity and deterministic quality-gate behavior.
-3. Track new feature streams in this document until promoted to release-specific backlog files.
+3. Capture future feature streams here only after they are distinct from stabilization or docs-contract maintenance.
 
 ## Rules
 - Do not create new top-level backlog files for completed releases.

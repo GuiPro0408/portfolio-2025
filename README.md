@@ -3,6 +3,7 @@
 > Canonical source: `docs/README.md`, `docs/HARNESS.md`, and `docs/SYSTEM-OF-RECORD.md`.
 
 Laravel 12 + Breeze (React + Inertia) portfolio application.
+Current shipped surface includes the public portfolio, SEO endpoints, owner-only dashboard/project management, homepage settings, and owner auth/profile flows.
 
 ## Canonical Documentation
 - [Docs index](docs/README.md)

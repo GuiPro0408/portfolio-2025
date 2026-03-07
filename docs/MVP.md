@@ -8,7 +8,7 @@ This document defines what ships first for the portfolio product.
 - Quality gate: `make check` passing
 
 ## Goal
-Deliver a complete first vertical slice with public portfolio discovery and authenticated project management.
+Deliver a complete first vertical slice with public portfolio discovery, owner-only content management, and the minimum auth/profile flows needed to operate it safely.
 
 ## Active Development Mode
 - Local development database: SQLite
@@ -18,19 +18,22 @@ Deliver a complete first vertical slice with public portfolio discovery and auth
 - Public homepage at `/` with intro, featured projects, and contact CTA.
 - Public project listing at `/projects` with server-driven filtering (`q`, `stack`, `sort`), pagination (9 per page), debounced search, multi-stack filtering, active-filter chips, and skeleton loading states.
 - Public project detail at `/projects/{slug}` for published projects only, with JSON-LD structured data (`CreativeWork`, `BreadcrumbList`), OpenGraph/Twitter meta, and canonical URLs.
-- Public contact page at `/contact` with form submission, honeypot/anti-spam, throttle protection, and queued email dispatch.
+- Public contact page at `/contact` with form submission, honeypot field, minimum-submit-delay protection, expiry checks, throttle protection, and queued email dispatch.
 - SEO endpoints: `/sitemap.xml` and `/robots.txt`.
-- Owner-only authenticated project management under `/dashboard/projects/*`.
+- Owner-only authenticated dashboard at `/dashboard` with portfolio metrics and recent project activity.
+- Owner-only authenticated project management under `/dashboard/projects/*`, including create, edit, duplicate, inline flag updates, and sort-order updates.
 - Owner-only authenticated homepage settings management under `/dashboard/homepage`.
+- Authenticated profile management under `/profile`, with owner-specific restrictions on email changes and account deletion.
+- Owner login, password reset, password confirmation, and email verification flows required by the dashboard surface.
 - Authenticated dashboard UX with workflow-first project operations (filters and inline flags).
 - Two content models: `Project` and `Technology` (with `project_technology` pivot table).
 - One singleton settings model: `HomepageSettings`.
-- Feature tests for visibility, auth protection, and CRUD behavior.
+- Feature and unit coverage for visibility, auth protection, CRUD behavior, SEO endpoints, cache invalidation helpers, migration/data contracts, and the Docker Vite entrypoint contract.
 
 ## Out Of Scope
 - Blog or article system.
 - Rich text editor.
-- File upload/media library.
+- General-purpose media library or asset management dashboard.
 - Role-based authorization.
 - Multi-language support.
 
@@ -57,6 +60,7 @@ Deliver a complete first vertical slice with public portfolio discovery and auth
 - Slug is auto-generated from title when omitted, and remains editable.
 - Public listing order: `sort_order ASC`, then `published_at DESC`.
 - Featured homepage section shows published + featured projects only (max 3).
+- Dashboard landing page summarizes project counts and recent updates.
 - If published is enabled and `published_at` is empty, set it automatically.
 - If published is disabled, clear `published_at`.
 - Public project list supports query filters:
@@ -66,8 +70,11 @@ Deliver a complete first vertical slice with public portfolio discovery and auth
   - Pagination: 9 per page.
 - Admin project list supports query filters:
   - `q`, `status`, `featured`, `sort`
+- Admin project write flows support either a validated `cover_image_url` or a validated uploaded cover image file stored on the public disk.
 - Admin inline flag updates are handled through:
   - `PATCH /dashboard/projects/{project}/flags`
+- Project duplication redirects directly into the edit flow for the copied project.
+- Public homepage and sitemap payloads are cached and must be invalidated after project or homepage-admin writes.
 
 ## Contact
 MVP contact CTA uses backend-provided config values exposed to frontend props:
@@ -76,7 +83,7 @@ MVP contact CTA uses backend-provided config values exposed to frontend props:
 - GitHub profile
 
 The `/contact` page provides a form submission flow:
-- Validated via `ContactRequest` (honeypot field, throttle protection).
+- Validated via `ContactRequest` (honeypot field, timed submission window, throttle protection).
 - Dispatches `SendContactSubmissionNotification` queued job for email delivery.
 - Anti-spam measures prevent automated submissions.
 
@@ -96,9 +103,14 @@ The `/contact` page provides a form submission flow:
   - `/projects/{slug}`
 - Contact CTA visibility depends on `contact` prop from backend on all public pages.
 
+## Auth And Profile Constraints
+- Public self-registration remains disabled.
+- Owner dashboard access requires `auth + verified + owner`.
+- Owner profile supports password updates but does not allow owner email changes or owner account deletion.
+
 ## Definition Of Done
-- Public pages and admin CRUD routes implemented.
+- Public pages, owner auth gates, and admin dashboard routes implemented.
 - Only published projects visible publicly.
-- The configured owner can create/update/delete projects.
-- Test coverage added for public visibility and admin behavior.
+- The configured owner can create/update/delete/duplicate/sort projects and update homepage settings.
+- Test coverage added for public visibility, admin behavior, auth/profile protection, and supporting contracts.
 - `make check` passes.

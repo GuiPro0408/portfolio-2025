@@ -6,6 +6,7 @@
 - Build or modify product behavior: [Architecture](ARCHITECTURE.md), [MVP](MVP.md), [Roadmap](ROADMAP.md)
 - Update quality workflow or CI: [Harness](HARNESS.md), [Quality](QUALITY.md), [System of record](SYSTEM-OF-RECORD.md)
 - Update deployment/runtime operations: [Deploy](DEPLOY.md)
+- Audit current shipped app surface: [Architecture](ARCHITECTURE.md), [MVP](MVP.md), [Deploy](DEPLOY.md), [Root overview mirror](../README.md)
 - Add or revise engineering process guidance: [System of record](SYSTEM-OF-RECORD.md), [Knowledge base](#by-document-type)
 - Operate specialized agent workflow: [Agent workflow contract](agents/WORKFLOW.md), [Context map](agents/CONTEXT-MAP.md), [Memory lifecycle](agents/MEMORY-LIFECYCLE.md)
 
@@ -51,3 +52,4 @@
 - Root overview mirror: [`README.md`](../README.md)
 - Native setup mirror: [`LOCAL_SETUP.md`](../LOCAL_SETUP.md)
 - Deployment quick guide mirror: [`DEPLOYMENT.md`](../DEPLOYMENT.md)
+- Live route entrypoints: [`routes/web.php`](../routes/web.php), [`routes/auth.php`](../routes/auth.php)

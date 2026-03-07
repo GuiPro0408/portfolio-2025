@@ -22,18 +22,14 @@ Notes:
 ### Native toolchain
 ```bash
 make setup
-cp .env.example .env
-php artisan key:generate
-touch database/database.sqlite
-php artisan migrate --seed
+make docs-check
+make check
 make dev
 ```
 
-## Required Quality Checks
-```bash
-make docs-check
-make check
-```
+Notes:
+- `make dev` runs local preflight checks, creates `.env` when missing, generates `APP_KEY` when needed, prepares the SQLite database, and bootstraps migrations/seeders if the database is not ready.
+- Use the manual Laravel bootstrap steps only if you need to inspect or override the preflight behavior described in `docs/HARNESS.md`.
 
 ## Canonical References
 - [docs/README.md](docs/README.md)

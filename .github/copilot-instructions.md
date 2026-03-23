@@ -1,0 +1,27 @@
+# Copilot instructions for this repository
+
+- Start with `AGENTS.md`, then use `docs/README.md` as the index into canonical docs.
+- Treat `docs/` as the system of record; if behavior or workflow changes, update canonical docs in the same change set. Root `README.md` is a mirror only.
+- Golden commands come from `Makefile` and `docs/HARNESS.md`: `make setup`, `make dev`, `make docs-check`, `make check`, `make check-docker`, `make test`, `make build`, `make format`.
+- `make check` is the golden quality gate; if command behavior changes, update `Makefile`, `docs/HARNESS.md`, and `.github/workflows/ci.yml` together.
+- Keep the Laravel/Inertia boundary: routes in `routes/*.php`, orchestration controllers in `app/Http/Controllers`, reusable domain logic in `app/Actions`, and UI pages in `resources/js/Pages`.
+- Keep controllers thin. Follow `app/Http/Controllers/HomeController.php` and `app/Http/Controllers/ProjectController.php`: resolve data via actions, then render Inertia.
+- Map Eloquent models to explicit arrays before passing data to Inertia; see `ProjectController::show()` and `Admin/ProjectController::edit()`.
+- Preserve the shared Inertia prop contract in `app/Http/Middleware/HandleInertiaRequests.php`: `auth`, `flash`, and `seo`.
+- Public pages using `PublicLayout` should receive the consistent `contact` prop contract from `App\Actions\Public\ResolveContactPayload`.
+- Put request normalization in `prepareForValidation()`; follow `app/Http/Requests/StoreProjectRequest.php` and `UpdateProjectRequest.php` for slug generation, booleans, and `published_at` handling.
+- Project stack data is normalized into `technologies` and `project_technology` through `app/Actions/Projects/SyncProjectTechnologies.php`; preserve that on create, update, duplicate, and in tests.
+- Public caching uses explicit keys from `app/Support/PublicCacheKeys.php` and invalidation through `app/Actions/Cache/InvalidatePublicCaches.php`.
+- Admin/dashboard routes in `routes/web.php` must preserve `auth`, `verified`, and `owner` protections; write actions also use `prevent.duplicate`.
+- Owner authorization is driven by `PORTFOLIO_OWNER_EMAIL`; keep the single-owner model and do not add public registration behavior.
+- Contact submissions are queued through `app/Jobs/SendContactSubmissionNotification.php`; preserve async delivery and retry behavior.
+- Frontend code under `resources/js` is TypeScript-only. Reuse shared contracts from `resources/js/types`, utilities from `resources/js/utils`, and reusable UI from `resources/js/Components`.
+- Keep `/projects` and `/dashboard/projects` server-driven with Inertia partial reloads using `only`; see `resources/js/Pages/Projects/Index.tsx` and `resources/js/Pages/Dashboard/Projects/Index.tsx`.
+- Preserve dashboard virtualization with `@tanstack/react-virtual`; see `resources/js/Pages/Dashboard/Projects/Index.tsx`.
+- Public project links use the established high-intent prefetch pattern: `prefetch="hover"` with `cacheFor="30s"`; see `resources/js/Pages/Projects/Index.tsx` and `resources/js/Components/Home/FeaturedProjectsGrid.tsx`.
+- Route-level styling is intentional: layouts/pages import their own CSS instead of making every route pay for every stylesheet.
+- Docs require CSS nesting under `resources/css/styles/`, but `postcss.config.js` currently only includes `tailwindcss` and `autoprefixer`; verify build support before adding nested syntax.
+- Backend behavior changes need `tests/Feature` and/or `tests/Unit` coverage. Feature tests use `RefreshDatabase`; see `tests/Feature/ProjectsPublicTest.php` and `tests/Feature/Admin/ProjectManagementTest.php`.
+- `database/factories/ProjectFactory.php` automatically syncs technologies after creating a project; account for that implicit behavior in tests.
+- Do not print secret values from `.env` or config-derived sensitive fields such as owner credentials.
+- Do not create commits unless the user explicitly asks for one.
